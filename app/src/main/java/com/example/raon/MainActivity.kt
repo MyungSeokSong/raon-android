@@ -7,9 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.raon.features.auth.ui.KakaoAuthViewModel
-import com.example.raon.features.bottom_navigation.b_test.ui.ViewModelTest
+import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
 import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.util.Utility
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,10 +30,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
 
-            // 테스트용 viewmodel
-            val viewmodeltest: ViewModelTest = viewModel()
 
-            AppNavigation(modifier = Modifier, kakaoAuthViewModel, this, viewmodeltest)
+            AppNavigation(modifier = Modifier, kakaoAuthViewModel, this)
 
 
         }

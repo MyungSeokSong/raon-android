@@ -31,8 +31,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreen
 import com.example.raon.features.bottom_navigation.a_home.ui.HomeTopAppBar
-import com.example.raon.features.bottom_navigation.b_test.ui.Test
-import com.example.raon.features.bottom_navigation.b_test.ui.ViewModelTest
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
 import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
@@ -44,7 +42,6 @@ import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar
 @Composable
 fun MainView(
     modifier: Modifier = Modifier,
-    viewModelTest: ViewModelTest,
     navController: NavController
 ) {
 
@@ -137,7 +134,7 @@ fun MainView(
             modifier = Modifier.padding(innerPadding)   // Scaffold가 제공하는 패딩을 적용하여 바텀바/탑바와 겹치지 않게 함
         ) {
             composable("home") { HomeScreen(navController) }
-            composable("test") { Test(modifier, viewModelTest) }
+            composable("test") { HomeScreen(navController) }
 //            composable("addItem") { AddItemScreen() }
             composable("chat") { ChatListScreen(navController) }
             composable("profile") { ProfileScreen() }
@@ -160,12 +157,11 @@ fun MainView(
 fun ContentScreen(
     modifier: Modifier = Modifier,
     seletedIndex: Int,
-    viewModelTest: ViewModelTest,
     navController: NavController
 ) {
     when (seletedIndex) {
         0 -> HomeScreen(navController)
-        1 -> Test(modifier, viewModelTest)
+        1 -> HomeScreen(navController)
         2 -> navController.navigate("addItem")
         3 -> ChatListScreen(navController)
         4 -> ProfileScreen()

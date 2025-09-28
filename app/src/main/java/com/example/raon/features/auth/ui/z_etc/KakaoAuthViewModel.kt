@@ -1,4 +1,4 @@
-package com.example.raon.features.auth.ui
+package com.example.raon.features.auth.ui.z_etc
 
 import android.app.Application
 import android.content.Context
@@ -34,8 +34,8 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         }
 
 // 카카오톡이 설치되어 있으면 카카오톡으로 로그인, 아니면 카카오계정으로 로그인
-        if (UserApiClient.instance.isKakaoTalkLoginAvailable(context2)) {
-            UserApiClient.instance.loginWithKakaoTalk(context2) { token, error ->
+        if (UserApiClient.Companion.instance.isKakaoTalkLoginAvailable(context2)) {
+            UserApiClient.Companion.instance.loginWithKakaoTalk(context2) { token, error ->
 
                 Log.e("카카오 상태", "설치0")
 
@@ -55,7 +55,10 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
                     }
 
                     // 카카오톡에 연결된 카카오계정이 없는 경우, 카카오계정으로 로그인 시도
-                    UserApiClient.instance.loginWithKakaoAccount(context2, callback = callback)
+                    UserApiClient.Companion.instance.loginWithKakaoAccount(
+                        context2,
+                        callback = callback
+                    )
                 } else if (token != null) {
 
                     Log.e("카카오 상태", "설치2")
@@ -66,7 +69,7 @@ class KakaoAuthViewModel(application: Application) : AndroidViewModel(applicatio
         } else {
             Log.e("카카오 상태", "미설치")
 
-            UserApiClient.instance.loginWithKakaoAccount(context2, callback = callback)
+            UserApiClient.Companion.instance.loginWithKakaoAccount(context2, callback = callback)
         }
 
     }

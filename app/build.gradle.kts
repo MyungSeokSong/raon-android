@@ -90,18 +90,29 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    //
     // 추가한 라이브러리들
+    //
 
     // Compose integration for Jatpack Navigation
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
-    // 카카오 로그인 API 모듈
-    implementation("com.kakao.sdk:v2-user:2.21.0")
+
+    // 파일 및 SharedPreferences 암호화를 위한 Jetpack 보안 라이브_러리
+    implementation("androidx.security:security-crypto:1.0.0")
+
 
     // Retrofit 라이브러리
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+//    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0") // 안정적인 최신 버전
     // Gson 라이브러리 -> Retrofit의 컨버터로 사용됨
     implementation("com.google.code.gson:gson:2.13.1")
+
+    // CookieJar 사용을 위해
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor") // 네트워크 로그 확인용
+    implementation("com.squareup.okhttp3:okhttp-urlconnection")   // JavaNetCookieJar 사용을 위해 필요
 
 
     // Paging 라이브러리
@@ -116,6 +127,9 @@ dependencies {
     // Coil 라이브러리
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
+
+    // 카카오 로그인 API 모듈
+    implementation("com.kakao.sdk:v2-user:2.21.0")
 
 
 }
