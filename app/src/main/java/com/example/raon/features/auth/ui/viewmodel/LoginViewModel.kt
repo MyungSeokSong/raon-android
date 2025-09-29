@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.raon.features.auth.data.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -17,8 +18,11 @@ import javax.inject.Inject
 sealed class LoginResult {
     object Idle : LoginResult()
     object Loading : LoginResult()
-    data class Success(val message: String) : LoginResult()
-    data class Error(val message: String) : LoginResult()
+    data class Success(val message: String) : LoginResult() // 로그인 성공
+    data class Faliure(val message: String) : LoginResult() // 로그인 실패
+    data class ServerError(val message: String) : LoginResult() // 서버 에러
+
+    class Error(val message: String) : LoginResult() // 예외상황 발생
 }
 
 // @Inject constructor 사용 => 즉 Hilt 사용해서 context를 직접 주입 하지 않아도 됨
@@ -30,9 +34,9 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI 상태 관리를 위한 변수들
-    var email by mutableStateOf("")
+    var email by mutableStateOf("email@email.com")
         private set
-    var password by mutableStateOf("")
+    var password by mutableStateOf("password1234")
         private set
     var passwordVisible by mutableStateOf(false)
         private set
@@ -52,7 +56,12 @@ class LoginViewModel @Inject constructor(
     // 로그인 관련 함수들
     fun login(email: String, password: String) {
         viewModelScope.launch {
+
+
             _loginResult.value = LoginResult.Loading
+
+            delay(1000)
+
 
             Log.d("LoginTest", "로그인 ViewModel 시작")
 

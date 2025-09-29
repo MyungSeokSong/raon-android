@@ -22,12 +22,15 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,6 +39,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +56,7 @@ import com.example.raon.R
 import com.example.raon.features.auth.ui.viewmodel.LoginResult
 import com.example.raon.features.auth.ui.viewmodel.LoginViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +69,23 @@ fun LoginScreen(
     val password = loginViewModel.password
     var passwordVisible by remember { mutableStateOf(false) }
     val loginResult by loginViewModel.loginResult.collectAsState()
+
+    // 현재 로딩 중인지 판단하는 상태 변수 추가
+    // loginResult가 LoginResult.Loading 상태일 때 true
+    val isLoading = loginResult is LoginResult.Loading
+
+    // Snackbar 상태와 코루틴 스코프 추가
+    // Composable 함수의 최상단에 다른 상태 변수들과 함께 위치합니다.
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+
+    // Faliure 상태일 때만 사용할 에러 메시지 변수 -> 사용 중인지 애매함
+    val errorMessage = if (loginResult is LoginResult.Faliure) {
+        (loginResult as LoginResult.Faliure).message
+    } else {
+        null
+    }
 
     // 화면 등장 애니메이션을 위한 상태
     var visible by remember { mutableStateOf(false) }
@@ -80,10 +102,25 @@ fun LoginScreen(
                 onLoginSuccess()
             }
 
-            is LoginResult.Error -> {
+            is LoginResult.Faliure -> {
                 // 로그인 실패 시 에러 로그 출력 (Toast나 Snackbar로 사용자에게 알림을 주도록 설계)
-                val errorMessage = (loginResult as LoginResult.Error).message
+//                val errorMessage = (loginResult as LoginResult.Faliure).message
+//                Log.e("LoginScreen", "Login failed: $errorMessage")
+            }
+
+            is LoginResult.ServerError -> {
+                // 로그인 실패 시 에러 로그 출력 (Snackbar로 사용자에게 알림을 주도록 설계)
+                val errorMessage = (loginResult as LoginResult.ServerError).message
                 Log.e("LoginScreen", "Login failed: $errorMessage")
+
+                // scope.launch를 사용해 코루틴 내에서 Snackbar를 띄웁니다.
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "네트워크 연결이 원활하지 않습니다. 잠시 후 다시 시도해 주세요.",
+//                        message = LoginResult.Error(errorMessage).message,
+
+                    )
+                }
             }
 
             else -> {
@@ -96,6 +133,11 @@ fun LoginScreen(
 
 
     Scaffold(
+
+        // Scaffold에 snackbarHost를 연결하는 부분
+        // Scaffold 컴포저블의 파라미터로 전달
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+
         containerColor = Color.White
     ) { paddingValues ->
         AnimatedVisibility(
@@ -141,6 +183,20 @@ fun LoginScreen(
                     isVisible = passwordVisible,
                     onVisibilityChange = { passwordVisible = !passwordVisible }
                 )
+
+                // errorMessage가 있을 때만 Text를 표시
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "이메일 또는 비밀번호를 다시 확인해주세요.",
+                        color = Color.Red, // 또는 MaterialTheme.colorScheme.error
+                        fontSize = 14.sp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // '로그인' 버튼
@@ -150,17 +206,9 @@ fun LoginScreen(
                         loginViewModel.login(email, password)
                         Log.d("LoginTest", "로그인 버튼 클릭2")
 
-//                        when (loginResult) {
-//                            is LoginResult.Success -> {
-//                                onLoginSuccess()
-//                            }
-//
-//                            is LoginResult.Error -> {}
-//                            LoginResult.Idle -> {}
-//                            LoginResult.Loading -> {}
-//                        }
 
                     },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -171,7 +219,22 @@ fun LoginScreen(
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Text(text = "로그인", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+
+                    // isLoading 상태에 따라 버튼 안의 내용물을 변경
+                    if (isLoading) {
+                        // 로딩 중일 때: 동그란 로딩 아이콘 표시
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color(0xFF3C3C3C),
+                            strokeWidth = 2.dp // 로딩 아이콘의 두께
+                        )
+                    } else {
+                        // 로딩 중이 아닐 때: '로그인' 텍스트 표시
+                        Text(text = "로그인", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    }
+
+
+//                    Text(text = "로그인", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 

@@ -132,4 +132,9 @@ dependencies {
     implementation("com.kakao.sdk:v2-user:2.21.0")
 
 
+    // 디자인 아이콘용 라이브러리
+    implementation("io.coil-kt:coil-compose:2.5.0") // Coil 이미지 로딩 라이브러리
+    implementation("androidx.compose.material:material-icons-extended") // 더 많은 아이콘 사용을 위해
+
+
 }

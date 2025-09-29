@@ -33,8 +33,8 @@ import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreen
 import com.example.raon.features.bottom_navigation.a_home.ui.HomeTopAppBar
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
-import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
-import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar
+import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen2
+import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar2
 
 
 // comp 자동 완성 키워드
@@ -73,7 +73,7 @@ fun MainView(
             when (currentRoute) {
                 "home" -> HomeTopAppBar()
                 "chat" -> ChatListTopAppBar()
-                "profile" -> ProfileTopAppBar()
+                "profile" -> ProfileTopAppBar2(navController)
             }
         },
         bottomBar = {
@@ -135,9 +135,8 @@ fun MainView(
         ) {
             composable("home") { HomeScreen(navController) }
             composable("test") { HomeScreen(navController) }
-//            composable("addItem") { AddItemScreen() }
             composable("chat") { ChatListScreen(navController) }
-            composable("profile") { ProfileScreen() }
+            composable("profile") { ProfileScreen2(navController) }
 
         }
 
@@ -164,7 +163,7 @@ fun ContentScreen(
         1 -> HomeScreen(navController)
         2 -> navController.navigate("addItem")
         3 -> ChatListScreen(navController)
-        4 -> ProfileScreen()
+//        4 -> ProfileScreen2()
     }
 }
 

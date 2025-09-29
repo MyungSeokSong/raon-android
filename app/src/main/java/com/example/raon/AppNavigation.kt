@@ -14,6 +14,7 @@ import com.example.raon.features.auth.ui.z_etc.AuthView
 import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
 import com.example.raon.features.bottom_navigation.c_add_item.ui.AddItemScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatRoomScreen
+import com.example.raon.features.bottom_navigation.e_profile.ui.SettingsScreen
 
 @Composable
 fun AppNavigation(
@@ -60,6 +61,10 @@ fun AppNavigation(
         }
         composable("chatroom") {
             ChatRoomScreen()
+        }
+
+        composable("settings_screen") {
+            SettingsScreen(navController)
         }
     }
 }
