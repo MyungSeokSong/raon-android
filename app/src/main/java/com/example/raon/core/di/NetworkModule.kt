@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://192.168.20.229:4000/"
+    private const val BASE_URL = "http://192.168.20.131:4000/"
 
     // 1. CookieJar 제공자 추가
     @Provides
