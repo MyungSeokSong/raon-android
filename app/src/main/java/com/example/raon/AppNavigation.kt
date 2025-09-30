@@ -25,10 +25,9 @@ fun AppNavigation(
 
     // navController 생성
     val navController = rememberNavController()
-
     NavHost(navController = navController, startDestination = "auth") {
 
-        composable("auth") {
+        composable("auth") {    // Auth 홈 화면
             AuthScreen(
                 modifier,
                 onNavigateToLogin = { navController.navigate("login") },
@@ -37,34 +36,46 @@ fun AppNavigation(
             )
         }
 
-        composable("signUp") {
+        composable("login") {   // 로그인 화면
+            LoginScreen({
+                navController.navigate("main") {
+
+                    popUpTo("auth") {
+                        inclusive = true
+                    }
+
+                }
+            })
+        }
+
+        composable("signUp") {  // 회원가입 화면
             SignUpScreen()
         }
 
-        composable("login") {
-            LoginScreen({ navController.navigate("main") })
-        }
-
-        composable("newAuthScreen") {
-            AuthView(modifier, navController, viewModel, context)
-        }
-
-
-
+        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 바텀 네비게이션 화면 부분 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
         composable("main") {
             MainView(modifier, navController)
         }
-
         composable("addItem") {
             AddItemScreen()
         }
         composable("chatroom") {
             ChatRoomScreen()
         }
-
         composable("settings_screen") {
-            SettingsScreen(navController)
+            SettingsScreen({    // 로그아웃 화면 전환
+                navController.navigate("auth") {
+                    popUpTo("main") {
+                        inclusive = true
+                    }
+                }
+            }, navController)
+        }
+
+        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 기타 네비게이션 부분 ( 정리 필요 ) ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+        composable("newAuthScreen") {
+            AuthView(modifier, navController, viewModel, context)
         }
     }
 }

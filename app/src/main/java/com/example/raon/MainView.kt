@@ -33,9 +33,8 @@ import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreen
 import com.example.raon.features.bottom_navigation.a_home.ui.HomeTopAppBar
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
-import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen2
-import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar2
-
+import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
+import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar
 
 // comp 자동 완성 키워드
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,7 +72,7 @@ fun MainView(
             when (currentRoute) {
                 "home" -> HomeTopAppBar()
                 "chat" -> ChatListTopAppBar()
-                "profile" -> ProfileTopAppBar2(navController)
+                "profile" -> ProfileTopAppBar(navController)
             }
         },
         bottomBar = {
@@ -136,34 +135,9 @@ fun MainView(
             composable("home") { HomeScreen(navController) }
             composable("test") { HomeScreen(navController) }
             composable("chat") { ChatListScreen(navController) }
-            composable("profile") { ProfileScreen2(navController) }
-
+            composable("profile") { ProfileScreen(navController) }
         }
 
-
-//        Column(modifier = Modifier.padding(innerPadding)) {
-//            ContentScreen(
-//                modifier = Modifier.padding(innerPadding),
-//                selectedIndex,
-//                viewModelTest,
-//                navController
-//            )
-//        }
-    }
-}
-
-@Composable
-fun ContentScreen(
-    modifier: Modifier = Modifier,
-    seletedIndex: Int,
-    navController: NavController
-) {
-    when (seletedIndex) {
-        0 -> HomeScreen(navController)
-        1 -> HomeScreen(navController)
-        2 -> navController.navigate("addItem")
-        3 -> ChatListScreen(navController)
-//        4 -> ProfileScreen2()
     }
 }
 

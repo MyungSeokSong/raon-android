@@ -15,8 +15,8 @@ import androidx.compose.material.icons.filled.NavigateNext
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +39,10 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(
+    onLogout: () -> Unit,
+    navController: NavController
+) {
     // 알림 설정 On/Off 상태를 관리하기 위한 변수
     var isNotificationOn by remember { mutableStateOf(true) }
     // 로그아웃 팝업의 표시 여부를 관리하는 상태 변수
@@ -58,6 +61,7 @@ fun SettingsScreen(navController: NavController) {
             confirmButton = {
                 Button(
                     onClick = {
+                        onLogout()  // 로그아웃시 화면 이동 함수
                         // 실제 로그아웃 로직 실행
                         // ...
                         showLogoutDialog = false // 로직 실행 후 팝업 닫기
@@ -138,7 +142,7 @@ fun SettingsScreen(navController: NavController) {
             // 로그아웃 및 회원탈퇴
             item {
                 Column(modifier = Modifier.padding(top = 24.dp)) {
-                    Divider()
+                    HorizontalDivider()
                     Text(
                         text = "로그아웃",
                         modifier = Modifier
@@ -146,7 +150,7 @@ fun SettingsScreen(navController: NavController) {
                             .clickable { showLogoutDialog = true } // 클릭 시 팝업 상태를 true로 변경
                             .padding(16.dp)
                     )
-                    Divider()
+                    HorizontalDivider()
                     Text(
                         text = "회원탈퇴",
                         color = MaterialTheme.colorScheme.error, // 위험한 작업임을 알리는 색상
@@ -155,7 +159,8 @@ fun SettingsScreen(navController: NavController) {
                             .clickable { /* TODO: 회원탈퇴 확인 팝업 표시 */ }
                             .padding(16.dp)
                     )
-                    Divider()
+                    HorizontalDivider()
+
                 }
             }
         }

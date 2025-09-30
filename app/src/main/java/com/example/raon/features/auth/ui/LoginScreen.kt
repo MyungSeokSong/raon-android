@@ -133,7 +133,6 @@ fun LoginScreen(
 
 
     Scaffold(
-
         // Scaffold에 snackbarHost를 연결하는 부분
         // Scaffold 컴포저블의 파라미터로 전달
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
