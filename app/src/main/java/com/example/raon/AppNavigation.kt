@@ -15,6 +15,7 @@ import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
 import com.example.raon.features.bottom_navigation.c_add_item.ui.AddItemScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatRoomScreen
 import com.example.raon.features.bottom_navigation.e_profile.ui.SettingsScreen
+import com.example.raon.features.location.ui.LocationSearchScreen
 
 @Composable
 fun AppNavigation(
@@ -43,13 +44,18 @@ fun AppNavigation(
                     popUpTo("auth") {
                         inclusive = true
                     }
-
                 }
             })
         }
 
         composable("signUp") {  // 회원가입 화면
-            SignUpScreen()
+            SignUpScreen({
+                navController.navigate("locationSetting")
+            })
+        }
+
+        composable("locationSetting") {
+            LocationSearchScreen()
         }
 
         // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 바텀 네비게이션 화면 부분 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ

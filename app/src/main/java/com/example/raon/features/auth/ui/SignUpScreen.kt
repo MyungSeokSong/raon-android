@@ -52,7 +52,9 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(
+    onNavigateToLocationSetting: () -> Unit = {}
+) {
     // UI 상태 관리를 위한 변수들
     var nickname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -131,6 +133,23 @@ fun SignUpScreen() {
                     onVisibilityChange = { passwordCheckVisible = !passwordCheckVisible }
                 )
                 Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = { /* TODO: 위치 데이터 로직 구현 */
+                        onNavigateToLocationSetting()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFDCC31),
+                        contentColor = Color(0xFF3C3C3C)
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    Text(text = "위치 데이터", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                }
 
                 Button(
                     onClick = { /* TODO: 가입하기 로직 구현 */ },
