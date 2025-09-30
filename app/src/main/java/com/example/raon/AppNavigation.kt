@@ -23,7 +23,6 @@ fun AppNavigation(
     viewModel: KakaoAuthViewModel,
     context: Context,
 ) {
-
     // navController 생성
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "auth") {
