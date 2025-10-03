@@ -18,8 +18,9 @@ interface AuthApiService {
      * @param request 닉네임, 이메일, 비밀번호가 담긴 요청 본문
      * @return 서버의 응답 (성공/실패 여부, 메시지 등)
      */
-    @POST("api/auth/signup")
+    @POST("api/v1/auth/sign-up")
     suspend fun signUp(@Body request: SignUpRequest): Response<SignUpResponse>
+
 
     /**
      * 로그인을 요청합니다.

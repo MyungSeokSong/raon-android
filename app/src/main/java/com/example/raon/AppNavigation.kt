@@ -51,6 +51,12 @@ fun AppNavigation(
 
         composable("signUp") {  // 회원가입 화면
             SignUpScreen({
+                navController.navigate("main") {
+                    popUpTo("auth") {
+                        inclusive = true
+                    }
+                }
+            }, {
                 navController.navigate("locationSetting")
             })
         }

@@ -34,9 +34,9 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI 상태 관리를 위한 변수들
-    var email by mutableStateOf("email@email.com")
+    var email by mutableStateOf("test1@email.com")
         private set
-    var password by mutableStateOf("password1234")
+    var password by mutableStateOf("test1234")
         private set
     var passwordVisible by mutableStateOf(false)
         private set
@@ -57,24 +57,17 @@ class LoginViewModel @Inject constructor(
     fun login(email: String, password: String) {
         viewModelScope.launch {
 
-
             _loginResult.value = LoginResult.Loading
-
             delay(1000)
-
 
             Log.d("LoginTest", "로그인 ViewModel 시작")
 
             // 모든 네트워크 로직을 Repository에 위임하고, 결과만 받아서 UI 상태를 업데이트.
             val result = authRepository.login(email, password)
             _loginResult.value = result
-
             Log.d("LoginState", "로그인 상태 $result")
-
-
             Log.d("LoginTest", "로그인 ViewModel 시작2")
-
-
+            
         }
     }
 }

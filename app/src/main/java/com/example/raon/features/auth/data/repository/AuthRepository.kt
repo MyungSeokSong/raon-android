@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.raon.features.auth.data.local.TokenManager
 import com.example.raon.features.auth.data.remote.api.AuthApiService
 import com.example.raon.features.auth.data.remote.dto.LoginRequest
+import com.example.raon.features.auth.data.remote.dto.SignUpRequest
 import com.example.raon.features.auth.ui.viewmodel.LoginResult
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -20,20 +21,15 @@ class AuthRepository @Inject constructor(
     // ApiClient로부터 미리 생성된 authApiService 인스턴스를 주입받습니다.
     private val apiService: AuthApiService
 
-    // ApiClient로부터 미리 생성된 authApiService 인스턴스를 주입받습니다.
-//    private val apiService: AuthApiService = ApiClient.authApiService
 ) {
+
+    // 로그인
     suspend fun login(email: String, password: String): LoginResult {
         return try {
 
             // 통신 코드
             val request = LoginRequest(email, password) // 서버와 통신할 데이터
             val response = apiService.login(request)    // 서버와 통신한 결과 데이터
-
-//            val loginResponse = response.body()!!   // 서버 응답 데이터
-
-//            if (response.body() != null) {
-//            }
 
             when (response.code()) {
                 // 1. HTTP 상태 코드가 200 (OK)인 경우
@@ -79,7 +75,6 @@ class AuthRepository @Inject constructor(
 
                 401 -> {
                     Log.d("LoginTest", "로그인 실패")
-
                     LoginResult.Faliure("로그인 실패 (401 Unauthorized)")
                 }
 
@@ -93,5 +88,21 @@ class AuthRepository @Inject constructor(
 
             LoginResult.ServerError(e.message ?: "로그인 실패 (서버 응답 오류: ${e.message})")
         } as LoginResult
+    }
+
+    // 회원가입
+    suspend fun signup(nickname: String, email: String, password: String, locationId: Int?) {
+
+        // 통신 코드
+        val request = SignUpRequest(nickname, email, password, 1760) // 서버와 통신할 데이터
+        val response = apiService.signUp(request)    // 서버와 통신한 결과 데이터
+
+
+        // 서버와 통신 데이터 로그값
+        Log.d("SignupTest", "서버 응답 내용 (code): ${response.code()}") // body
+        Log.d("SignupTest", "서버 응답 내용 (Body): ${response.body().toString()}") // body
+        Log.d("SignupTest", "서버 응답 헤더: ${response.headers()}")   // header
+//        Log.d("SignupTest", "토큰 데이터: $accessToken")  // accessToken
+
     }
 }
