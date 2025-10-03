@@ -30,7 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreen
-import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreen2
+import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreenTopAppBar
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
 import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
@@ -70,7 +70,10 @@ fun MainView(
             val currentRoute = navBackStackEntry?.destination?.route
 
             when (currentRoute) {
-                "home" -> ProfileTopAppBar(navController)
+                "home" -> HomeScreenTopAppBar(
+                    { navController.navigate("searchInput") {} }
+                )
+
                 "chat" -> ChatListTopAppBar()
                 "profile" -> ProfileTopAppBar(navController)
             }
@@ -132,8 +135,8 @@ fun MainView(
             startDestination = navItemList[0].route,    // MainView 진입 시 기본으로 보여줄 탭 (예: "home_tab")
             modifier = Modifier.padding(innerPadding)   // Scaffold가 제공하는 패딩을 적용하여 바텀바/탑바와 겹치지 않게 함
         ) {
-            composable("home") { HomeScreen2(modifier = Modifier) }
-            composable("test") { HomeScreen(navController) }
+            composable("home") { HomeScreen(modifier = Modifier) }
+            composable("test") { HomeScreen(Modifier) }
             composable("chat") { ChatListScreen(navController) }
             composable("profile") { ProfileScreen(navController) }
         }

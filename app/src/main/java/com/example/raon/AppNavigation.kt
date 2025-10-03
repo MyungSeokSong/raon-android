@@ -16,6 +16,8 @@ import com.example.raon.features.bottom_navigation.c_add_item.ui.AddItemScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatRoomScreen
 import com.example.raon.features.bottom_navigation.e_profile.ui.SettingsScreen
 import com.example.raon.features.location.ui.LocationSearchScreen
+import com.example.raon.features.search.ui.SearchInputScreen
+import com.example.raon.features.search.ui.SearchResultScreen
 
 @Composable
 fun AppNavigation(
@@ -76,6 +78,18 @@ fun AppNavigation(
                     }
                 }
             }, navController)
+        }
+
+        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 검색 화면 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+        composable("searchInput") {
+            SearchInputScreen(
+                { navController.navigate("searchResult") }
+            )
+        }
+
+        composable("searchResult") {
+            SearchResultScreen()
         }
 
         // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 기타 네비게이션 부분 ( 정리 필요 ) ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
