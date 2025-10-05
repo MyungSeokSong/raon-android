@@ -57,7 +57,6 @@ import com.example.raon.R
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddItemScreen(
-
     modifier: Modifier = Modifier,
     onUploadSuccess: () -> Unit,
     onClose: () -> Unit = {},
@@ -138,7 +137,7 @@ fun AddItemScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { /* TODO: 서버에 상품 정보 등록 버튼 */
+                onClick = { // 서버에 상품 정보 등록 버튼
                     addItemViewModel.onEvent(AddItemEvent.Submit)
                 },
                 enabled = uiState.title.isNotBlank() && uiState.seletedImages.isNotEmpty(),

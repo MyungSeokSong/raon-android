@@ -62,7 +62,7 @@ class AddItemViewModel @Inject constructor(
                 val response = itemRepository.postNewItem(  // 서버 통신 코드
                     title = currentState.title,
                     description = currentState.description,
-                    price = currentState.price.toString(),
+                    price = currentState.price,
                     imageUris = currentState.seletedImages
                 )
 

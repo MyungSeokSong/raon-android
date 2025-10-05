@@ -8,6 +8,8 @@ import com.example.raon.features.auth.data.remote.dto.LoginRequest
 import com.example.raon.features.auth.data.remote.dto.SignUpRequest
 import com.example.raon.features.auth.ui.viewmodel.LoginResult
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 // 역할: 서버 통신을 직접 실행하고 결과를 가공하여 LoginResult 형태로 반환
@@ -22,6 +24,18 @@ class AuthRepository @Inject constructor(
     private val apiService: AuthApiService
 
 ) {
+
+    // Access Token을 Flow 형태로 제공하는 함수
+    // AuthInterceptor가 이 함수를 호출하여 토큰을 가져옴
+    fun getAccessToken(): Flow<String?> = flow {
+        emit(TokenManager.getAccessToken(context))
+    }
+
+    // Refresh Token을 Flow 형태로 제공하는 함수
+    // TokenAuthenticator가 이 함수를 호출하여 토큰을 가져옴
+    fun getRefreshToken(): Flow<String?> = flow {
+        emit(TokenManager.getRefreshToken(context))
+    }
 
     // 로그인
     suspend fun login(email: String, password: String): LoginResult {

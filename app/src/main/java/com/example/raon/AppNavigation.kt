@@ -78,9 +78,15 @@ fun AppNavigation(
         composable("addItem") {
             AddItemScreen(
                 modifier,
-                onUploadSuccess = { navController.navigate("itemDetail") },
-
-                )
+                onUploadSuccess = {
+                    navController.navigate("itemDetail") {
+                        // 현재 화면인 "addItem"을 백 스택에서 제거
+                        popUpTo("addItem") {
+                            inclusive = true
+                        }
+                    }
+                },
+            )
         }
 
         composable("itemDetail") {

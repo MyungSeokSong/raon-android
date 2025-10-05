@@ -1,33 +1,42 @@
 package com.example.raon.core.network
 
-import android.content.Context
-import com.example.raon.features.auth.data.local.TokenManager
+import com.example.raon.features.auth.data.repository.AuthRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
 
-// 모든 API 요청을 가로채, 헤더에 자동으로 Access Token을 추가하는 클래스
+// Hilt가 AuthRepository를 만들어서 주입해줄 수 있도록 생성자를 수정합니다.
 class AuthInterceptor @Inject constructor(
-    // Hilt가 Context를 주입할 수 있도록 생성자에 @Inject 추가
-    private val context: Context
+    private val authRepository: AuthRepository // Context를 직접 받는 대신, 완성된 AuthRepository를 주입받습니다.
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
 
-        // SharedPreferences에서 저장된 토큰을 가져오기
-        val token = TokenManager.getAccessToken(context)
+        // 1. "No-Authentication" 헤더가 있는지 확인
+        val request = chain.request()
+        val noAuthHeader = request.header("No-Authentication")
 
-        // if-else 표현식을 사용하여 조건에 따라 다른 요청 객체를 생성
-        val newRequest = if (!token.isNullOrBlank()) {
-            // 토큰이 있을 경우: 헤더를 추가해 새 요청을 빌드
-            chain.request().newBuilder()
-                .header("Authorization", "Bearer $token")
+        // 2. 헤더가 있다면, 해당 헤더를 제거하고 그대로 요청을 진행 (토큰 추가 X)
+        if (noAuthHeader != null) {
+            val newRequest = request.newBuilder()
+                .removeHeader("No-Authentication")
                 .build()
-        } else {
-            // 토큰이 없을 경우, 그냥 요청
-            chain.request()
+            return chain.proceed(newRequest)
         }
 
-        // 최종적으로 만들어진 요청을 서버로 보내기
+        // 3. 헤더가 없다면, 주입받은 authRepository에서 토큰을 가져와 요청에 추가
+        //    이제 직접 만들 필요가 없습니다. Hilt가 이미 완벽하게 만들어준 것을 사용하면 됩니다.
+        val accessToken = runBlocking { authRepository.getAccessToken().first() }
+
+        val newRequest = if (!accessToken.isNullOrBlank()) {
+            request.newBuilder()
+                .addHeader("Authorization", "Bearer $accessToken")
+                .build()
+        } else {
+            request
+        }
         return chain.proceed(newRequest)
     }
 }
+

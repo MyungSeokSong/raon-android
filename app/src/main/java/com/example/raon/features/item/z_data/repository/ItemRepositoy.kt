@@ -3,14 +3,17 @@ package com.example.raon.features.item.z_data.repository
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.example.raon.core.network.repository.ImageStorageRepository
 import com.example.raon.features.item.z_data.remote.api.ItemApiService
 import com.example.raon.features.item.z_data.remote.dto.ItemRequest
 import com.example.raon.features.item.z_data.remote.dto.ItemResponse
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,24 +21,34 @@ import javax.inject.Singleton
 @Singleton
 class ItemRepository @Inject constructor(
     private val itemApiService: ItemApiService,
+    private val storageRepository: ImageStorageRepository,
     @ApplicationContext private val context: Context
 ) {
     // 새 item 게시글 등록
     suspend fun postNewItem(
         title: String,
         description: String,
-        price: String,
+        price: Int,
         imageUris: List<Uri>
     ): ItemResponse {
 
         try {
-            Log.d("addItemTest", "이미지 업로드 전")
+            Log.d("addItemTest", "S3에 이미지 업로드를 시작.")
 
-            // 1단계: 이미지 Uri를 Multipart 파일로 변환하여 업로드하고 URL 받기
-            val imageUrls = uploadImagesAndGetUrls(imageUris)
+            // StorageRepository를 사용하여 S3에 이미지를 업로드하고 최종 URL 목록을 받아오기
+            val imageUrls = uploadImagesAndGetS3Urls(imageUris)
+            if (imageUris.isNotEmpty() && imageUrls.isEmpty()) {
 
-            Log.d("addItemTest", "이미지 업로드 후")
-            Log.d("addItemTest", "이미지 URL: $imageUrls")
+                Log.d("addItemTest", "S3 이미지 업로드 실패?. URL: ${imageUrls.toString()}")
+
+                // 이미지를 업로드하려고 했지만 모두 실패한 경우
+                return ItemResponse(
+                    code = "IMAGE_UPLOAD_FAILED",
+                    message = "이미지 업로드에 실패했습니다.",
+                    data = null
+                )
+            }
+            Log.d("addItemTest", "S3 이미지 업로드 완료. URL: $imageUrls")
 
 
             // 서버에 전송할 데이터 객체 : 받은 URL과 텍스트 데이터로 ItemRequest 객체를 만들어 최종 전송
@@ -49,18 +62,14 @@ class ItemRepository @Inject constructor(
                 tradeType = "DIRECT", // TODO: 실제 앱 상태에서 값 가져오기
                 imageList = imageUrls
             )
-            Log.d("addItemTest", "item 업로드 전 ")
-            Log.d("addItemTest", "이미지 url : ${itemRequest.imageList} ")
-
+            Log.d("addItemTest", "item 업로드 전")
 
             // 서버에 게시글 데이터 업로드
             val response = itemApiService.postItem(itemRequest)
 
             Log.d("addItemTest", "item 업로드 후")
             Log.d("addItemTest", "item 업로드 에러{${response.code}}")
-
             Log.d("addItemTest", "item 업로드 에러 메시지{${response.message}}")
-
 
             return response
 
@@ -108,31 +117,56 @@ class ItemRepository @Inject constructor(
 
     }
 
-    private suspend fun uploadImagesAndGetUrls(imageUris: List<Uri>): List<String> {
-        if (imageUris.isEmpty()) return emptyList()
+    /**
+     * 이미지 업로드 함수
+     * StorageRepository를 사용하여 여러 이미지를 S3에 동시에 업로드하고,
+     * 성공한 이미지들의 영구 URL 목록을 반환
+     */
+    private suspend fun uploadImagesAndGetS3Urls(imageUris: List<Uri>): List<String> =
+        coroutineScope {
+            if (imageUris.isEmpty()) return@coroutineScope emptyList()
 
-        val imageParts = imageUris.mapNotNull { uri ->
-            context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                val bytes = inputStream.readBytes()
-                val requestFile = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
-                MultipartBody.Part.createFormData(
-                    "images",
-                    "image_${System.currentTimeMillis()}.jpg",
-                    requestFile
-                )
+            // 각 이미지를 비동기(동시)로 업로드 처리
+            val uploadJobs = imageUris.map { uri ->
+                async {
+                    try {
+                        // 1단계: Presigned URL 요청
+                        val fileName =
+                            "item-image-${System.currentTimeMillis()}-${uri.lastPathSegment}"
+                        val presignedUrlResult = storageRepository.getPresignedUrl("item", fileName)
+
+                        Log.d("addItemTest", "presignedUrl 확인: ${presignedUrlResult.toString()}")
+
+
+                        presignedUrlResult.getOrNull()?.let { presignedUrl ->
+                            // 2단계: Uri를 RequestBody로 변환
+                            val requestBody = context.contentResolver.openInputStream(uri)?.use {
+                                it.readBytes().toRequestBody(
+                                    context.contentResolver.getType(uri)?.toMediaTypeOrNull()
+                                )
+                            } ?: return@async null // 파일 읽기 실패 시 null 반환
+
+                            // 3단계: Presigned URL로 실제 파일 업로드
+                            val uploadResult =
+                                storageRepository.uploadFile(presignedUrl, requestBody)
+
+                            if (uploadResult.isSuccess) {
+                                // 4단계: 성공 시, 영구 URL을 반환 (Presigned URL에서 '?' 앞부분)
+                                presignedUrl.substringBefore("?")
+                            } else {
+                                null // 업로드 실패 시 null 반환
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("ItemRepository", "이미지 업로드 중 오류 발생: $uri", e)
+                        null // 예외 발생 시 null 반환
+                    }
+                }
             }
+
+            // 모든 비동기 작업이 끝날 때까지 기다린 후, null이 아닌(성공한) URL들만 필터링하여 반환
+            uploadJobs.awaitAll().filterNotNull()
         }
-        // 실제로는 아래 코드를 실행해야 합니다.
-        // return itemApiService.uploadImages(imageParts)
-
-        // 지금은 테스트를 위해 임시 URL을 반환합니다.
-//        return imageUris.map { "https://example.com/images/${System.nanoTime()}.jpg" }
-
-        return listOf(
-            "https://example.com/images/${System.nanoTime()}.jpg",
-            "https://example.com/images/${System.nanoTime() + 1}.jpg"
-        )
-    }
 }
 
 
