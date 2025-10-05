@@ -124,16 +124,16 @@ dependencies {
     ksp("com.google.dagger:hilt-android-compiler:2.56.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-    // Coil 라이브러리
+//    // Coil 라이브러리
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
+
 
     // 카카오 로그인 API 모듈
     implementation("com.kakao.sdk:v2-user:2.21.0")
 
 
     // 디자인 아이콘용 라이브러리
-    implementation("io.coil-kt:coil-compose:2.5.0") // Coil 이미지 로딩 라이브러리
     implementation("androidx.compose.material:material-icons-extended") // 더 많은 아이콘 사용을 위해
 
 

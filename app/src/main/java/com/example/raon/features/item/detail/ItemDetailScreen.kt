@@ -1,4 +1,4 @@
-package com.example.raon.features.product_detail.ui
+package com.example.raon.features.item.detail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,11 +43,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.example.raon.features.bottom_navigation.a_home.ui.ProductItem // 홈 화면의 ProductItem 데이터 클래스 import
+import coil3.compose.AsyncImage
+import com.example.raon.features.bottom_navigation.a_home.ui.ProductItem
 
 /**
  * 상세 페이지에 필요한 추가적인 판매자 정보 데이터 클래스
@@ -63,9 +62,10 @@ data class SellerInfo(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductDetailScreen(
+fun ItemDetailScreen(
     product: ProductItem,
     seller: SellerInfo,
+//    seller2: Seller
     onBackClick: () -> Unit // 뒤로가기 동작을 위한 콜백
 ) {
     Scaffold(
@@ -290,33 +290,5 @@ fun ProductBottomBar(product: ProductItem) {
 }
 
 
-// --- 미리보기용 코드 ---
 
-@Preview(showBackground = true)
-@Composable
-fun ProductDetailScreenPreview() {
-    // 화면 테스트를 위한 샘플 데이터
-    val sampleProduct = ProductItem(
-        id = 4,
-        title = "(~10/12) 컨버스 척 70 블랙",
-        location = "삼송동",
-        timeAgo = "끌올 47분 전",
-        price = 10000,
-        imageUrl = "https://picsum.photos/id/21/400/400", // 상세 화면용 고화질 이미지
-        comments = 2,
-        likes = 8
-    )
 
-    val sampleSeller = SellerInfo(
-        profileImageUrl = "https://picsum.photos/id/237/100/100",
-        nickname = "고양동주민",
-        mannerTemperature = 37.8f,
-        address = "고양동"
-    )
-
-    ProductDetailScreen(
-        product = sampleProduct,
-        seller = sampleSeller,
-        onBackClick = {}
-    )
-}
