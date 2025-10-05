@@ -29,12 +29,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreen
-import com.example.raon.features.bottom_navigation.a_home.ui.HomeScreenTopAppBar
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
 import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
 import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar
+import com.example.raon.features.item.ui.list.HomeScreen
+import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
 
 // comp 자동 완성 키워드
 @OptIn(ExperimentalMaterial3Api::class)

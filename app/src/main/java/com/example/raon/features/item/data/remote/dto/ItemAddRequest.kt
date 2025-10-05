@@ -1,8 +1,8 @@
-package com.example.raon.features.item.z_data.remote.dto
+package com.example.raon.features.item.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class ItemRequest(
+data class ItemAddRequest(
     @SerializedName("categoryId")   // 실제 JSON 필드 이름과 매칭시킴
     val categoryId: Int,
     @SerializedName("locationId")

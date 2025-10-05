@@ -12,12 +12,12 @@ import com.example.raon.features.auth.ui.LoginScreen
 import com.example.raon.features.auth.ui.SignUpScreen
 import com.example.raon.features.auth.ui.z_etc.AuthView
 import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
-import com.example.raon.features.bottom_navigation.a_home.ui.ProductItem
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatRoomScreen
 import com.example.raon.features.bottom_navigation.e_profile.ui.SettingsScreen
-import com.example.raon.features.item.add.ui.AddItemScreen
-import com.example.raon.features.item.detail.ItemDetailScreen
-import com.example.raon.features.item.detail.SellerInfo
+import com.example.raon.features.item.ui.add.AddItemScreen
+import com.example.raon.features.item.ui.detail.ItemDetailScreen
+import com.example.raon.features.item.ui.detail.SellerInfo
+import com.example.raon.features.item.ui.list.ProductItem
 import com.example.raon.features.location.ui.LocationSearchScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen

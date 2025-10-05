@@ -1,4 +1,4 @@
-package com.example.raon.features.item.z_data.remote.dto
+package com.example.raon.features.item.data.remote.dto
 
 import com.google.gson.annotations.SerializedName
 

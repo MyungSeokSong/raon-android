@@ -6,7 +6,7 @@ import com.example.raon.core.network.TokenAuthenticator
 import com.example.raon.core.network.api.ImageStorageService
 import com.example.raon.features.auth.data.remote.api.AuthApiService
 import com.example.raon.features.auth.data.repository.AuthRepository
-import com.example.raon.features.item.z_data.remote.api.ItemApiService
+import com.example.raon.features.item.data.remote.api.ItemApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,8 +27,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // --- 서버별 기본 URL ---
-//    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
-    private const val RAON_SERVER_URL = "http://192.168.12.70:4000/" // 실제 앱 용
+    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
+//    private const val RAON_SERVER_URL = "http://192.168.12.70:4000/" // 실제 앱 용
 
 
     // 잊지 말고 API Gateway ID를 꼭 수정해주세요!

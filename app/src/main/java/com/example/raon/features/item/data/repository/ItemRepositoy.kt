@@ -1,12 +1,12 @@
-package com.example.raon.features.item.z_data.repository
+package com.example.raon.features.item.data.repository
 
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.example.raon.core.network.repository.ImageStorageRepository
-import com.example.raon.features.item.z_data.remote.api.ItemApiService
-import com.example.raon.features.item.z_data.remote.dto.ItemRequest
-import com.example.raon.features.item.z_data.remote.dto.ItemResponse
+import com.example.raon.features.item.data.remote.api.ItemApiService
+import com.example.raon.features.item.data.remote.dto.ItemAddRequest
+import com.example.raon.features.item.data.remote.dto.ItemResponse
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -52,7 +52,7 @@ class ItemRepository @Inject constructor(
 
 
             // 서버에 전송할 데이터 객체 : 받은 URL과 텍스트 데이터로 ItemRequest 객체를 만들어 최종 전송
-            val itemRequest = ItemRequest(
+            val itemRequest = ItemAddRequest(
                 categoryId = 270, // TODO: 실제 앱 상태에서 값 가져오기
                 locationId = 435, // TODO: 실제 앱 상태에서 값 가져오기
                 title = title,

@@ -1,7 +1,7 @@
-package com.example.raon.features.item.z_data.remote.api
+package com.example.raon.features.item.data.remote.api
 
-import com.example.raon.features.item.z_data.remote.dto.ItemRequest
-import com.example.raon.features.item.z_data.remote.dto.ItemResponse
+import com.example.raon.features.item.data.remote.dto.ItemAddRequest
+import com.example.raon.features.item.data.remote.dto.ItemResponse
 import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.Multipart
@@ -21,6 +21,6 @@ interface ItemApiService {
     /** 2. 최종 아이템 정보를 JSON으로 등록하는 API */
     @POST("api/v1/product")
     suspend fun postItem(
-        @Body itemData: ItemRequest
+        @Body itemData: ItemAddRequest
     ): ItemResponse
 }

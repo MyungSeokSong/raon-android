@@ -1,4 +1,4 @@
-package com.example.raon.features.bottom_navigation.a_home.ui
+package com.example.raon.features.item.ui.list
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement

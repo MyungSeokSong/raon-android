@@ -1,4 +1,4 @@
-package com.example.raon.features.item.detail
+package com.example.raon.features.item.ui.detail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,7 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.example.raon.features.bottom_navigation.a_home.ui.ProductItem
+import com.example.raon.features.item.ui.list.ProductItem
 
 /**
  * 상세 페이지에 필요한 추가적인 판매자 정보 데이터 클래스
