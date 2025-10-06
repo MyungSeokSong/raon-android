@@ -35,13 +35,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onLogout: () -> Unit,
-    navController: NavController
+    navController: NavController,
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
     // 알림 설정 On/Off 상태를 관리하기 위한 변수
     var isNotificationOn by remember { mutableStateOf(true) }
@@ -61,9 +63,10 @@ fun SettingsScreen(
             confirmButton = {
                 Button(
                     onClick = {
+
+                        viewModel.logout()  // 로그아웃
+                        
                         onLogout()  // 로그아웃시 화면 이동 함수
-                        // 실제 로그아웃 로직 실행
-                        // ...
                         showLogoutDialog = false // 로직 실행 후 팝업 닫기
                     },
                     shape = RoundedCornerShape(12.dp),

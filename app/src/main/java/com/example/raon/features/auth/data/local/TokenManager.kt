@@ -5,15 +5,17 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-object TokenManager {
+@Singleton // Hilt가 싱글톤으로 관리하도록 설정
+class TokenManager @Inject constructor( // ◀◀ object를 class로 변경, 생성자 추가
+    @ApplicationContext private val context: Context // ◀◀ Hilt로부터 Context를 주입받음
+) {
 
-    private const val PREFS_NAME = "auth_prefs"           // SharedPreferences 파일 이름
-    private const val ACCESS_TOKEN_KEY = "access_token"   // Access Token 키
-    private const val REFRESH_TOKEN_KEY = "refresh_token" // Refresh Token 키
-
-    private fun getEncryptedPrefs(context: Context): SharedPreferences {
-        return try {
+    private val prefs: SharedPreferences by lazy {
+        try {
             val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
             EncryptedSharedPreferences.create(
                 PREFS_NAME,
@@ -28,33 +30,35 @@ object TokenManager {
         }
     }
 
-    // Access Token 저장
-    fun saveAccessToken(context: Context, token: String) {
-        getEncryptedPrefs(context).edit().putString(ACCESS_TOKEN_KEY, token).apply()
-        Log.d("LoginTest", "Access Token 저장 코드 실행 됨")
+    // 이제 함수에서 context를 파라미터로 받을 필요가 없습니다.
+    fun saveAccessToken(token: String) {
+        prefs.edit().putString(ACCESS_TOKEN_KEY, token).apply()
+        Log.d("TokenManager", "Access Token 저장됨")
     }
 
-    // Access Token 가져오기
-    fun getAccessToken(context: Context): String? {
-        return getEncryptedPrefs(context).getString(ACCESS_TOKEN_KEY, null)
+    fun getAccessToken(): String? {
+        return prefs.getString(ACCESS_TOKEN_KEY, null)
     }
 
-    // Refresh Token 저장
-    fun saveRefreshToken(context: Context, token: String) {
-        getEncryptedPrefs(context).edit().putString(REFRESH_TOKEN_KEY, token).apply()
-        Log.d("LoginTest", "Refresh Token 저장 코드 실행 됨")
+    fun saveRefreshToken(token: String) {
+        prefs.edit().putString(REFRESH_TOKEN_KEY, token).apply()
+        Log.d("TokenManager", "Refresh Token 저장됨")
     }
 
-    // Refresh Token 가져오기
-    fun getRefreshToken(context: Context): String? {
-        return getEncryptedPrefs(context).getString(REFRESH_TOKEN_KEY, null)
+    fun getRefreshToken(): String? {
+        return prefs.getString(REFRESH_TOKEN_KEY, null)
     }
 
-    // 토큰 모두 삭제 (로그아웃 시)
-    fun clearTokens(context: Context) {
-        getEncryptedPrefs(context).edit()
-            .remove(ACCESS_TOKEN_KEY)  // Access Token 삭제
-            .remove(REFRESH_TOKEN_KEY) // Refresh Token 삭제
+    fun clearTokens() {
+        prefs.edit()
+            .remove(ACCESS_TOKEN_KEY)
+            .remove(REFRESH_TOKEN_KEY)
             .apply()
+    }
+
+    companion object {
+        private const val PREFS_NAME = "auth_prefs"
+        private const val ACCESS_TOKEN_KEY = "access_token"
+        private const val REFRESH_TOKEN_KEY = "refresh_token"
     }
 }

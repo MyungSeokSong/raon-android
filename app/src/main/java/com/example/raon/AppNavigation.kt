@@ -19,6 +19,7 @@ import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.location.ui.LocationSearchScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
+import com.example.raon.features.splash.SplashScreen
 import com.example.raon.features.user.ui.SettingsScreen
 
 @Composable
@@ -29,7 +30,25 @@ fun AppNavigation(
 ) {
     // navController 생성
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "auth") {
+    NavHost(navController = navController, startDestination = "splash") {
+
+
+        // 로딩 첫 화면
+        composable("splash") {
+            SplashScreen(
+                onNavigateToAuth = {    // Auth 홈 화면으로 이동 -> 토큰 없음
+                    navController.navigate("auth") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                },
+                onNavigateToMain = {    // Main 화면으로 이동 -> 토큰 있음
+                    navController.navigate("main") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
+            )
+        }
+
 
         composable("auth") {    // Auth 홈 화면
             AuthScreen(

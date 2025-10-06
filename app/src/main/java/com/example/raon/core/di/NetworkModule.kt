@@ -20,6 +20,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.CookieManager
+import java.net.CookiePolicy
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -41,10 +42,20 @@ object NetworkModule {
     // MARK: - 공통 컴포넌트 제공
     // =================================================================
 
+    // 1. [변경] CookieManager를 싱글톤으로 분리하여 제공합니다.
+    // 이렇게 하면 다른 곳(AuthRepository)에서 주입받아 사용할 수 있습니다.
     @Provides
     @Singleton
-    fun provideCookieJar(): CookieJar {
-        return JavaNetCookieJar(CookieManager())
+    fun provideCookieManager(): CookieManager {
+        return CookieManager().apply {
+            setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideCookieJar(cookieManager: CookieManager): CookieJar {
+        return JavaNetCookieJar(cookieManager)
     }
 
     // AuthInterceptor는 Hilt로부터 AuthRepository를 주입받습니다.
