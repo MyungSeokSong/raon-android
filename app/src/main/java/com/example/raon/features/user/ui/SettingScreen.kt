@@ -1,4 +1,4 @@
-package com.example.raon.features.bottom_navigation.e_profile.ui
+package com.example.raon.features.user.ui
 
 
 import androidx.compose.foundation.clickable

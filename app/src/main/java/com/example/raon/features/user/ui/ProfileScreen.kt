@@ -1,7 +1,8 @@
-package com.example.raon.features.bottom_navigation.e_profile.ui
+package com.example.raon.features.user.ui
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,15 +43,58 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+//import coil.compose.AsyncImage
+import com.example.raon.features.user.domain.model.User
+
+//import com.example.raon.features.user.ui.profile.ProfileViewModel
 
 // 앱의 시그니처 색상을 상수로 정의
 private val BrandYellow = Color(0xFFFDCC31)
 private val DarkGrayText = Color(0xFF3C3C3C)
 
 /**
- * TopAppBar: 설정 아이콘 포함
+ * ProfileScreen: 화면의 콘텐츠만 책임집니다.
+ */
+@Composable
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel = hiltViewModel()
+) {
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+
+    // Scaffold를 제거하고 Column으로 바로 시작합니다.
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        // 데이터 상태에 따라 헤더 UI를 분기 처리합니다.
+        if (userProfile == null) {
+            // 데이터 로딩 중이거나 없을 때 보여줄 UI
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp), // 헤더 영역의 대략적인 높이 지정
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = BrandYellow)
+            }
+        } else {
+            // 데이터가 있을 때 실제 프로필 정보를 보여줍니다.
+            ProfileHeader(user = userProfile!!)
+        }
+
+        Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)
+        ProfileMenuList(navController = navController)
+    }
+}
+
+/**
+ * TopAppBar: MainView에서 호출하여 사용합니다.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -67,26 +113,10 @@ fun ProfileTopAppBar(navController: NavController) {
 }
 
 /**
- * ProfileScreen 전체 UI
- */
-@Composable
-fun ProfileScreen(navController: NavController) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        ProfileHeader_NoData()
-        Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)
-        ProfileMenuList(navController = navController)
-    }
-}
-
-/**
  * 프로필 상단 헤더 UI
  */
 @Composable
-fun ProfileHeader_NoData() {
+fun ProfileHeader(user: User) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -94,7 +124,7 @@ fun ProfileHeader_NoData() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         AsyncImage(
-            model = "https://picsum.photos/seed/myprofile/300/300",
+            model = user.profileImage ?: "https://i.pravatar.cc/300",
             contentDescription = "프로필 사진",
             modifier = Modifier
                 .size(100.dp)
@@ -103,19 +133,19 @@ fun ProfileHeader_NoData() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "멋진 개발자",
+            text = user.nickname,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "서초동",
+            text = user.address,
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = { /* TODO: 프로필 수정 */ },
+            onClick = { /* TODO: 프로필 수정 화면으로 이동 */ },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -141,7 +171,6 @@ fun ProfileMenuList(navController: NavController) {
             text = "나의 거래",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            // ## 변경: 소제목 색상을 설정 페이지와 동일한 테마 기본 색상으로 ##
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         )
@@ -158,7 +187,6 @@ fun ProfileMenuList(navController: NavController) {
             text = "기타",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            // ## 변경: 소제목 색상을 설정 페이지와 동일한 테마 기본 색상으로 ##
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         )

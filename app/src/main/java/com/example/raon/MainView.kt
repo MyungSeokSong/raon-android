@@ -1,5 +1,6 @@
 package com.example.raon
 
+//import com.example.raon.features.item.ui.list.HomeScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -31,11 +32,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
-import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
-import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar
-//import com.example.raon.features.item.ui.list.HomeScreen
 import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
 import com.example.raon.features.item.ui.list.ItemListScreen
+import com.example.raon.features.user.ui.ProfileScreen
+import com.example.raon.features.user.ui.ProfileTopAppBar
 
 // comp 자동 완성 키워드
 @OptIn(ExperimentalMaterial3Api::class)

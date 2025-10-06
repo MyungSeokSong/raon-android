@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.raon.features.auth.data.repository.AuthRepository
+import com.example.raon.features.user.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,8 @@ sealed class LoginResult {
 @HiltViewModel
 class LoginViewModel @Inject constructor(
 //    private val authRepository: AuthRepository = AuthRepository() // -> Hilt 사용전
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository
 
 ) : ViewModel() {
 
@@ -57,17 +59,26 @@ class LoginViewModel @Inject constructor(
     fun login(email: String, password: String) {
         viewModelScope.launch {
 
+            // 로그인 상태 변수
             _loginResult.value = LoginResult.Loading
             delay(1000)
 
             Log.d("LoginTest", "로그인 ViewModel 시작")
 
             // 모든 네트워크 로직을 Repository에 위임하고, 결과만 받아서 UI 상태를 업데이트.
-            val result = authRepository.login(email, password)
+            val result = authRepository.login(email, password)  // 로그인하기
             _loginResult.value = result
             Log.d("LoginState", "로그인 상태 $result")
             Log.d("LoginTest", "로그인 ViewModel 시작2")
-            
+
+
+            // UserRepository를 통해 프로필 정보 가져와서 DataStore에 저장
+            // 이 함수가 성공하든 실패하든 로그인 자체는 성공한 것으로 처리
+            // fetchAndSaveUserProfile() 내부에 API 호출 및 DataStore 저장 로직이 모두 들어있음
+            userRepository.fetchAndSaveUserProfile()
+            Log.d("LoginTest", "User Data 확인 : ${userRepository.getUserProfile()}")
+
+
         }
     }
 }

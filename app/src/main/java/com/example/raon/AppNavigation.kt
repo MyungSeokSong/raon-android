@@ -1,5 +1,7 @@
 package com.example.raon
 
+//import com.example.raon.features.item.ui.detail.ItemDetailScreen
+//import com.example.raon.features.item.ui.detail.SellerInfo
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,13 +15,11 @@ import com.example.raon.features.auth.ui.SignUpScreen
 import com.example.raon.features.auth.ui.z_etc.AuthView
 import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatRoomScreen
-import com.example.raon.features.bottom_navigation.e_profile.ui.SettingsScreen
 import com.example.raon.features.item.ui.add.AddItemScreen
-//import com.example.raon.features.item.ui.detail.ItemDetailScreen
-//import com.example.raon.features.item.ui.detail.SellerInfo
 import com.example.raon.features.location.ui.LocationSearchScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
+import com.example.raon.features.user.ui.SettingsScreen
 
 @Composable
 fun AppNavigation(

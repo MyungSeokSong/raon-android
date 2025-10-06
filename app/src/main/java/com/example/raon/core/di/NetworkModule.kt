@@ -7,6 +7,7 @@ import com.example.raon.core.network.api.ImageStorageService
 import com.example.raon.features.auth.data.remote.api.AuthApiService
 import com.example.raon.features.auth.data.repository.AuthRepository
 import com.example.raon.features.item.data.remote.api.ItemApiService
+import com.example.raon.features.user.data.remote.UserApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -166,5 +167,14 @@ object NetworkModule {
     fun provideImageStorageService(@Named("ImageStorageRetrofit") retrofit: Retrofit): ImageStorageService {
         return retrofit.create(ImageStorageService::class.java)
     }
+
+
+    // 사용자 프로필 API (라온마켓 서버용 Retrofit 사용)
+    @Provides
+    @Singleton
+    fun provideUserApiService(@Named("RaonRetrofit") retrofit: Retrofit): UserApiService {
+        return retrofit.create(UserApiService::class.java)
+    }
+
 }
 

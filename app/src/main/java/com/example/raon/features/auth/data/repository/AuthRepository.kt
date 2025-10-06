@@ -21,8 +21,10 @@ class AuthRepository @Inject constructor(
     @ApplicationContext private val context: Context,
 
     // ApiClient로부터 미리 생성된 authApiService 인스턴스를 주입받습니다.
-    private val apiService: AuthApiService
+    private val apiService: AuthApiService,
 
+    // 로그인시 바로 User 데이터를 요청해서 가져오기 위해 사용
+//    private val userRepository: UserRepository
 ) {
 
     // Access Token을 Flow 형태로 제공하는 함수
@@ -77,6 +79,7 @@ class AuthRepository @Inject constructor(
                                 val refreshTokenChek = TokenManager.getRefreshToken(context)
                                 Log.d("LoginTest", "Refresh Token 저장 성공: $refreshTokenChek")
                             }
+
 
 
                             LoginResult.Success(loginResponse.message)
