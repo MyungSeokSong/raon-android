@@ -1,5 +1,6 @@
 package com.example.raon.core.network.repository
 
+import android.util.Log
 import com.example.raon.core.network.api.ImageStorageService
 import com.example.raon.core.network.dto.PresignedUrlRequest
 import okhttp3.RequestBody
@@ -29,10 +30,17 @@ class ImageStorageRepository @Inject constructor(
             val response = imageStorageService.getPresignedUrl(request)
             Result.success(response.url)
         } catch (e: Exception) {
+
+
+            Log.d("imageUpload", "error : ${e.message}")
+
+
             Result.failure(e)
+
         }
     }
 
+    // S3 이미지 업로드
     suspend fun uploadFile(url: String, file: RequestBody): Result<Unit> {
         return try {
             val response = imageStorageService.uploadImage(url, file)

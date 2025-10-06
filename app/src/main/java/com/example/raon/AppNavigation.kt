@@ -85,6 +85,10 @@ fun AppNavigation(
                         }
                     }
                 },
+                // onClose 파라미터에 뒤로 가기 동작을 전달
+                onClose = {
+                    navController.popBackStack()
+                }
             )
         }
 

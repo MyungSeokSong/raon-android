@@ -50,13 +50,16 @@ class AddItemViewModel @Inject constructor(
                 }
             }
 
-            is AddItemEvent.Submit -> postItem()
+            is AddItemEvent.Submit -> postItem()    // item 등록 완료 버튼 이벤트
         }
     }
 
 
     private fun postItem() {
         viewModelScope.launch {
+
+            Log.d("addItem", "postItem 함수")
+
             _uiState.update { it.copy(isLoading = true) }
             try {
                 val currentState = _uiState.value
@@ -67,7 +70,9 @@ class AddItemViewModel @Inject constructor(
                     imageUris = currentState.seletedImages
                 )
 
-                Log.e("ItemRepository", "local imageUris: {${currentState.seletedImages}}")
+                Log.d("addItem", "local imageUris: {${currentState.seletedImages}}")
+                Log.d("addItem", "response: {${response.code}}")
+                Log.d("addItem", "response: {${response.message}}")
 
 
                 // 서버 통신에 따른 처리

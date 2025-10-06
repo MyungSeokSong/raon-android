@@ -22,7 +22,7 @@ interface ImageStorageService {
 
 
     // S3 이미지의 Presigned URL 요청 -> 업로드용
-    @POST("default/raon-presigned-url-generator") // API Gateway의 세부 경로
+    @POST("/prod/images") // API Gateway의 세부 경로
     suspend fun getPresignedUrl(
         @Body request: PresignedUrlRequest
     ): PresignedUrlResponse

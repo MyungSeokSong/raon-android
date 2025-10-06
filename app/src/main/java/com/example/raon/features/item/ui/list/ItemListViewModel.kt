@@ -36,7 +36,6 @@ class ItemListViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                // --- 바로 이 부분입니다! ---
                 // Repository의 새 함수를 호출하여 Presigned URL까지 적용된 최종 UI 모델 목록을 바로 받습니다.
                 val newItemsUiModel =
                     itemRepository.getItemsWithViewableUrls(page = _uiState.value.currentPage)
@@ -55,6 +54,4 @@ class ItemListViewModel @Inject constructor(
             }
         }
     }
-
-    // toUiModel, formatTimeAgo 함수는 이제 Repository에 있으므로 여기서 삭제합니다.
 }

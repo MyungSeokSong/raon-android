@@ -34,7 +34,7 @@ object NetworkModule {
 
     // 잊지 말고 API Gateway ID를 꼭 수정 -> 바뀌면
     private const val AWS_API_GATEWAY_URL =
-        "https://35w5qu5t6g.execute-api.ap-northeast-2.amazonaws.com/"
+        "https://35w5qu5t6g.execute-api.ap-northeast-2.amazonaws.com"
 
 
     // =================================================================
