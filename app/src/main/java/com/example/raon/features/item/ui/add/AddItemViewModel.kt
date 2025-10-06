@@ -1,5 +1,6 @@
 package com.example.raon.features.item.ui.add
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.raon.features.item.data.repository.ItemRepository
@@ -65,6 +66,9 @@ class AddItemViewModel @Inject constructor(
                     price = currentState.price,
                     imageUris = currentState.seletedImages
                 )
+
+                Log.e("ItemRepository", "local imageUris: {${currentState.seletedImages}}")
+
 
                 // 서버 통신에 따른 처리
                 if (response.code == "OK") {

@@ -121,8 +121,10 @@ dependencies {
 
     // Hilt 라이브러리
     implementation("com.google.dagger:hilt-android:2.56.2")
-    ksp("com.google.dagger:hilt-android-compiler:2.56.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
+//    ksp("com.google.dagger:hilt-android-compiler:2.56.2") // -> 이게 에러라고함
+    ksp("com.google.dagger:hilt-compiler:2.56.2") // -> 위 코드 수정본
 
 //    // Coil 라이브러리
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")

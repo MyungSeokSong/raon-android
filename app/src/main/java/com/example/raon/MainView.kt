@@ -33,8 +33,9 @@ import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
 import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileScreen
 import com.example.raon.features.bottom_navigation.e_profile.ui.ProfileTopAppBar
-import com.example.raon.features.item.ui.list.HomeScreen
+//import com.example.raon.features.item.ui.list.HomeScreen
 import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
+import com.example.raon.features.item.ui.list.ItemListScreen
 
 // comp 자동 완성 키워드
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,8 +136,19 @@ fun MainView(
             startDestination = navItemList[0].route,    // MainView 진입 시 기본으로 보여줄 탭 (예: "home_tab")
             modifier = Modifier.padding(innerPadding)   // Scaffold가 제공하는 패딩을 적용하여 바텀바/탑바와 겹치지 않게 함
         ) {
-            composable("home") { HomeScreen(modifier = Modifier) }
-            composable("test") { HomeScreen(Modifier) }
+            composable("home") {
+                ItemListScreen(
+                    // onNavigateToSearch: ItemListScreen 내부의 검색 아이콘을 눌렀을 때 실행될 동작
+                    onNavigateToSearch = {
+                        navController.navigate("searchScreen") // 예: "searchScreen" 경로로 이동
+                    },
+                    // onNavigateToWritePost: ItemListScreen 내부의 글쓰기 버튼을 눌렀을 때 실행될 동작
+                    onNavigateToWritePost = {
+                        navController.navigate("addItem") // "addItem" 경로로 이동
+                    }
+                )
+            }
+//            composable("test") { HomeScreen(Modifier) }
             composable("chat") { ChatListScreen(navController) }
             composable("profile") { ProfileScreen(navController) }
         }

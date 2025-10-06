@@ -4,19 +4,29 @@ import com.example.raon.core.network.dto.PresignedUrlRequest
 import com.example.raon.core.network.dto.PresignedUrlResponse
 import okhttp3.RequestBody
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Query
 import retrofit2.http.Url
 
+// 이미지 CRUD Api
 interface ImageStorageService {
 
-    // 서버에 Presigned URL 요청
+    // S3 이미지의 Presigned URL 요청 -> 조회용
+    @GET("/prod/images") // API Gateway에 새로 설정한 GET 경로
+    suspend fun getPresignedImageUrl(
+        @Query("key") imageKey: String
+    ): PresignedUrlResponse
+
+
+    // S3 이미지의 Presigned URL 요청 -> 업로드용
     @POST("default/raon-presigned-url-generator") // API Gateway의 세부 경로
     suspend fun getPresignedUrl(
         @Body request: PresignedUrlRequest
     ): PresignedUrlResponse
-    
+
 
     // S3로 실제 이미지 파일 업로드
     // @Url 어노테이션은 baseUrl을 무시하고 파라미터로 받은 url 주소로 직접 요청을 보냄
