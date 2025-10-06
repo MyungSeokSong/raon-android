@@ -98,6 +98,9 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.9")
 
 
+    // Preferences DataStore -> 유저 정보 저장
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     // 파일 및 SharedPreferences 암호화를 위한 Jetpack 보안 라이브_러리
     implementation("androidx.security:security-crypto:1.0.0")
 

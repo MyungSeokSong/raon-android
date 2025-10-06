@@ -142,10 +142,6 @@ fun MainView(
                     onNavigateToSearch = {
                         navController.navigate("searchScreen") // 예: "searchScreen" 경로로 이동
                     },
-                    // onNavigateToWritePost: ItemListScreen 내부의 글쓰기 버튼을 눌렀을 때 실행될 동작
-                    onNavigateToWritePost = {
-                        navController.navigate("addItem") // "addItem" 경로로 이동
-                    }
                 )
             }
 //            composable("test") { HomeScreen(Modifier) }

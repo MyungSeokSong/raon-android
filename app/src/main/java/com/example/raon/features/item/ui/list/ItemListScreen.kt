@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -25,7 +24,6 @@ import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,22 +48,13 @@ fun ItemListScreen(
     modifier: Modifier = Modifier,
     viewModel: ItemListViewModel = hiltViewModel(),
     onNavigateToSearch: () -> Unit,
-    onNavigateToWritePost: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(modifier = modifier.fillMaxSize()) {
-        
+
         // uiState.items 상테로 바꾸기 -> itemList를 가져와서 UI로 보여줌
         ItemList(items = uiState.items) // 이름 및 파라미터 변경
-
-
-        WritePostFab(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            onClick = onNavigateToWritePost
-        )
 
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -211,29 +200,6 @@ fun ItemListItem(item: ItemUiModel) { // 이름 및 파라미터 타입 변경
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun WritePostFab(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    FloatingActionButton(
-        onClick = onClick,
-        containerColor = Color(0xFFF76707),
-        contentColor = Color.White,
-        shape = RoundedCornerShape(50),
-        modifier = modifier
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "글쓰기")
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("글쓰기", fontWeight = FontWeight.Bold)
         }
     }
 }
