@@ -7,7 +7,9 @@ import com.example.raon.core.network.repository.ImageStorageRepository
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
+import com.example.raon.features.item.data.remote.dto.detail.ItemDetailData
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
+import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import com.example.raon.features.item.ui.list.model.ItemUiModel
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
@@ -194,7 +196,7 @@ class ItemRepositoryImpl @Inject constructor(
             uploadJobs.awaitAll().filterNotNull()
         }
 
-    // --- 아래 변환 함수들이 추가되었습니다 ---
+    // --- 아래 변환 함수들이 추가 ---
     private fun ItemDto.toUiModel(presignedUrl: String?): ItemUiModel {
         return ItemUiModel(
             id = this.itemId,
@@ -228,6 +230,58 @@ class ItemRepositoryImpl @Inject constructor(
             "시간 정보 없음"
         }
     }
+
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ItemDtail 데이터 가져오기 부분이 추가 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+
+    /**
+     * [수정] ItemDetail을 가져올 때 Presigned URL을 함께 처리하도록 변경
+     */
+    override suspend fun getItemDetail(itemId: Int): ItemDetailModel {
+        // 1. 메인 서버에서 아이템 상세 정보(S3 Object Key 포함)를 가져옵니다.
+        val responseDto = itemApiService.getItemDetail(itemId)
+        val itemData = responseDto.data
+
+        // 2. 각 이미지의 Object Key로 Presigned URL을 병렬로 요청합니다.
+        val viewableImageUrls = coroutineScope {
+            val urlJobs = itemData.imageUrls.map { key ->
+                async {
+                    // S3 전체 URL에서 순수 객체 키만 파싱 (기존 로직과 동일)
+                    val objectKey =
+                        key.removePrefix("https://raon-market-images-prod.s3.ap-northeast-2.amazonaws.com/")
+                    storageRepository.getPresignedImageUrl(objectKey).getOrNull()
+                }
+            }
+            // 모든 Presigned URL 요청이 끝날 때까지 기다린 후, null이 아닌 것만 필터링
+            urlJobs.awaitAll().filterNotNull()
+        }
+
+        // 3. 최종 UI 모델로 변환하여 반환합니다.
+        // 이때, 기존 S3 Object Key 대신 방금 받은 Presigned URL 목록을 사용합니다.
+        return itemData.toItemDetailModel(presignedUrls = viewableImageUrls)
+    }
+
+    /**
+     * [수정] toItemDetailModel 함수가 Presigned URL을 받도록 변경
+     */
+    private fun ItemDetailData.toItemDetailModel(presignedUrls: List<String>): ItemDetailModel {
+        return ItemDetailModel(
+            id = this.productId,
+            imageUrls = presignedUrls, // S3 Object Key 대신 Presigned URL 사용
+            sellerNickname = this.seller.nickname,
+            sellerProfileUrl = this.seller.profileImage, // TODO: 판매자 프로필 이미지도 Presigned URL 처리가 필요하다면 추가
+            sellerAddress = this.location.address,
+            title = this.title,
+            category = this.categories.joinToString(" > ") { it.name },
+            createdAt = formatTimeAgo(this.createdAt),
+            description = this.description,
+            favoriteCount = this.favoriteCount,
+            viewCount = this.viewCount,
+            price = this.price
+        )
+    }
+
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 }
 
 // API 에러 응답 파싱용 DTO

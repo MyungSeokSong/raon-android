@@ -23,6 +23,23 @@ class AuthRepository @Inject constructor(
 //    private val userRepository: UserRepository
 ) {
 
+    // --- 아래 3개의 코드 블록을 추가합니다 ---
+    // 1. 메모리에 현재 액세스 토큰을 저장할 변수
+    private var currentAccessToken: String? = null
+
+    // 2. Repository가 처음 생성될 때, 저장된 토큰을 읽어와 메모리에 미리 로드
+    init {
+        // 앱이 시작될 때 한 번만 실행됨
+        currentAccessToken = tokenManager.getAccessToken()
+        Log.d("AuthRepository", "초기 토큰 로드 완료: $currentAccessToken")
+    }
+
+    // 3. Interceptor와 Authenticator가 호출할 빠르고 안전한 동기 함수
+    fun getAccessTokenSync(): String? {
+        return currentAccessToken
+    }
+
+
     // Access Token을 Flow 형태로 제공하는 함수
     // AuthInterceptor가 이 함수를 호출하여 토큰을 가져옴
     fun getAccessToken(): Flow<String?> = flow {
@@ -60,6 +77,9 @@ class AuthRepository @Inject constructor(
 
                             // TokenManager를 사용해 Access Token을 기기에 저장
                             tokenManager.saveAccessToken(accessToken)
+
+                            currentAccessToken = accessToken // 메모리 캐시 업데이트
+
 
                             // Access Token 저장 확인 코드
                             val acessTokenChek = tokenManager.getAccessToken()
@@ -116,6 +136,7 @@ class AuthRepository @Inject constructor(
 
     }
 
+    // 로그아웃
     fun logout() {
         // --- 1. SharedPreferences (Access Token) 삭제 확인 ---
         Log.d("Logout_Test", "--- Access Token 삭제 전 ---")
@@ -124,6 +145,9 @@ class AuthRepository @Inject constructor(
 
         // 실제 삭제 로직
         tokenManager.clearTokens()
+
+        currentAccessToken = null // 메모리 캐시 초기화
+
 
         Log.d("Logout_Test", "--- Access Token 삭제 후 ---")
         val accessTokenAfter = tokenManager.getAccessToken()
@@ -152,4 +176,44 @@ class AuthRepository @Inject constructor(
 
         Log.d("Logout_Test", "로그아웃 절차 완료.")
     }
+
+
+    // AccessToken 재발급
+    /**
+     * [추가] 실제 토큰 재발급 로직
+     * @return 성공 시 새로운 Access Token, 실패 시 null
+     */
+    suspend fun refreshToken(): String? {
+        // CookieJar가 자동으로 리프레시 토큰을 담아 요청합니다.
+        Log.d("AuthRepository", "토큰 재발급 API 호출 시도...")
+        return try {
+            val response = apiService.refreshToken() // 서버 API 호출
+
+            // 서버 응답이 성공적이고, 새로운 accessToken이 있다면
+            if (response.code == "OK" && response.data?.accessToken != null) {
+                val newAccessToken = response.data.accessToken
+
+                currentAccessToken = newAccessToken // [추가] 메모리 캐시 업데이트
+
+
+                // 1. 새로 받은 토큰을 기기에 저장
+                tokenManager.saveAccessToken(newAccessToken)
+
+                Log.d("AuthRepository", "토큰 재발급 성공! 새 토큰 저장 완료: $newAccessToken")
+
+                // 2. TokenAuthenticator가 사용할 수 있도록 새 토큰을 반환
+                newAccessToken
+            } else {
+                Log.e("AuthRepository", "API 응답 실패: ${response.message}")
+                logout() // 재발급 실패 시 강제 로그아웃
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "토큰 재발급 중 예외 발생", e)
+            logout() // 재발급 실패 시 강제 로그아웃
+            null
+        }
+    }
+
+
 }

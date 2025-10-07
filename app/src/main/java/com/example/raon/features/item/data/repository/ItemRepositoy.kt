@@ -3,6 +3,7 @@ package com.example.raon.features.item.data.repository
 import android.net.Uri
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
+import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import com.example.raon.features.item.ui.list.model.ItemUiModel
 
 // 아이템 데이터 처리를 위한 인터페이스
@@ -21,4 +22,8 @@ interface ItemRepository {
         price: Int,
         imageUris: List<Uri>
     ): ItemResponse
+
+
+    // 상세 페이지 모델을 가져오는 함수 정의
+    suspend fun getItemDetail(itemId: Int): ItemDetailModel
 }

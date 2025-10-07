@@ -140,8 +140,14 @@ fun MainView(
                 ItemListScreen(
                     // onNavigateToSearch: ItemListScreen 내부의 검색 아이콘을 눌렀을 때 실행될 동작
                     onNavigateToSearch = {
-                        navController.navigate("searchScreen") // 예: "searchScreen" 경로로 이동
+                        navController.navigate("searchScreen")  // searchScreen 경로로 이동
                     },
+                    onItemClick = { itemId ->
+                        navController.navigate("itemDetail/$itemId")
+//                        navController.navigate("itemDetail")
+
+
+                    }
                 )
             }
 //            composable("test") { HomeScreen(Modifier) }

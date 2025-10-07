@@ -1,6 +1,7 @@
 package com.example.raon.features.item.ui.list
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,13 +49,17 @@ fun ItemListScreen(
     modifier: Modifier = Modifier,
     viewModel: ItemListViewModel = hiltViewModel(),
     onNavigateToSearch: () -> Unit,
+    onItemClick: (Int) -> Unit  // ItemDetail 페이지로 이동 이벤트
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(modifier = modifier.fillMaxSize()) {
 
         // uiState.items 상테로 바꾸기 -> itemList를 가져와서 UI로 보여줌
-        ItemList(items = uiState.items) // 이름 및 파라미터 변경
+        ItemList(
+            items = uiState.items,
+            onItemClick = onItemClick
+        )
 
         if (uiState.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -102,24 +107,37 @@ fun HomeScreenTopAppBar(
     }
 }
 
+// itemList
 @Composable
-fun ItemList(items: List<ItemUiModel>) { // 이름 및 파라미터 변경
+fun ItemList(
+    items: List<ItemUiModel>,
+    onItemClick: (Int) -> Unit // 터치한 Item의 ID를 전달
+) {
     LazyColumn {
         items(
             items = items, // 파라미터 사용
             key = { it.id }
         ) { item -> // 변수명 변경
-            ItemListItem(item = item) // 이름 변경
+            ItemListItem(
+                item = item,
+                onClick = { onItemClick(item.id) }
+
+            )
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
         }
     }
 }
 
+// 각 item Ui
 @Composable
-fun ItemListItem(item: ItemUiModel) { // 이름 및 파라미터 타입 변경
+fun ItemListItem(
+    item: ItemUiModel,
+    onClick: () -> Unit // 터치 이벤트 -> ItemDetail 화면을 이동
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)   // 클릭함수 넣어주기
             .padding(16.dp)
     ) {
         AsyncImage(

@@ -1,5 +1,6 @@
 package com.example.raon.core.network
 
+import android.util.Log
 import com.example.raon.features.auth.data.repository.AuthRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -28,6 +29,10 @@ class AuthInterceptor @Inject constructor(
         // 3. 헤더가 없다면, 주입받은 authRepository에서 토큰을 가져와 요청에 추가
         //    이제 직접 만들 필요가 없습니다. Hilt가 이미 완벽하게 만들어준 것을 사용하면 됩니다.
         val accessToken = runBlocking { authRepository.getAccessToken().first() }
+
+
+        Log.d("AuthInterceptor", "토큰: $accessToken")
+
 
         val newRequest = if (!accessToken.isNullOrBlank()) {
             request.newBuilder()

@@ -1,6 +1,5 @@
 package com.example.raon.core.di
 
-import android.content.Context
 import com.example.raon.core.network.AuthInterceptor
 import com.example.raon.core.network.TokenAuthenticator
 import com.example.raon.core.network.api.ImageStorageService
@@ -11,7 +10,6 @@ import com.example.raon.features.user.data.remote.UserApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.CookieJar
 import okhttp3.JavaNetCookieJar
@@ -29,8 +27,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // --- 서버별 기본 URL ---
-    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
-//    private const val RAON_SERVER_URL = "http://192.168.12.253:4000/" // 실제 앱 용
+//    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
+    private const val RAON_SERVER_URL = "http://192.168.12.36:4000/" // 실제 앱 용
 
 
     // 잊지 말고 API Gateway ID를 꼭 수정 -> 바뀌면
@@ -74,10 +72,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideTokenAuthenticator(
-        @ApplicationContext context: Context,
-        authApiService: AuthApiService // Hilt가 아래에서 만든 '토큰 갱신 전용' 서비스를 주입합니다.
+        authRepository: AuthRepository
     ): TokenAuthenticator {
-        return TokenAuthenticator(context, authApiService)
+        return TokenAuthenticator(authRepository)
     }
 
     // '토큰 갱신 전용' OkHttpClient (Authenticator가 없어 순환 참조를 방지)

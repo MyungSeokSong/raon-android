@@ -6,9 +6,11 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.raon.features.auth.ui.AuthScreen
 import com.example.raon.features.auth.ui.LoginScreen
 import com.example.raon.features.auth.ui.SignUpScreen
@@ -16,6 +18,7 @@ import com.example.raon.features.auth.ui.z_etc.AuthView
 import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
 import com.example.raon.features.bottom_navigation.d_chat.ui.ChatRoomScreen
 import com.example.raon.features.item.ui.add.AddItemScreen
+import com.example.raon.features.item.ui.detail.ItemDetailScreen
 import com.example.raon.features.location.ui.LocationSearchScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
@@ -97,12 +100,15 @@ fun AppNavigation(
             AddItemScreen(
                 modifier,
                 onUploadSuccess = {
-                    navController.navigate("itemDetail") {
-                        // 현재 화면인 "addItem"을 백 스택에서 제거
-                        popUpTo("addItem") {
-                            inclusive = true
-                        }
-                    }
+
+                    navController.popBackStack()
+
+//                    navController.navigate("itemDetail") {
+//                        // 현재 화면인 "addItem"을 백 스택에서 제거
+//                        popUpTo("addItem") {
+//                            inclusive = true
+//                        }
+//                    }
                 },
                 // onClose 파라미터에 뒤로 가기 동작을 전달
                 onClose = {
@@ -111,7 +117,12 @@ fun AppNavigation(
             )
         }
 
-        composable("itemDetail") {
+        composable(
+            route = "itemDetail/{itemId}",   // 경로에 변수가 포함됨을 정의
+            arguments = listOf(navArgument("itemId") {
+                type = NavType.IntType  // itemId는 Int 타입으로 정의
+            })
+        ) {
 //            val productitem = ProductItem(
 //                id = 1,
 //                title = "팝니다) 깨끗한 맥북 프로 14인치",
@@ -123,8 +134,12 @@ fun AppNavigation(
 //                likes = 23
 //            )
 //            val seller = SellerInfo("aaa", "seller", 36.5f, "주소")
-//
-//            ItemDetailScreen(productitem, seller, {})
+
+            ItemDetailScreen(
+                onBackClick = {
+                    navController.popBackStack()    // 뒤로가기 버튼 눌렀을 때
+                }
+            )
         }
 
 
