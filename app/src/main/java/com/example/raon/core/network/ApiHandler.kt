@@ -2,6 +2,8 @@ package com.example.raon.core.network
 
 
 import android.util.Log
+import com.example.raon.core.network.model.ErrorResponseBody
+import com.google.gson.Gson
 import retrofit2.Response
 import java.io.IOException
 
@@ -26,7 +28,24 @@ suspend fun <T> handleApi(
         } else {
             Log.e("HandleApi", "API Error: Code=${response.code()}, Message=${response.message()}")
 
-            ApiResult.Error(code = response.code(), message = response.message())
+            // Http 200말고 다른 에러 code를 처리 함
+
+            // 1. 에러 응답의 본문을 문자열로 읽어옵니다.
+            val errorBodyString = response.errorBody()?.string()
+
+
+            // 2. 읽어온 문자열을 ErrorResponseBody DTO로 파싱합니다.
+            val errorResponse = try {
+                Gson().fromJson(errorBodyString, ErrorResponseBody::class.java)
+            } catch (e: Exception) {
+                null // 파싱에 실패하면 null 처리
+            }
+
+            // 3. 수정된 ApiResult.Error 형식에 맞게 객체를 생성하여 반환합니다.
+            ApiResult.Error(code = response.code(), errorBody = errorResponse)
+
+
+//            ApiResult.Error(code = response.code(), message = response.message())
         }
     } catch (e: IOException) {
         Log.e("HandleApi", "API Exception (IOException): ${e.message}", e)

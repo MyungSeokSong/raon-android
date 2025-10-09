@@ -5,6 +5,7 @@ import com.example.raon.core.network.TokenAuthenticator
 import com.example.raon.core.network.api.ImageStorageService
 import com.example.raon.features.auth.data.remote.api.AuthApiService
 import com.example.raon.features.auth.data.repository.AuthRepository
+import com.example.raon.features.chat.data.remote.api.ChatApiService
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.user.data.remote.UserApiService
 import dagger.Module
@@ -27,8 +28,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // --- 서버별 기본 URL ---
-//    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
-    private const val RAON_SERVER_URL = "http://192.168.12.36:4000/" // 실제 앱 용
+    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
+//    private const val RAON_SERVER_URL = "http://192.168.12.248:4000/" // 실제 앱 용
 
 
     // 잊지 말고 API Gateway ID를 꼭 수정 -> 바뀌면
@@ -182,6 +183,18 @@ object NetworkModule {
     @Singleton
     fun provideUserApiService(@Named("RaonRetrofit") retrofit: Retrofit): UserApiService {
         return retrofit.create(UserApiService::class.java)
+    }
+
+
+    // =================================================================
+    // MARK: - 채팅 API 서비스
+    // =================================================================
+
+
+    @Provides
+    @Singleton
+    fun provideChatApiService(@Named("RaonRetrofit") retrofit: Retrofit): ChatApiService {
+        return retrofit.create(ChatApiService::class.java)
     }
 
 }

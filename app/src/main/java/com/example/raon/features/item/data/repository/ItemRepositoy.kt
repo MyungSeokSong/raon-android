@@ -1,6 +1,9 @@
 package com.example.raon.features.item.data.repository
 
 import android.net.Uri
+import com.example.raon.core.network.ApiResult
+import com.example.raon.features.chat.data.remote.dto.CreateChatRoomResponseDto
+import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
@@ -26,4 +29,15 @@ interface ItemRepository {
 
     // 상세 페이지 모델을 가져오는 함수 정의
     suspend fun getItemDetail(itemId: Int): ItemDetailModel
+
+    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 채팅관련 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+    // 채팅방 id를 가져오는 함수 -> ApiResult를 사용해서 HTTP 200 code 일때만 Repository에서 DTO를 받아서 처리
+    // 채팅방이 있는지 확인하는 함수
+    suspend fun getChatRoomForItem(itemId: Long): ApiResult<GetChatRoomResponseDto>
+
+    // 2. 채팅방이 없을 때 생성하는 함수
+    suspend fun createChatForItem(itemId: Long): ApiResult<CreateChatRoomResponseDto>
+
+
 }

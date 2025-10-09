@@ -1,5 +1,6 @@
 package com.example.raon.features.item.ui.detail
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +35,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,19 +53,41 @@ import coil3.compose.AsyncImage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemDetailScreen(
-    onBackClick: () -> Unit, // NavController 대신 뒤로가기 이벤트 람다를 받음
+    onBackClick: () -> Unit,
+    onNavigateToChatRoom: (Long) -> Unit,
     viewModel: ItemDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // ViewModel의 일회성 이벤트를 구독하고 처리
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is ItemChatEvent.NavigateToChatRoom -> {
+                    // 전달받은 람다를 호출하여 화면 이동 요청
+                    onNavigateToChatRoom(event.chatId)
+                }
+
+                is ItemChatEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
-            // 전달받은 onBackClick 람다를 TopAppBar에 넘겨줌
             ProductDetailTopAppBar(onBackClick = onBackClick)
         },
         bottomBar = {
             uiState.item?.let {
-                ProductBottomBar(price = it.price)
+                ProductBottomBar(
+                    price = it.price,
+                    onChatClick = {
+                        viewModel.onChatButtonClicked()
+                    }
+                )
             }
         }
     ) { paddingValues ->
@@ -87,7 +112,6 @@ fun ItemDetailScreen(
                     val item = uiState.item!!
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
                         item {
-                            // 여러 이미지를 보여주는 Pager 호출
                             ProductImagePager(imageUrls = item.imageUrls)
                         }
                         item {
@@ -121,7 +145,7 @@ private fun ProductDetailTopAppBar(onBackClick: () -> Unit) {
     TopAppBar(
         title = {},
         navigationIcon = {
-            IconButton(onClick = onBackClick) { // 전달받은 람다 사용
+            IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
             }
         },
@@ -139,7 +163,6 @@ private fun ProductDetailTopAppBar(onBackClick: () -> Unit) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ProductImagePager(imageUrls: List<String>) {
-    // 이미지가 없을 경우를 대비한 방어 코드
     if (imageUrls.isEmpty()) {
         Box(
             modifier = Modifier
@@ -208,7 +231,7 @@ private fun SellerProfile(nickname: String, profileUrl: String?, address: String
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(Color.LightGray), // 이미지가 없을 때 회색 배경
+                .background(Color.LightGray),
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(12.dp))
@@ -240,7 +263,7 @@ private fun ProductInfo(
 }
 
 @Composable
-private fun ProductBottomBar(price: Int) {
+private fun ProductBottomBar(price: Int, onChatClick: () -> Unit) {
     Surface(shadowElevation = 8.dp) {
         Row(
             modifier = Modifier
@@ -257,7 +280,7 @@ private fun ProductBottomBar(price: Int) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = "%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
-            Button(onClick = { /* TODO: 채팅하기 */ }) {
+            Button(onClick = onChatClick) {
                 Text("채팅하기")
             }
         }

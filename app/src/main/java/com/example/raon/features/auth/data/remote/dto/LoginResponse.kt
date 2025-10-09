@@ -1,7 +1,6 @@
 package com.example.raon.features.auth.data.remote.dto
 
 data class LoginResponse(
-
     val code: String,   // 로그인 확인
     val message: String,// 로그인 메세지
     val data: LoginData // 로그인 토큰 데이터

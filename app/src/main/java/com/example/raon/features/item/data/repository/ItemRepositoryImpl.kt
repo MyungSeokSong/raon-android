@@ -3,7 +3,11 @@ package com.example.raon.features.item.data.repository
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.example.raon.core.network.ApiResult
+import com.example.raon.core.network.handleApi
 import com.example.raon.core.network.repository.ImageStorageRepository
+import com.example.raon.features.chat.data.remote.dto.CreateChatRoomResponseDto
+import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
@@ -282,7 +286,25 @@ class ItemRepositoryImpl @Inject constructor(
     }
 
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 채팅 부분 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+
+    // 채팅방 확인 함수
+    override suspend fun getChatRoomForItem(itemId: Long): ApiResult<GetChatRoomResponseDto> {
+        return handleApi { itemApiService.getChatRoomForItem(itemId) }
+    }
+
+    // 채팅방 생성 함수
+    override suspend fun createChatForItem(itemId: Long): ApiResult<CreateChatRoomResponseDto> {
+        return handleApi { itemApiService.createChatForItem(itemId) }
+    }
+
+// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+
 }
+
 
 // API 에러 응답 파싱용 DTO
 data class ErrorResponse(

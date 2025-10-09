@@ -1,4 +1,4 @@
-package com.example.raon.features.bottom_navigation.d_chat.ui.components
+package com.example.raon.features.chat.ui.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
@@ -84,7 +85,7 @@ fun MessageBubble(
 
 // 채팅 메시지 내용 UI
 @Composable
-fun MessageBubbleContent(message: String, backgroundColor: androidx.compose.ui.graphics.Color) {
+fun MessageBubbleContent(message: String, backgroundColor: Color) {
 
     Surface(
         shape = RoundedCornerShape(15.dp),

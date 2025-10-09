@@ -9,6 +9,7 @@ plugins {
     // hilt 사용 코드
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+
 }
 
 // local.properties에서 값 읽기
@@ -105,7 +106,7 @@ dependencies {
     implementation("androidx.security:security-crypto:1.0.0")
 
 
-    // Retrofit 라이브러리
+    // Retrofit 라이브러리 -> http 통신 프로토콜
 //    implementation("com.squareup.retrofit2:retrofit:3.0.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0") // 안정적인 최신 버전
     // Gson 라이브러리 -> Retrofit의 컨버터로 사용됨
@@ -129,6 +130,7 @@ dependencies {
 //    ksp("com.google.dagger:hilt-android-compiler:2.56.2") // -> 이게 에러라고함
     ksp("com.google.dagger:hilt-compiler:2.56.2") // -> 위 코드 수정본
 
+
 //    // Coil 라이브러리
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
@@ -140,6 +142,28 @@ dependencies {
 
     // 디자인 아이콘용 라이브러리
     implementation("androidx.compose.material:material-icons-extended") // 더 많은 아이콘 사용을 위해
+
+
+    // 안드로이드에 가장 적합한 최신 Krossbow 라이브러리 설정
+//    val krossbowVersion = "7.0.0" // 2025년 10월 기준 최신 안정 버전
+//    implementation("org.krossbow:krossbow-stomp-client:$krossbowVersion")
+//    implementation("org.krossbow:krossbow-websocket-okhttp:$krossbowVersion")
+
+
+    // Krossbow 라이브러리 -> Stomp 통신을 위한 라이브러리
+    val krossbowVersion = "7.0.0"
+    implementation("org.hildan.krossbow:krossbow-stomp-core:7.0.0")
+    implementation("org.hildan.krossbow:krossbow-websocket-builtin:7.0.0")
+    implementation("org.hildan.krossbow:krossbow-websocket-okhttp:7.0.0")
+//    implementation("org.krossbow:krossbow-stomp-client:${krossbowVersion}")?
+// <-- 이것을 사용해야 합니다.
+
+
+    // STOMP 통신을 위한 Krossbow 라이브러리 (Gson 사용 -> Retrofit과 통일)
+    // Krossbow (STOMP + OkHttp WebSocket 클라이언트)
+//    implementation("org.hildan.krossbow:krossbow-stomp-client-android:5.4.0")
+//    // Krossbow가 Gson을 사용해 JSON을 변환하도록 도와주는 라이브러리
+//    implementation("org.hildan.krossbow:krossbow-stomp-conversions-gson:5.4.0")
 
 
 }

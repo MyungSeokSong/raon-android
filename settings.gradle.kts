@@ -10,6 +10,7 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+
     }
 }
 dependencyResolutionManagement {
@@ -20,6 +21,7 @@ dependencyResolutionManagement {
 
         // 카카오 저장소 추가
         maven { url = java.net.URI("https://devrepo.kakao.com/nexus/content/groups/public/") }
+
 
     }
 }

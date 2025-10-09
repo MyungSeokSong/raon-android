@@ -1,6 +1,8 @@
 package com.example.raon.core.di
 
 
+import com.example.raon.features.chat.data.repository.ChatRepositoryImpl
+import com.example.raon.features.chat.domain.repository.ChatRepository
 import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.data.repository.ItemRepositoryImpl
 import com.example.raon.features.user.data.repository.UserRepositoryImpl
@@ -30,4 +32,12 @@ abstract class RepositoryModule {
     abstract fun bindUserRepository(
         userRepositoryImpl: UserRepositoryImpl
     ): UserRepository // UserRepository를 요청하면 -> UserRepositoryImpl을 주입
+
+
+    // 👇 이 부분을 추가하시면 됩니다.
+    @Binds
+    @Singleton
+    abstract fun bindChatRepository(
+        chatRepositoryImpl: ChatRepositoryImpl
+    ): ChatRepository // ChatRepository를 요청하면 -> ChatRepositoryImpl을 주입
 }

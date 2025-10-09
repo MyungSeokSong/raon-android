@@ -30,8 +30,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListScreen
-import com.example.raon.features.bottom_navigation.d_chat.ui.ChatListTopAppBar
+import com.example.raon.features.chat.ui.ChatListScreen
+import com.example.raon.features.chat.ui.ChatListTopAppBar
 import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
 import com.example.raon.features.item.ui.list.ItemListScreen
 import com.example.raon.features.user.ui.ProfileScreen

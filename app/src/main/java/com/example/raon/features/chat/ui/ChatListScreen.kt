@@ -1,4 +1,4 @@
-package com.example.raon.features.bottom_navigation.d_chat.ui
+package com.example.raon.features.chat.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
