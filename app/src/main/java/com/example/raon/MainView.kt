@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
@@ -51,7 +51,7 @@ fun MainView(
     // 불변 List 자료구조 사용 - 굳이 수정될 이유가 없기 때문
     val navItemList = listOf(
         NavItem("홈", Icons.Default.Home, "home"),
-        NavItem("테스트", Icons.Default.Build, "test"),
+        NavItem("찜", Icons.Default.HeartBroken, "chat"),
         NavItem("등록", Icons.Default.AddCircle, "addItem"),
         NavItem("채팅", Icons.Default.Send, "chat"),
         NavItem("프로필", Icons.Default.Person, "profile"),
@@ -150,7 +150,6 @@ fun MainView(
                     }
                 )
             }
-//            composable("test") { HomeScreen(Modifier) }
             composable("chat") { ChatListScreen(navController) }
             composable("profile") { ProfileScreen(navController) }
         }
