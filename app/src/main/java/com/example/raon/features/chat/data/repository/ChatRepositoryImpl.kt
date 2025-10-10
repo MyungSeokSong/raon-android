@@ -4,7 +4,11 @@ package com.example.raon.features.chat.data.repository
 import com.example.raon.core.network.ApiResult
 import com.example.raon.core.network.dto.ApiResponse
 import com.example.raon.core.network.handleApi
+import com.example.raon.features.chat.data.remote.ChatMessageDto
+import com.example.raon.features.chat.data.remote.StompService
 import com.example.raon.features.chat.data.remote.api.ChatApiService
+import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
+import com.example.raon.features.chat.data.remote.dto.MessageListDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageRequestDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
 import com.example.raon.features.chat.domain.model.ChatMessage
@@ -20,9 +24,19 @@ import javax.inject.Inject
  */
 class ChatRepositoryImpl @Inject constructor(
     // private val chatApiService: ChatApiService // Hilt/Koin 등으로 실제 API 서비스를 주입받습니다.
-    private val chatApiService: ChatApiService  //
+    private val chatApiService: ChatApiService,  //
+    private val stompService: StompService // 실시간 채팅을 위한 StompService
 
 ) : ChatRepository {
+
+    // ▼▼▼ 1. HTTP GET으로 과거 메시지를 불러오는 실제 구현 ▼▼▼
+    override suspend fun getMessageList(
+        chatId: Long,
+        page: Int
+    ): ApiResult<ApiResponse<MessageListDto>> {
+        return handleApi { chatApiService.getMessages(chatId, page) }
+    }
+
 
     // 임시 더미 데이터를 사용한 예시
     override fun getMessages(chatRoomId: Long): Flow<List<ChatMessage>> = flow {
@@ -61,5 +75,32 @@ class ChatRepositoryImpl @Inject constructor(
         // 2. ApiService를 호출하고, handleApi로 감싼 결과를 그대로 반환(return)합니다.
         //    (결과를 여기서 처리하지 않고 ViewModel로 넘겨주는 것이 핵심입니다.)
         return handleApi { chatApiService.sendMessage(chatRoomId, requestDto) }
+    }
+
+
+    override suspend fun getChatRoomList(page: Int): ApiResult<ApiResponse<ChatRoomListDto>> {
+        return handleApi { chatApiService.getChats(page) }
+    }
+
+    // --- STOMP 관련 함수 구현 ---
+
+    override suspend fun connectStomp(chatRoomId: Long, authToken: String) {
+        // StompService에 작업을 위임합니다.
+        stompService.connectAndSubscribe(chatRoomId)
+    }
+
+    override fun observeMessages(): Flow<ChatMessageDto> {
+        // StompService가 제공하는 메시지 Flow를 그대로 반환합니다.
+        return stompService.messages
+    }
+
+    override suspend fun sendStompMessage(chatRoomId: Long, message: String) {
+        // StompService에 작업을 위임합니다.
+        stompService.sendMessage(chatRoomId, message)
+    }
+
+    override suspend fun disconnectStomp() {
+        // StompService에 작업을 위임합니다.
+        stompService.disconnect()
     }
 }

@@ -1,4 +1,4 @@
-package com.example.raon
+package com.example.raon.features.main.ui
 
 //import com.example.raon.features.item.ui.list.HomeScreen
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +17,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,14 +25,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.raon.NavItem
 import com.example.raon.features.chat.ui.ChatListScreen
-import com.example.raon.features.chat.ui.ChatListTopAppBar
+//import com.example.raon.features.chat.ui.ChatListTopAppBar
 import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
 import com.example.raon.features.item.ui.list.ItemListScreen
 import com.example.raon.features.user.ui.ProfileScreen
@@ -42,9 +45,12 @@ import com.example.raon.features.user.ui.ProfileTopAppBar
 @Composable
 fun MainView(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 실
 ) {
 
+
+    val mainUiState by mainViewModel.uiState.collectAsState()
     // **핵심 변경 1: MainView 내부의 바텀 내비게이션 탭 관리를 위한 NavController 생성**
     val bottomNavController = rememberNavController()
 
@@ -75,7 +81,7 @@ fun MainView(
                     { navController.navigate("searchInput") {} }
                 )
 
-                "chat" -> ChatListTopAppBar()
+//                "chat" -> ChatListTopAppBar()
                 "profile" -> ProfileTopAppBar(navController)
             }
         },
@@ -121,6 +127,21 @@ fun MainView(
                         },
                         label = {
                             Text(text = navItem.label)
+
+                            // ▼▼▼ 3. '채팅' 탭에 안 읽은 메시지 개수 배지 표시 ▼▼▼
+//                            if (navItem.route == "chat") {
+//                                BadgedBox(
+//                                    badge = {
+//                                        if (mainUiState.unreadChatCount > 0) {
+//                                            Badge { Text(text = mainUiState.unreadChatCount.toString()) }
+//                                        }
+//                                    }
+//                                ) {
+//                                    Icon(imageVector = navItem.icon, contentDescription = navItem.label)
+//                                }
+//                            } else {
+//                                Icon(imageVector = navItem.icon, contentDescription = navItem.label)
+//                            }
                         }
                     )
                 }
@@ -150,7 +171,12 @@ fun MainView(
                     }
                 )
             }
-            composable("chat") { ChatListScreen(navController) }
+            composable("chat") {
+                ChatListScreen(
+                    navController,
+                    chatRooms = mainUiState.chatRooms // ◀◀ 이 부분이 핵심입니다.
+                )
+            }
             composable("profile") { ProfileScreen(navController) }
         }
 

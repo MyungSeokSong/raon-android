@@ -20,6 +20,7 @@ import com.example.raon.features.chat.ui.ChatRoomScreen
 import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
 import com.example.raon.features.location.ui.LocationSearchScreen
+import com.example.raon.features.main.ui.MainView
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
 import com.example.raon.features.splash.SplashScreen

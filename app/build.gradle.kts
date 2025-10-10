@@ -159,11 +159,23 @@ dependencies {
 // <-- 이것을 사용해야 합니다.
 
 
+    // --- 이 부분이 가장 중요합니다! ---
+// Krossbow STOMP를 위한 Gson 컨버터 라이브러리
+//    implementation("org.hildan.krossbow:krossbow-stomp-client:7.0.0")
+//    implementation("org.hildan.krossbow:krossbow-stomp-conversions-gson:7.0.0")
+
     // STOMP 통신을 위한 Krossbow 라이브러리 (Gson 사용 -> Retrofit과 통일)
     // Krossbow (STOMP + OkHttp WebSocket 클라이언트)
 //    implementation("org.hildan.krossbow:krossbow-stomp-client-android:5.4.0")
 //    // Krossbow가 Gson을 사용해 JSON을 변환하도록 도와주는 라이브러리
 //    implementation("org.hildan.krossbow:krossbow-stomp-conversions-gson:5.4.0")
+
+
+    // Krossbow의 기본 JSON 라이브러리인 kotlinx.serialization을 사용하도록 아래 라인을 추가합니다.
+//    implementation("org.hildan.krossbow:krossbow-stomp-conversions-kotlinx-serialization:7.0.0")
+
+// 만약 프로젝트에 kotlinx-serialization-json 의존성이 없다면 아래 라인도 추가해야 할 수 있습니다.
+//    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
 
 }
