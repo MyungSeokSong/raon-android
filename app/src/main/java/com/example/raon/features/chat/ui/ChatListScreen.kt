@@ -28,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.raon.features.chat.data.remote.dto.ChatRoomInfo
 import java.time.OffsetDateTime
@@ -36,7 +35,7 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun ChatListScreen(
-    navController: NavController,
+    onChatRoomClick: (chatRoomId: Long, sellerId: Long) -> Unit,
     chatRooms: List<ChatRoomInfo>
 ) {
     LazyColumn(
@@ -49,8 +48,12 @@ fun ChatListScreen(
             ChatListItem(
                 chatRoom = chatRoom,
                 onClick = {
+
+                    // 채티방 터치 이벤트 발생시 실행하는 함수 -> chatroomId, sellerId 전달
+                    onChatRoomClick(chatRoom.chatId, chatRoom.seller.userId)
+
                     // 아이템 클릭 시 해당 chatId를 가지고 채팅방 화면으로 이동
-                    navController.navigate("chatroom/${chatRoom.chatId}")
+//                    navController.navigate("chatRoom/${chatRoom.chatId}")
 
                     Log.d("채팅프로세스1", "ChatListScreen ->  채팅방 ID: ${chatRoom.chatId}")
                 }

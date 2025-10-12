@@ -4,7 +4,6 @@ package com.example.raon.features.chat.data.repository
 import com.example.raon.core.network.ApiResult
 import com.example.raon.core.network.dto.ApiResponse
 import com.example.raon.core.network.handleApi
-import com.example.raon.features.chat.data.remote.ChatMessageDto
 import com.example.raon.features.chat.data.remote.StompService
 import com.example.raon.features.chat.data.remote.api.ChatApiService
 import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
@@ -43,8 +42,8 @@ class ChatRepositoryImpl @Inject constructor(
         // 실제로는 WebSocket이나 API를 통해 메시지를 수신하는 로직이 들어갑니다.
         // 여기서는 1초마다 더미 데이터를 방출하는 예시를 보여줍니다.
         val dummyHistory = listOf(
-            ChatMessage(1L, chatRoomId, 2L, "상대방", null, "안녕하세요", null, "오후 2:30"),
-            ChatMessage(2L, chatRoomId, 1L, "나", null, "네 안녕하세요!", null, "오후 2:31")
+            ChatMessage(1L, chatRoomId, 2L, "상대방", null, "안녕하세요", null, "오후 2:30", true),
+            ChatMessage(2L, chatRoomId, 1L, "나", null, "네 안녕하세요!", null, "오후 2:31", false)
         )
         emit(dummyHistory) // 초기 메시지 전송
         delay(1000)
@@ -57,7 +56,8 @@ class ChatRepositoryImpl @Inject constructor(
                 null,
                 "혹시 네고 가능한가요?",
                 null,
-                "오후 2:31"
+                "오후 2:31",
+                true
             )
         )
     }
@@ -84,20 +84,20 @@ class ChatRepositoryImpl @Inject constructor(
 
     // --- STOMP 관련 함수 구현 ---
 
-    override suspend fun connectStomp(chatRoomId: Long, authToken: String) {
+    override suspend fun connectStomp(chatRoomId: Long) {
         // StompService에 작업을 위임합니다.
         stompService.connectAndSubscribe(chatRoomId)
     }
 
-    override fun observeMessages(): Flow<ChatMessageDto> {
+    override fun observeMessages(chatId: Long): Flow<String> {
         // StompService가 제공하는 메시지 Flow를 그대로 반환합니다.
         return stompService.messages
     }
 
-    override suspend fun sendStompMessage(chatRoomId: Long, message: String) {
-        // StompService에 작업을 위임합니다.
-        stompService.sendMessage(chatRoomId, message)
-    }
+//    override suspend fun sendStompMessage(chatRoomId: Long, message: String) {
+//        // StompService에 작업을 위임합니다.
+//        stompService.sendMessage(chatRoomId, message)
+//    }
 
     override suspend fun disconnectStomp() {
         // StompService에 작업을 위임합니다.

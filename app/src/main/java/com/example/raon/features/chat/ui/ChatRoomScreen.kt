@@ -3,14 +3,11 @@ package com.example.raon.features.chat.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -40,10 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.raon.features.chat.domain.model.ChatMessage
+
 //import com.example.raon.ui.theme.RaonTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +98,7 @@ fun ChatRoomScreen(
 }
 
 @Composable
-fun MessageBubble(message: UiChatMessage) {
+fun MessageBubble(message: ChatMessage) {
     // isFromMe 값에 따라 메시지를 오른쪽 또는 왼쪽에 배치
     val horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
 
@@ -120,7 +118,8 @@ fun MessageBubble(message: UiChatMessage) {
         }
 
         // 말풍선 모양과 색상 설정
-        val bubbleColor = if (message.isFromMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
+        val bubbleColor =
+            if (message.isFromMe) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer
         val bubbleShape = if (message.isFromMe) {
             RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp)
         } else {

@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.ui.Modifier
 import com.example.raon.features.auth.ui.z_etc.KakaoAuthViewModel
+import com.example.raon.navigation.AppNavigation
 import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.util.Utility
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,13 +28,11 @@ class MainActivity : ComponentActivity() {
         // KakaoSdk 초기화
         KakaoSdk.init(this, BuildConfig.Kakao_native_App_Key)
 
+
+        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
         enableEdgeToEdge()
         setContent {
-
-
-            AppNavigation(modifier = Modifier, kakaoAuthViewModel, this)
-
-
+            AppNavigation(modifier = Modifier)
         }
     }
 }

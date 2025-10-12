@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
-import org.hildan.krossbow.stomp.sendText
 import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import javax.inject.Inject
@@ -35,8 +34,14 @@ class StompService @Inject constructor(
     private val stompClient = StompClient(OkHttpWebSocketClient())
     private var session: StompSession? = null
 
-    private val _messages = MutableSharedFlow<ChatMessageDto>()
-    val messages: Flow<ChatMessageDto> get() = _messages.asSharedFlow()
+    // 서버에서 Stomp 실시간 데이터를 Json 형식으로 받아서 dto로 저장해서 다룰 때 코드
+//    private val _messages = MutableSharedFlow<ChatMessageDto>()
+//    val messages: Flow<ChatMessageDto> get() = _messages.asSharedFlow()
+
+
+    // ▼▼▼ 1. Flow가 String을 방출하도록 타입을 변경합니다. ▼▼▼
+    private val _messages = MutableSharedFlow<String>()
+    val messages: Flow<String> get() = _messages.asSharedFlow()
 
     private val gson = Gson()
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -71,16 +76,26 @@ class StompService @Inject constructor(
 
 
             // stomp subscribe destination
-            val destination = "/chat/${chatRoomId}"
+//            val destination = "/chat/${chatRoomId}"   // 수정전
+            val destination = "/user/chat"     // 수정후
+
+
 
             Log.d("StompService", "destination : ${destination}")
 
 
             scope.launch {
                 session!!.subscribeText(destination)
-                    .mapNotNull { jsonString ->
+                    .mapNotNull { chatmessage ->
                         try {
-                            Log.d("StompService", "수신 데이터: $jsonString") // ⬅️ 여기서 원본 JSON 확인!
+
+                            // ▼▼▼ 바로 이 로그입니다! ▼▼▼
+                            // 서버가 STOMP로 보낸 순수한 JSON 문자열이 그대로 출력됩니다.
+                            Log.d("StompService", "수신 데이터: $chatmessage") // ⬅️ 여기서 원본 JSON 확인!
+
+                            // 데이터 내보내기
+                            _messages.emit(chatmessage)
+
 //                            gson.fromJson(jsonString, ChatMessageDto::class.java)
                         } catch (e: Exception) {
                             Log.e("StompService", "JSON parsing failed", e)
@@ -98,28 +113,28 @@ class StompService @Inject constructor(
         }
     }
 
-    suspend fun sendMessage(chatRoomId: Long, message: String) {
-        session?.let { currentSession ->
-            try {
-                val destinationPath = "/chat/${chatRoomId}" // send destination
-
-                Log.e("StompService", "destinationPath: ${destinationPath}")
-
-
-                val payload = ChatMessageDto(
-                    senderId = 1, // 로그인 유저 정보를 실제로 대입
-                    content = message,
-                    timestamp = ""   // 필요시 설정
-                )
-                val jsonString = gson.toJson(payload)
-                // 함수 시그니처대로 destination, body 순서로 전달!
-                currentSession.sendText(destinationPath, jsonString)
-
-            } catch (e: Exception) {
-                Log.e("StompService", "Failed to send message", e)
-            }
-        }
-    }
+//    suspend fun sendMessage(chatRoomId: Long, message: String) {
+//        session?.let { currentSession ->
+//            try {
+//                val destinationPath = "/chat/${chatRoomId}" // send destination
+//
+//                Log.e("StompService", "destinationPath: ${destinationPath}")
+//
+//
+//                val payload = ChatMessageDto(
+//                    senderId = 1, // 로그인 유저 정보를 실제로 대입
+//                    content = message,
+//                    timestamp = ""   // 필요시 설정
+//                )
+//                val jsonString = gson.toJson(payload)
+//                // 함수 시그니처대로 destination, body 순서로 전달!
+//                currentSession.sendText(destinationPath, jsonString)
+//
+//            } catch (e: Exception) {
+//                Log.e("StompService", "Failed to send message", e)
+//            }
+//        }
+//    }
 
     suspend fun disconnect() {
         try {

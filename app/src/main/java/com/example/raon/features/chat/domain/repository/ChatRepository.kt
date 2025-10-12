@@ -40,20 +40,23 @@ interface ChatRepository {
      * @param chatRoomId 구독할 채팅방 ID
      * @param authToken 인증을 위한 Access Token
      */
-    suspend fun connectStomp(chatRoomId: Long, authToken: String)
+    suspend fun connectStomp(chatRoomId: Long)
 
     /**
      * 구독 중인 STOMP 메시지 흐름(Flow)을 제공합니다.
      * @return ChatMessageDto 객체를 방출하는 Flow
      */
-    fun observeMessages(): Flow<com.example.raon.features.chat.data.remote.ChatMessageDto>
+    fun observeMessages(chatId: Long): Flow<String>
+
+//    fun observeMessages(): Flow<com.example.raon.features.chat.data.remote.ChatMessageDto>    // dto일때
+
 
     /**
      * STOMP를 통해 실시간 메시지를 전송합니다.
      * @param recipientId 메시지를 받을 상대방의 사용자 ID
      * @param message 보낼 메시지 내용
      */
-    suspend fun sendStompMessage(chatRoomId: Long, message: String)
+//    suspend fun sendStompMessage(chatRoomId: Long, message: String)
 
     /**
      * STOMP 세션 연결을 해제합니다.

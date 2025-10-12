@@ -10,5 +10,6 @@ data class ChatMessage(
     val senderProfileUrl: String?,
     val content: String,
     val imageUrl: String?,
-    val timestamp: String
+    val timestamp: String,
+    val isFromMe: Boolean
 )

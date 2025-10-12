@@ -1,6 +1,5 @@
 package com.example.raon.features.auth.ui
 
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -50,8 +49,7 @@ const val KakaoChatLogo = android.R.drawable.sym_action_chat
 fun AuthScreen(
     modifier: Modifier = Modifier,
     onNavigateToLogin: () -> Unit,
-    onNavigateToSignUp: () -> Unit,
-    context: Context
+    onNavigateToSignUp: () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
 
@@ -65,7 +63,7 @@ fun AuthScreen(
         containerColor = Color(0xFFF0F2F5)
     ) { paddingValues ->
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues),
             horizontalAlignment = Alignment.CenterHorizontally

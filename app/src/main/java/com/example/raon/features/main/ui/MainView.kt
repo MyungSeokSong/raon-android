@@ -1,6 +1,8 @@
 package com.example.raon.features.main.ui
 
 //import com.example.raon.features.item.ui.list.HomeScreen
+//import com.example.raon.features.chat.ui.ChatListTopAppBar
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,13 +34,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.raon.NavItem
 import com.example.raon.features.chat.ui.ChatListScreen
-//import com.example.raon.features.chat.ui.ChatListTopAppBar
 import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
 import com.example.raon.features.item.ui.list.ItemListScreen
 import com.example.raon.features.user.ui.ProfileScreen
 import com.example.raon.features.user.ui.ProfileTopAppBar
+import com.example.raon.navigation.NavItem
 
 // comp 자동 완성 키워드
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,9 +58,9 @@ fun MainView(
     // 불변 List 자료구조 사용 - 굳이 수정될 이유가 없기 때문
     val navItemList = listOf(
         NavItem("홈", Icons.Default.Home, "home"),
-        NavItem("찜", Icons.Default.HeartBroken, "chat"),
+        NavItem("찜", Icons.Default.HeartBroken, "chatRoomList"),
         NavItem("등록", Icons.Default.AddCircle, "addItem"),
-        NavItem("채팅", Icons.Default.Send, "chat"),
+        NavItem("채팅", Icons.Default.Send, "chatRoomList"),
         NavItem("프로필", Icons.Default.Person, "profile"),
     )
 
@@ -171,9 +172,13 @@ fun MainView(
                     }
                 )
             }
-            composable("chat") {
+            composable("chatRoomList") {
                 ChatListScreen(
-                    navController,
+                    onChatRoomClick = { chatRoomId, sellerId ->
+                        navController.navigate("chatRoom/$chatRoomId")
+
+                        Log.d("채팅프로세스", "메인뷰 chatRoomId 전달 : ${chatRoomId}")
+                    },
                     chatRooms = mainUiState.chatRooms // ◀◀ 이 부분이 핵심입니다.
                 )
             }
