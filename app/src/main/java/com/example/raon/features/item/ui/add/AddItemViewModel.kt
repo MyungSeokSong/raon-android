@@ -30,8 +30,8 @@ class AddItemViewModel @Inject constructor(
             }
 
             is AddItemEvent.PriceChanged -> {   // 가격이 바뀌었을 때 새 객체 만들어서 업데이트
-                // 숫자만 입력되도록 필터링하는 로직 등을 추가할 수 있습니다.
-                _uiState.update { it.copy(price = event.price.length) }
+                // 숫자만 입력되도록 필터링하는 로직 등을 추가할 수 있음
+                _uiState.update { it.copy(price = event.price.toIntOrNull() ?: 0) }
             }
 
             is AddItemEvent.AddImages -> {  // 이미지가 추가됬을 때

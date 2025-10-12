@@ -127,11 +127,10 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.56.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
-//    ksp("com.google.dagger:hilt-android-compiler:2.56.2") // -> 이게 에러라고함
     ksp("com.google.dagger:hilt-compiler:2.56.2") // -> 위 코드 수정본
 
 
-//    // Coil 라이브러리
+    // Coil 라이브러리
     implementation("io.coil-kt.coil3:coil-compose:3.2.0")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.2.0")
 
@@ -144,38 +143,16 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended") // 더 많은 아이콘 사용을 위해
 
 
-    // 안드로이드에 가장 적합한 최신 Krossbow 라이브러리 설정
-//    val krossbowVersion = "7.0.0" // 2025년 10월 기준 최신 안정 버전
-//    implementation("org.krossbow:krossbow-stomp-client:$krossbowVersion")
-//    implementation("org.krossbow:krossbow-websocket-okhttp:$krossbowVersion")
-
-
     // Krossbow 라이브러리 -> Stomp 통신을 위한 라이브러리
     val krossbowVersion = "7.0.0"
-    implementation("org.hildan.krossbow:krossbow-stomp-core:7.0.0")
-    implementation("org.hildan.krossbow:krossbow-websocket-builtin:7.0.0")
-    implementation("org.hildan.krossbow:krossbow-websocket-okhttp:7.0.0")
+    implementation("org.hildan.krossbow:krossbow-stomp-core:${krossbowVersion}")
+    implementation("org.hildan.krossbow:krossbow-websocket-builtin:${krossbowVersion}")
+    implementation("org.hildan.krossbow:krossbow-websocket-okhttp:${krossbowVersion}")
 //    implementation("org.krossbow:krossbow-stomp-client:${krossbowVersion}")?
-// <-- 이것을 사용해야 합니다.
 
+    // Room 라이브러리
 
-    // --- 이 부분이 가장 중요합니다! ---
-// Krossbow STOMP를 위한 Gson 컨버터 라이브러리
-//    implementation("org.hildan.krossbow:krossbow-stomp-client:7.0.0")
-//    implementation("org.hildan.krossbow:krossbow-stomp-conversions-gson:7.0.0")
-
-    // STOMP 통신을 위한 Krossbow 라이브러리 (Gson 사용 -> Retrofit과 통일)
-    // Krossbow (STOMP + OkHttp WebSocket 클라이언트)
-//    implementation("org.hildan.krossbow:krossbow-stomp-client-android:5.4.0")
-//    // Krossbow가 Gson을 사용해 JSON을 변환하도록 도와주는 라이브러리
-//    implementation("org.hildan.krossbow:krossbow-stomp-conversions-gson:5.4.0")
-
-
-    // Krossbow의 기본 JSON 라이브러리인 kotlinx.serialization을 사용하도록 아래 라인을 추가합니다.
-//    implementation("org.hildan.krossbow:krossbow-stomp-conversions-kotlinx-serialization:7.0.0")
-
-// 만약 프로젝트에 kotlinx-serialization-json 의존성이 없다면 아래 라인도 추가해야 할 수 있습니다.
-//    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    val room_version = "2.8.1"
 
 
 }
