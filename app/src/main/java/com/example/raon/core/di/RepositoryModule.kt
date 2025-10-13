@@ -1,6 +1,8 @@
 package com.example.raon.core.di
 
 
+import com.example.raon.features.category.data.repository.CategoryRepositoryImpl
+import com.example.raon.features.category.domain.repository.CategoryRepository
 import com.example.raon.features.chat.data.repository.ChatRepositoryImpl
 import com.example.raon.features.chat.domain.repository.ChatRepository
 import com.example.raon.features.item.data.repository.ItemRepository
@@ -16,6 +18,15 @@ import javax.inject.Singleton
 @Module // Hilt에게 이것이 모듈 파일임을 알림
 @InstallIn(SingletonComponent::class) // 이 모듈의 의존성은 앱 전체에서 싱글톤으로 관리
 abstract class RepositoryModule {
+
+
+    // 👇 여기에 이 코드를 추가하세요!
+    @Binds
+    @Singleton
+    abstract fun bindCategoryRepository(
+        categoryRepositoryImpl: CategoryRepositoryImpl
+    ): CategoryRepository // CategoryRepository를 요청하면 -> CategoryRepositoryImpl을 주입
+
 
     @Binds // 인터페이스와 구현체를 연결해주는 역할을 함
     @Singleton

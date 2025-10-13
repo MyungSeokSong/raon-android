@@ -150,9 +150,15 @@ dependencies {
     implementation("org.hildan.krossbow:krossbow-websocket-okhttp:${krossbowVersion}")
 //    implementation("org.krossbow:krossbow-stomp-client:${krossbowVersion}")?
 
-    // Room 라이브러리
 
+    // Room 라이브러리
     val room_version = "2.8.1"
+    // 1. Room Runtime (핵심 엔진)
+    implementation("androidx.room:room-runtime:$room_version")
+    // 2. Room Compiler (KSP용 코드 생성기)
+    ksp("androidx.room:room-compiler:$room_version")
+    // 3. Room Coroutine Support (코루틴 지원)
+    implementation("androidx.room:room-ktx:$room_version")
 
 
 }

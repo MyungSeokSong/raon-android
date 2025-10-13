@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.raon.features.category.ui.CategoryScreen
 import com.example.raon.features.chat.ui.ChatRoomScreen
 import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
@@ -22,7 +23,14 @@ fun AppNavigation(
 ) {
     // navController 생성
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "auth_graph") {
+    NavHost(navController = navController, startDestination = "category") {
+
+        composable("category") {
+            CategoryScreen({ categoryId ->
+                navController.navigate("category?parentId=${categoryId}")
+            })
+        }
+
 
         // 그래프
         authGraph(navController)    // auth 관련 화면

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.raon.core.model.LoginState
 import com.example.raon.features.auth.data.local.TokenManager
+import com.example.raon.features.category.domain.repository.CategoryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,13 +15,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val tokenManager: TokenManager // Hilt를 통해 TokenManager 주입
+    private val tokenManager: TokenManager, // Hilt를 통해 TokenManager 주입
+    private val categoryRepository: CategoryRepository // Hilt를 통해 CategoryRepository 주입
 ) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Loading)
     val loginState = _loginState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            categoryRepository.setupCategoriesIfNeeded()
+        }
+
+
         checkLoginStatus()
     }
 

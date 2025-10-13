@@ -1,4 +1,4 @@
-package com.example.raon.features.category.domain
+package com.example.raon.features.category.domain.model
 
 /**
  * UI 계층에서 사용할 최종 카테고리 데이터 모델입니다.

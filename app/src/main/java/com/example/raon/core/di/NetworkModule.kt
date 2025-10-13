@@ -5,6 +5,7 @@ import com.example.raon.core.network.TokenAuthenticator
 import com.example.raon.core.network.api.ImageStorageService
 import com.example.raon.features.auth.data.remote.api.AuthApiService
 import com.example.raon.features.auth.data.repository.AuthRepository
+import com.example.raon.features.category.data.remote.api.CategoryApiService
 import com.example.raon.features.chat.data.remote.api.ChatApiService
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.user.data.remote.UserApiService
@@ -198,6 +199,16 @@ object NetworkModule {
     fun provideChatApiService(@Named("RaonRetrofit") retrofit: Retrofit): ChatApiService {
         return retrofit.create(ChatApiService::class.java)
     }
+
+
+    // 수정된 코드 ✨
+    @Provides
+    @Singleton
+    fun provideCategoryApiService(@Named("RaonRetrofit") retrofit: Retrofit): CategoryApiService {
+        // "RaonRetrofit"이라는 이름표가 붙은 Retrofit을 달라고 명확히 요청
+        return retrofit.create(CategoryApiService::class.java)
+    }
+
 
 }
 
