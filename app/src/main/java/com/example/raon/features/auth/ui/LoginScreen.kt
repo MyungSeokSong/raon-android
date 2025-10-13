@@ -81,8 +81,8 @@ fun LoginScreen(
 
 
     // Faliure 상태일 때만 사용할 에러 메시지 변수 -> 사용 중인지 애매함
-    val errorMessage = if (loginResult is LoginResult.Faliure) {
-        (loginResult as LoginResult.Faliure).message
+    val errorMessage = if (loginResult is LoginResult.Failure) {
+        (loginResult as LoginResult.Failure).message
     } else {
         null
     }
@@ -102,7 +102,7 @@ fun LoginScreen(
                 onLoginSuccess()
             }
 
-            is LoginResult.Faliure -> {
+            is LoginResult.Failure -> {
                 // 로그인 실패 시 에러 로그 출력 (Toast나 Snackbar로 사용자에게 알림을 주도록 설계)
 //                val errorMessage = (loginResult as LoginResult.Faliure).message
 //                Log.e("LoginScreen", "Login failed: $errorMessage")

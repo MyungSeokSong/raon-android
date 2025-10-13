@@ -14,6 +14,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed class SignUpResult {
+    object Idle : LoginResult()
+    object Loading : LoginResult()
+    data class Success(val message: String) : LoginResult() // 로그인 성공
+    data class Failure(val message: String) : LoginResult() // 로그인 실패
+    data class ServerError(val message: String) : LoginResult() // 서버 에러
+
+    class Error(val message: String) : LoginResult() // 예외상황 발생
+}
+
+
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authRepository: AuthRepository,
