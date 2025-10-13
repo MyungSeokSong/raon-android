@@ -9,18 +9,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -175,50 +172,50 @@ fun AuthScreen(
                     visible = visible,
                     enter = fadeIn(animationSpec = tween(400, 400))
                 ) {
-                    Text(text = "OR", color = Color.Gray, fontSize = 14.sp)
+//                    Text(text = "OR", color = Color.Gray, fontSize = 14.sp)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 카카오 로그인 버튼
-                AnimatedVisibility(
-                    visible = visible,
-                    enter = fadeIn(animationSpec = tween(400, 450)) + slideInVertically(
-                        initialOffsetY = { it },
-                        animationSpec = tween(400, 450)
-                    )
-                ) {
-                    Button(
-                        onClick = { /* TODO: 카카오 로그인 API 호출 */ },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFEE500),
-                            contentColor = Color(0xFF3C1E1E)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                painter = painterResource(id = KakaoChatLogo),
-                                contentDescription = "Kakao Logo",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.Black
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "카카오로 시작하기",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
+//                AnimatedVisibility(
+//                    visible = visible,
+//                    enter = fadeIn(animationSpec = tween(400, 450)) + slideInVertically(
+//                        initialOffsetY = { it },
+//                        animationSpec = tween(400, 450)
+//                    )
+//                ) {
+//                    Button(
+//                        onClick = { /* TODO: 카카오 로그인 API 호출 */ },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(56.dp),
+//                        shape = RoundedCornerShape(12.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color(0xFFFEE500),
+//                            contentColor = Color(0xFF3C1E1E)
+//                        ),
+//                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+//                    ) {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.Center
+//                        ) {
+//                            Icon(
+//                                painter = painterResource(id = KakaoChatLogo),
+//                                contentDescription = "Kakao Logo",
+//                                modifier = Modifier.size(24.dp),
+//                                tint = Color.Black
+//                            )
+//                            Spacer(modifier = Modifier.width(8.dp))
+//                            Text(
+//                                text = "카카오로 시작하기",
+//                                fontSize = 18.sp,
+//                                fontWeight = FontWeight.SemiBold
+//                            )
+//                        }
+//                    }
+//                }
             }
         }
     }

@@ -121,10 +121,10 @@ class AuthRepository @Inject constructor(
     }
 
     // 회원가입
-    suspend fun signup(nickname: String, email: String, password: String, locationId: Int?) {
+    suspend fun signup(nickname: String, email: String, password: String, locationId: Int) {
 
         // 통신 코드
-        val request = SignUpRequest(nickname, email, password, 1760) // 서버와 통신할 데이터
+        val request = SignUpRequest(nickname, email, password, locationId) // 서버와 통신할 데이터
         val response = apiService.signUp(request)    // 서버와 통신한 결과 데이터
 
 

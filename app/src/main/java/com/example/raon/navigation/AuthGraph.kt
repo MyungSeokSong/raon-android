@@ -2,7 +2,9 @@ package com.example.raon.navigation
 
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.example.raon.features.auth.ui.AuthScreen
 import com.example.raon.features.auth.ui.LoginScreen
@@ -54,16 +56,26 @@ fun NavGraphBuilder.authGraph(navController: NavController) {
 
 
         // SginUp 하면
-        composable("signUp") {
-            SignUpScreen({
-                navController.navigate("main_graph") {
-                    popUpTo("auth") {
-                        inclusive = true
-                    }
+        composable(
+            "signUp?locationId={locationId}&location={location}",
+            arguments = listOf(
+                navArgument("locationId") {
+                    type = NavType.IntType
+                    defaultValue = -1 // 기본값
+                },
+                navArgument("location") {
+                    type = NavType.StringType
+                    nullable = true // null 허용
                 }
-            }, {
-                navController.navigate("locationSetting")
-            }
+            )) {
+            SignUpScreen(
+                {
+                    navController.navigate("main_graph") {
+                        popUpTo("auth") {
+                            inclusive = true
+                        }
+                    }
+                },
             )
         }
 
@@ -71,8 +83,8 @@ fun NavGraphBuilder.authGraph(navController: NavController) {
         // 위치 정하는 Screen
         composable("location") {
             LocationSearchScreen(
-                onNavigateToSignup = {
-                    navController.navigate("signUp")
+                onNavigateToSignup = { address, locationId ->
+                    navController.navigate("signUp?locationId=${locationId}&location=${address}")
                 },
                 onBackClick = { // 뒤로 가기
                     navController.popBackStack()

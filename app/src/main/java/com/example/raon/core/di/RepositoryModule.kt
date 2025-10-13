@@ -7,6 +7,8 @@ import com.example.raon.features.chat.data.repository.ChatRepositoryImpl
 import com.example.raon.features.chat.domain.repository.ChatRepository
 import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.data.repository.ItemRepositoryImpl
+import com.example.raon.features.location.data.repository.LocationRepositoryImpl
+import com.example.raon.features.location.domain.repository.LocationRepository
 import com.example.raon.features.user.data.repository.UserRepositoryImpl
 import com.example.raon.features.user.domain.repository.UserRepository
 import dagger.Binds
@@ -51,4 +53,14 @@ abstract class RepositoryModule {
     abstract fun bindChatRepository(
         chatRepositoryImpl: ChatRepositoryImpl
     ): ChatRepository // ChatRepository를 요청하면 -> ChatRepositoryImpl을 주입
+
+
+    // @Binds 어노테이션을 사용하여 Hilt에게 지시합니다.
+    @Binds
+    @Singleton // 앱 전체에서 Repository 인스턴스를 하나만 사용하도록 설정
+    abstract fun bindLocationRepository(
+        // 'LocationRepositoryImpl' 객체를
+        locationRepositoryImpl: LocationRepositoryImpl
+        // 'LocationRepository' 인터페이스 타입으로 주입해달라는 의미
+    ): LocationRepository
 }

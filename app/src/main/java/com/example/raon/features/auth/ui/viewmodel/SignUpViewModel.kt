@@ -1,5 +1,6 @@
 package com.example.raon.features.auth.ui.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.raon.features.auth.data.repository.AuthRepository
@@ -15,11 +16,28 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    savedStateHandle: SavedStateHandle // 👈 주입
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState = _uiState.asStateFlow()
+
+
+    init {
+        val address: String? = savedStateHandle["location"]
+        val locationId: Int = savedStateHandle.get<Int>("locationId") ?: -1
+
+        if (address != null && locationId != -1) {
+            _uiState.update {
+                it.copy(
+                    userLocation = address,
+                    userLocationId = locationId
+                )
+            }
+        }
+    }
 
     // --- UI 이벤트를 처리하는 함수들 ---
     fun onNicknameChange(nickname: String) {
@@ -55,13 +73,16 @@ class SignUpViewModel @Inject constructor(
         if (currentState.nickname.isBlank() ||
             currentState.email.isBlank() ||
             currentState.password.isBlank() ||
-            currentState.passwordCheck.isBlank()
+            currentState.passwordCheck.isBlank() ||
+            currentState.userLocation.isBlank() ||
+            currentState.userLocationId == -1
         ) {
             _uiState.update {
                 it.copy(signUpResult = SignUpResult.Failure("모든 항목을 입력해주세요."))
             }
             return
         }
+
 
         // 2. 비밀번호 일치 여부 검사
         if (currentState.password != currentState.passwordCheck) {
@@ -75,12 +96,12 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(signUpResult = SignUpResult.Loading) }
 
-//            val respoonse = authReposi
+            // 회원가입 repository 실행
             val resposen = authRepository.signup(
                 currentState.nickname,
                 currentState.email,
                 currentState.password,
-                1760
+                locationId = currentState.userLocationId
             )
 
             try {
@@ -94,6 +115,8 @@ class SignUpViewModel @Inject constructor(
         }
     }
 
+
+    // SignUpResult를 다시 초기화 시키는 코드
     fun resultConsumed() {
         _uiState.update { it.copy(signUpResult = SignUpResult.Idle) }
     }

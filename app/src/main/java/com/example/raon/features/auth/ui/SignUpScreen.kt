@@ -5,15 +5,18 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,17 +25,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,25 +65,28 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    onSignupScussess: () -> Unit,
-    onNavigateToLocationSetting: () -> Unit = {},
+    onSignupSuccess: () -> Unit,
     signUpViewModel: SignUpViewModel = hiltViewModel()
 ) {
     val uiState by signUpViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // 모든 입력 필드가 채워졌는지 확인하는 변수
     val isFormValid = uiState.nickname.isNotBlank() &&
             uiState.email.isNotBlank() &&
             uiState.password.isNotBlank() &&
-            uiState.passwordCheck.isNotBlank()
+            uiState.passwordCheck.isNotBlank() &&
+            uiState.userLocation.isNotBlank()
 
+    // ... (LaunchedEffect, Box, Scaffold 등 나머지 코드는 동일) ...
     LaunchedEffect(key1 = uiState.signUpResult) {
         when (val result = uiState.signUpResult) {
+
+            // 회원가입 성공시 처리 과정
             is SignUpResult.Success -> {
                 Toast.makeText(context, "회원가입 성공!", Toast.LENGTH_SHORT).show()
-                onSignupScussess()
-                signUpViewModel.resultConsumed()
+                onSignupSuccess()
+                signUpViewModel.resultConsumed()        // SignUpResult를 다시 초기화 시키는 코드
+
             }
 
             is SignUpResult.Failure -> {
@@ -164,27 +171,15 @@ fun SignUpScreen(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
 
-//                    Button(
-//                        onClick = { onNavigateToLocationSetting() },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(56.dp),
-//                        shape = RoundedCornerShape(12.dp),
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color(0xFFFDCC31),
-//                            contentColor = Color(0xFF3C3C3C)
-//                        ),
-//                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-//                    ) {
-//                        Text(text = "위치 데이터", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-//                    }
-
+                    // ✨ 새롭게 디자인된 주소 표시 UI
+                    LocationDisplayField(
+                        address = uiState.userLocation
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = { signUpViewModel.signUp() },
-                        // 버튼 활성화 조건
                         enabled = isFormValid && uiState.signUpResult != SignUpResult.Loading,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -198,15 +193,8 @@ fun SignUpScreen(
                     ) {
                         Text(text = "가입하기", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
 
-                    TextButton(onClick = { /* TODO: 로그인 화면으로 이동 */ }) {
-                        Text(
-                            "이미 계정이 있으신가요? 로그인",
-                            color = Color(0xFF666666),
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
+                    // ✨ "이미 계정이 있으신가요?" TextButton이 제거되었습니다.
                 }
             }
         }
@@ -217,6 +205,55 @@ fun SignUpScreen(
     }
 }
 
+// ✨ OutlinedTextField 대신 커스텀 UI로 완전히 교체!
+@Composable
+private fun LocationDisplayField(
+    address: String
+) {
+    val displayText = if (address.isNotBlank()) address else "주소 정보 없음"
+
+    // 라벨과 내용 박스를 분리하기 위해 Column 사용
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // 1. "내 동네" 라벨을 텍스트 필드 밖으로 이동
+        Text(
+            text = "내 동네",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color(0xFF666666),
+            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+        )
+
+        // 2. 아이콘과 주소를 담는 Row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                // 3. 배경색과 모양을 지정하여 다른 필드와 구분
+                .background(
+                    color = Color(0xFFF5F5F5), // 연한 회색 배경
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Place,
+                contentDescription = null,
+                tint = Color(0xFFFDCC31)
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = displayText,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF333333)
+            )
+        }
+    }
+}
+
+
+// ... (SignUpTextField, PasswordTextField는 기존 코드와 동일) ...
 @Composable
 private fun SignUpTextField(
     value: String,

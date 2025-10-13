@@ -7,6 +7,9 @@ data class SignUpUiState(
     val email: String = "test@email.com",
     val password: String = "test1234",
     val passwordCheck: String = "test1234",
+    val userLocation: String = "",
+    val userLocationId: Int = -1,
+
 
     // 2. UI의 상태를 나타내는 값들
     val isPasswordVisible: Boolean = false,
