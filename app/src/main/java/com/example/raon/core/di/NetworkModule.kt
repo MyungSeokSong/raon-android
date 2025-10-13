@@ -32,7 +32,7 @@ object NetworkModule {
     private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
 //    private const val RAON_SERVER_URL = "http://192.168.111.183:4000/" // 기기 연결용
 
-//    private const val RAON_SERVER_URL = "http://192.168.43.59:4000/" // 실제 앱 용
+//    private const val RAON_SERVER_URL = "http://172.20.10.2:4000/" // 실제 앱 용
 
 
     // 잊지 말고 API Gateway ID를 꼭 수정 -> 바뀌면

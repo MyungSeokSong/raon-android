@@ -1,6 +1,11 @@
 package com.example.raon.features.location.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,17 +17,22 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,90 +41,127 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationSearchScreen() {
+fun LocationSearchScreen(
+    onNavigateToSignup: (LocationInfo) -> Unit, // 회원가입 Screen 이동 람다
+    onBackClick: () -> Unit, // 뒤로가기 람다
+    locationViewModel: LocationViewModel = viewModel()
+) {
     var searchText by remember { mutableStateOf("") }
+    val listUiState by locationViewModel.listUiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
-    val nearbyLocations = listOf(
-        "서울 영등포구 문래동6가", "서울 영등포구 문래동5가", "서울 영등포구 문래동4가",
-        "서울 영등포구 양평동1가", "서울 영등포구 양평제1동", "서울 영등포구 양평동2가",
-        "서울 영등포구 당산동2가", "서울 영등포구 문래동3가", "서울 영등포구 문래동2가",
-        "서울 영등포구 당산동1가", "서울 영등포구 문래동", "서울 영등포구 신길동",
-        "서울 영등포구 도림동"
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                locationViewModel.fetchCurrentLocation()
+            }
+        }
     )
 
-    // 👇 1. Scaffold로 전체 UI를 감싸줍니다.
-    Scaffold { paddingValues ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    TextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        placeholder = { Text("강남") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        ),
+                        singleLine = true
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (searchText.isNotEmpty()) {
+                        IconButton(onClick = { searchText = "" }) {
+                            Icon(Icons.Filled.Close, contentDescription = "Clear Search")
+                        }
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // 👇 2. Scaffold가 제공하는 paddingValues를 적용합니다.
                 .padding(paddingValues)
-                .padding(16.dp) // 기존의 16dp 패딩은 유지합니다.
         ) {
-            // 1. 검색창
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = { searchText = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("내 동네 이름(동,읍,면)으로 검색") },
-                leadingIcon = {
-                    Icon(Icons.Filled.Search, contentDescription = "Search Icon")
-                },
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 2. 현재 위치로 찾기 버튼
+            // '현재 위치로 찾기' 버튼
             Button(
-                onClick = { /* TODO: 현재 위치 찾기 로직 실행 */ },
+                onClick = {
+                    val hasPermission = ContextCompat.checkSelfPermission(
+                        context, Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                    if (hasPermission) {
+                        locationViewModel.fetchCurrentLocation()
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .height(48.dp),
+                // ✨ 요청하신 버튼 색상을 그대로 적용
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFFDCC31),
                     contentColor = Color(0xFF3C3C3C)
                 )
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.MyLocation,
-                        contentDescription = "Current Location Icon"
-                    )
+                    Icon(Icons.Filled.MyLocation, contentDescription = "Current Location Icon")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("현재 위치로 찾기", fontWeight = FontWeight.Bold)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // 목록 상태에 따른 UI 분기
+            when (val state = listUiState) {
+                is LocationListUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                }
 
-            // 3. '근처 동네' 섹션
-            Text("근처 동네", style = MaterialTheme.typography.titleSmall, color = Color.Gray)
-            Spacer(modifier = Modifier.height(8.dp))
+                is LocationListUiState.Success -> {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        items(items = state.locations) { locationInfo ->
 
-            // 4. 근처 동네 목록
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                items(nearbyLocations) { location ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { /* TODO: 선택된 동네 처리 로직 */ }
-                    ) {
-                        Text(
-                            text = location,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp)
-                        )
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+                            LocationListItem(
+                                locationInfo = locationInfo,
+                                onItemClick = { selectedLocation ->
+
+                                    onNavigateToSignup(selectedLocation)
+                                }
+                            )
+                        }
+                    }
+                }
+
+                is LocationListUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = state.message)
                     }
                 }
             }
@@ -122,11 +169,31 @@ fun LocationSearchScreen() {
     }
 }
 
-
-@Preview(showBackground = true, name = "Location Search UI Preview")
+// 리스트 아이템을 그리는 별도의 Composable
 @Composable
-fun LocationSearchScreenPreview() {
-    MaterialTheme {
-        LocationSearchScreen()
+fun LocationListItem(
+    locationInfo: LocationInfo,
+    onItemClick: (LocationInfo) -> Unit // ✨ 3. NavController 대신 클릭 이벤트를 처리할 람다를 받습니다.
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onItemClick(locationInfo) }    // Item들이 터치당하면 실행하는 람다 함수 넣어주기
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = locationInfo.mainAddress,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Normal
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = locationInfo.subAddress,
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+            lineHeight = 16.sp,
+            maxLines = 1 // 한 줄로 표시하고 나머지는 ... 처리
+        )
     }
+    HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
 }

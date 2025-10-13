@@ -37,7 +37,7 @@ fun NavGraphBuilder.authGraph(navController: NavController) {
         composable("auth") {
             AuthScreen(
                 onNavigateToLogin = { navController.navigate("login") },
-                onNavigateToSignUp = { navController.navigate("signUp") }
+                onNavigateToLocationForSignup = { navController.navigate("location") }
             )
         }
 
@@ -68,8 +68,16 @@ fun NavGraphBuilder.authGraph(navController: NavController) {
         }
 
 
-        composable("locationSetting") {
-            LocationSearchScreen()
+        // 위치 정하는 Screen
+        composable("location") {
+            LocationSearchScreen(
+                onNavigateToSignup = {
+                    navController.navigate("signUp")
+                },
+                onBackClick = { // 뒤로 가기
+                    navController.popBackStack()
+                }
+            )
         }
 
     }

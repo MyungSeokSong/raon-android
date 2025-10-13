@@ -164,20 +164,22 @@ fun SignUpScreen(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    Button(
-                        onClick = { onNavigateToLocationSetting() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFDCC31),
-                            contentColor = Color(0xFF3C3C3C)
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        Text(text = "위치 데이터", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                    }
+//                    Button(
+//                        onClick = { onNavigateToLocationSetting() },
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(56.dp),
+//                        shape = RoundedCornerShape(12.dp),
+//                        colors = ButtonDefaults.buttonColors(
+//                            containerColor = Color(0xFFFDCC31),
+//                            contentColor = Color(0xFF3C3C3C)
+//                        ),
+//                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+//                    ) {
+//                        Text(text = "위치 데이터", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+//                    }
+
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(

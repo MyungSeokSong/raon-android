@@ -148,7 +148,6 @@ dependencies {
     implementation("org.hildan.krossbow:krossbow-stomp-core:${krossbowVersion}")
     implementation("org.hildan.krossbow:krossbow-websocket-builtin:${krossbowVersion}")
     implementation("org.hildan.krossbow:krossbow-websocket-okhttp:${krossbowVersion}")
-//    implementation("org.krossbow:krossbow-stomp-client:${krossbowVersion}")?
 
 
     // Room 라이브러리
@@ -160,5 +159,9 @@ dependencies {
     // 3. Room Coroutine Support (코루틴 지원)
     implementation("androidx.room:room-ktx:$room_version")
 
+    // GPS 라이브러리 -> await() 함수가 필요
+    implementation("com.google.android.gms:play-services-location:21.2.0")
+    // await() 함수를 사용하기 위한 라이브러리 -> android gps는 await()를 사용해야함
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
 
 }

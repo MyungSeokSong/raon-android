@@ -65,7 +65,7 @@ class StompService @Inject constructor(
             val webSocketUrl = "ws://10.0.2.2:4000/ws" // -> 애뮬레이터 용
 //            val webSocketUrl = "ws://192.168.111.183:4000/ws" // -> 기기 연결 용
 
-//            val webSocketUrl = "ws://192.168.43.59:4000/ws" // 실제 서버 엔드포인트로 교체
+//            val webSocketUrl = "ws://172.20.10.2:4000/ws" // 실제 서버 엔드포인트로 교체
 
 
             // 헤더에 AccessToken 넣어서 만들기

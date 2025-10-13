@@ -23,7 +23,7 @@ fun AppNavigation(
 ) {
     // navController 생성
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = "category") {
+    NavHost(navController = navController, startDestination = "auth_graph") {
 
         composable("category") {
             CategoryScreen({ categoryId ->

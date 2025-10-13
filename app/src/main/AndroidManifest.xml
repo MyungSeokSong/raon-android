@@ -5,7 +5,10 @@
     <!-- 인터넷 사용 권한 설정-->
     <uses-permission android:name="android.permission.INTERNET" />
 
-
+    <!-- GPS, Wifi로 위치 가져오는 권한 설정-->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
     <!--        http통신도 허용 하게하는 줄-->
     <application
         android:usesCleartextTraffic="true"
@@ -33,19 +36,21 @@
             </intent-filter>
         </activity>
 
-<!--        카카오 로그인 액티비티 설정-->
+        <!--        카카오 로그인 액티비티 설정-->
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <!-- Redirect URI: "kakao${NATIVE_APP_KEY}://oauth" -->
-<!--                <data android:host="oauth"-->
-<!--                    android:scheme="kakao${NATIVE_APP_KEY}" />-->
-                <data android:host="oauth"
+                <!--                <data android:host="oauth"-->
+                <!--                    android:scheme="kakao${NATIVE_APP_KEY}" />-->
+                <data
+                    android:host="oauth"
                     android:scheme="kakaoe72fcf70623e601b900835b95ca089b6" />
 
             </intent-filter>

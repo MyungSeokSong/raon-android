@@ -49,7 +49,7 @@ const val KakaoChatLogo = android.R.drawable.sym_action_chat
 fun AuthScreen(
     modifier: Modifier = Modifier,
     onNavigateToLogin: () -> Unit,
-    onNavigateToSignUp: () -> Unit
+    onNavigateToLocationForSignup: () -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
 
@@ -152,7 +152,7 @@ fun AuthScreen(
                     )
                 ) {
                     OutlinedButton(
-                        onClick = onNavigateToSignUp,
+                        onClick = onNavigateToLocationForSignup,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
