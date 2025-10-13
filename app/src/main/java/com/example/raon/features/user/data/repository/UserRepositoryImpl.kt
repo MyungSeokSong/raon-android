@@ -17,6 +17,7 @@ class UserRepositoryImpl @Inject constructor(
     private val userDataStore: UserDataStore
 ) : UserRepository {
 
+    // DataStore에서 Profile 데이터 가져오기
     override fun getUserProfile(): Flow<User?> {
         return userDataStore.userProfileFlow
     }

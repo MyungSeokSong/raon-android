@@ -43,14 +43,18 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.example.raon.features.item.ui.list.model.ItemUiModel
+import com.example.raon.features.main.ui.MainViewModel
 
 @Composable
 fun ItemListScreen(
     modifier: Modifier = Modifier,
     viewModel: ItemListViewModel = hiltViewModel(),
+    mainviewModel: MainViewModel = hiltViewModel(),
     onNavigateToSearch: () -> Unit,
     onItemClick: (Int) -> Unit  // ItemDetail 페이지로 이동 이벤트
 ) {
+
+
     val uiState by viewModel.uiState.collectAsState()
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -81,7 +85,8 @@ fun ItemListScreen(
 
 @Composable
 fun HomeScreenTopAppBar(
-    onNavigateToSearch: () -> Unit
+    onNavigateToSearch: () -> Unit,
+    address: String
 ) {
     Column(modifier = Modifier.statusBarsPadding()) {
         Row(
@@ -91,7 +96,7 @@ fun HomeScreenTopAppBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "대자동", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                Text(text = address, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 Icon(Icons.Default.KeyboardArrowDown, contentDescription = "지역 선택")
             }
             Spacer(modifier = Modifier.weight(1f))

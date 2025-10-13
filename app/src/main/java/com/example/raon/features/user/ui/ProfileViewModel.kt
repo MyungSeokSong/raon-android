@@ -23,10 +23,4 @@ class ProfileViewModel @Inject constructor(
             initialValue = null
         )
 
-    // 데이터 로딩 로직이 MainViewModel로 이전되었으므로 init 블록을 주석.
-    // init {
-    //     viewModelScope.launch {
-    //         userRepository.fetchAndSaveUserProfile()
-    //     }
-    // }
 }

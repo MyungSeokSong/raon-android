@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.ui.list.model.ItemUiModel
+import com.example.raon.features.user.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,14 +22,17 @@ data class ItemListUiState(
 
 @HiltViewModel
 class ItemListViewModel @Inject constructor(
-    private val itemRepository: ItemRepository
+    private val itemRepository: ItemRepository,
+    private val userRepository: UserRepository  // Datastore에서 Profile 주소 데이터 가져오기 위해서
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ItemListUiState())
     val uiState = _uiState.asStateFlow()
 
+
     init {
         loadItems()
+
     }
 
     private fun loadItems() {

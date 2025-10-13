@@ -6,12 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.raon.core.network.ApiResult
 import com.example.raon.features.chat.data.remote.dto.ChatRoomInfo
 import com.example.raon.features.chat.domain.repository.ChatRepository
+import com.example.raon.features.user.domain.model.User
 import com.example.raon.features.user.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first // 👈 Flow에서 첫 번째 값을 꺼내기 위해 import
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,6 +35,24 @@ class MainViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState = _uiState.asStateFlow()
+
+    val userProfile: StateFlow<User?> = userRepository.getUserProfile()
+        .onEach { user -> // <-- 이 부분을 추가하세요!
+            Log.d("YourViewModel", "DataStore에서 ?1")
+
+            if (user != null) {
+                Log.d("YourViewModel", "DataStore에서 사용자 데이터 로드 성공: $user")
+            } else {
+                Log.d("YourViewModel", "DataStore에 사용자 데이터가 없거나 초기값입니다.")
+            }
+            Log.d("YourViewModel", "DataStore에서 ?2")
+
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     init {
         loadInitialData()

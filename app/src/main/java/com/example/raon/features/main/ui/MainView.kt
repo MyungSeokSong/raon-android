@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -49,6 +50,14 @@ fun MainView(
     navController: NavController,
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 실
 ) {
+
+    // 👇 이 한 줄이 '구독'을 시작하게 만드는 핵심 코드입니다!
+    // 이 코드가 실행되는 순간, ViewModel의 userProfile Flow가 활성화됩니다.
+    val userProfile by mainViewModel.userProfile.collectAsStateWithLifecycle()
+
+//    val mainaddress = userProfile.address.split("").last()
+
+    val mainaddress = userProfile?.address?.split(" ")?.lastOrNull()    // -> 풀 주소의 마지막 동만 가져오기
 
 
     val mainUiState by mainViewModel.uiState.collectAsState()
@@ -79,7 +88,8 @@ fun MainView(
 
             when (currentRoute) {
                 "home" -> HomeScreenTopAppBar(
-                    { navController.navigate("searchInput") {} }
+                    { navController.navigate("searchInput") {} },
+                    address = mainaddress ?: "내 주소"
                 )
 
 //                "chat" -> ChatListTopAppBar()
