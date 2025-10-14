@@ -21,13 +21,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -49,6 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+
+// 채팅하기 버튼 색
+private val BrandYellow = Color(0xFFFDCC31)
+private val DarkGrayText = Color(0xFF3C3C3C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,7 +87,7 @@ fun ItemDetailScreen(
         bottomBar = {
             uiState.item?.let {
                 ProductBottomBar(
-                    price = it.price,
+//                    price = it.price,
                     onChatClick = {
                         viewModel.onChatButtonClicked()
                     }
@@ -125,7 +129,9 @@ fun ItemDetailScreen(
                         item {
                             ProductInfo(
                                 title = item.title,
-                                categoryAndTime = "${item.category} · ${item.createdAt}",
+                                price = item.price,
+                                category = "${item.category} ",  //·
+                                time = "${item.createdAt}",
                                 description = item.description,
                                 stats = "관심 ${item.favoriteCount} · 조회 ${item.viewCount}"
                             )
@@ -150,12 +156,12 @@ private fun ProductDetailTopAppBar(onBackClick: () -> Unit) {
             }
         },
         actions = {
-            IconButton(onClick = { /* TODO: 홈 화면 이동 */ }) {
-                Icon(Icons.Outlined.Home, contentDescription = "홈")
-            }
-            IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "더보기")
-            }
+//            IconButton(onClick = { /* TODO: 홈 화면 이동 */ }) {
+//                Icon(Icons.Outlined.Home, contentDescription = "홈")
+//            }
+//            IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
+//                Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+//            }
         }
     )
 }
@@ -245,7 +251,9 @@ private fun SellerProfile(nickname: String, profileUrl: String?, address: String
 @Composable
 private fun ProductInfo(
     title: String,
-    categoryAndTime: String,
+    price: Int,
+    category: String,
+    time: String,
     description: String,
     stats: String
 ) {
@@ -256,33 +264,115 @@ private fun ProductInfo(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-        Text(text = categoryAndTime, color = Color.Gray, fontSize = 13.sp)
+        // 👇 추가된 가격 Text 입니다.
+        Text(
+            text = "%,d원".format(price),
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
+        Text(text = category, color = Color.Gray, fontSize = 13.sp)
+        Text(text = time, color = Color.Gray, fontSize = 13.sp)
+
         Text(text = description, fontSize = 16.sp, lineHeight = 24.sp)
         Text(text = stats, color = Color.Gray, fontSize = 13.sp)
     }
 }
 
+
 @Composable
-private fun ProductBottomBar(price: Int, onChatClick: () -> Unit) {
+private fun ProductBottomBar(onChatClick: () -> Unit) {
+    // Surface를 사용하여 그림자 효과를 줍니다.
     Surface(shadowElevation = 8.dp) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                Icons.Outlined.FavoriteBorder,
-                contentDescription = "관심",
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            }
-            Button(onClick = onChatClick) {
-                Text("채팅하기")
+        // Column을 사용하여 상단 구분선과 버튼 영역을 나눕니다.
+        Column {
+            // 상단에 회색 구분선을 추가합니다.
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp), // 패딩을 조절합니다.
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 클릭 가능한 좋아요 아이콘 버튼
+                IconButton(onClick = { /* TODO: 좋아요 기능 구현 */ }) {
+                    Icon(
+                        Icons.Outlined.FavoriteBorder,
+                        contentDescription = "관심",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(16.dp)) // 아이콘과 버튼 사이의 간격
+
+                // 채팅하기 버튼
+                Button(
+                    onClick = onChatClick,
+                    // weight(1f)를 사용하여 남은 가로 공간을 모두 차지하게 합니다.
+                    modifier = Modifier.weight(1f),
+                    // 👇 이 부분을 추가하여 버튼 색상을 지정합니다.
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BrandYellow, // 버튼 배경색
+                        contentColor = DarkGrayText   // 버튼 안의 글자색
+                    )
+                ) {
+                    Text("채팅하기")
+                }
             }
         }
     }
 }
+
+
+//@Composable
+//private fun ProductBottomBar(
+//    price: Int,
+//    onChatClick: () -> Unit
+//) { // price 인자는 더 이상 사용되지 않지만, 기존 호출부와의 호환성을 위해 유지합니다.
+//    Surface(shadowElevation = 8.dp) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 16.dp, vertical = 12.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            // 좋아요 아이콘
+//            Icon(
+//                Icons.Outlined.FavoriteBorder,
+//                contentDescription = "관심",
+//                modifier = Modifier.size(28.dp)
+//            )
+////            // Spacer를 사용하여 남은 공간을 모두 차지하게 하여 채팅하기 버튼을 오른쪽 끝으로 밀어냅니다.
+////            Spacer(Modifier.weight(1f))
+//            // 채팅하기 버튼
+//            Button(onClick = onChatClick) {
+//                Text("채팅하기")
+//            }
+//        }
+//    }
+//}
+
+//@Composable
+//private fun ProductBottomBar(price: Int, onChatClick: () -> Unit) {
+//    Surface(shadowElevation = 8.dp) {
+//        Row(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(horizontal = 16.dp, vertical = 12.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Icon(
+//                Icons.Outlined.FavoriteBorder,
+//                contentDescription = "관심",
+//                modifier = Modifier.size(28.dp)
+//            )
+//            Spacer(Modifier.width(16.dp))
+//            Column(modifier = Modifier.weight(1f)) {
+//                Text(text = "%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+//            }
+//            Button(onClick = onChatClick) {
+//                Text("채팅하기")
+//            }
+//        }
+//    }
+//}

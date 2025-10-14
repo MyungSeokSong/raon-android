@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,10 +30,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.raon.features.chat.data.remote.dto.ChatRoomInfo
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
+
+
+/**
+ * TopAppBar: MainView에서 호출하여 사용합니다.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ChatListTopAppBar(navController: NavController) {
+    TopAppBar(
+        title = { Text("채팅방") },
+//        actions = {
+//            IconButton(onClick = { navController.navigate("settings_screen") }) {
+//                Icon(
+//                    imageVector = Icons.Default.Settings,
+//                    contentDescription = "설정으로 이동"
+//                )
+//            }
+//        }
+    )
+}
 
 @Composable
 fun ChatListScreen(

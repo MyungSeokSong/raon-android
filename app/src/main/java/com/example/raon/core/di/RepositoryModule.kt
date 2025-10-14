@@ -9,6 +9,8 @@ import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.data.repository.ItemRepositoryImpl
 import com.example.raon.features.location.data.repository.LocationRepositoryImpl
 import com.example.raon.features.location.domain.repository.LocationRepository
+import com.example.raon.features.search.data.repository.SearchRepositoryImpl
+import com.example.raon.features.search.domain.repository.SearchRepository
 import com.example.raon.features.user.data.repository.UserRepositoryImpl
 import com.example.raon.features.user.domain.repository.UserRepository
 import dagger.Binds
@@ -63,4 +65,12 @@ abstract class RepositoryModule {
         locationRepositoryImpl: LocationRepositoryImpl
         // 'LocationRepository' 인터페이스 타입으로 주입해달라는 의미
     ): LocationRepository
+
+
+    // Search 기능 Repository
+    @Binds
+    @Singleton
+    abstract fun bindSearchRepository(
+        searchRepositoryImpl: SearchRepositoryImpl
+    ): SearchRepository // SearchRepository를 요청하면 -> SearchRepositoryImpl을 주입
 }

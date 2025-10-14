@@ -198,13 +198,54 @@ fun AppNavigation(
 
         composable("searchInput") {
             SearchInputScreen(
-                { navController.navigate("searchResult") }
+                { query ->
+
+                    navController.navigate("searchResult/$query")
+                },
+                onCloses = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate("main_graph") {
+                        popUpTo("searchInput") { inclusive = true }
+                    }
+//                    navController.popBackStack()
+                }
             )
         }
 
-        composable("searchResult") {
-            SearchResultScreen()
+//        composable("searchResult") {
+//            SearchResultScreen()
+//        }
+
+        // 2. 검색 결과 화면
+        composable(
+            route = "searchResult/{query}", // {query} 부분으로 검색어를 전달받음
+            arguments = listOf(navArgument("query") { type = NavType.StringType })
+        ) { backStackEntry ->
+            // 전달받은 검색어를 추출
+            val query = backStackEntry.arguments?.getString("query") ?: ""
+            SearchResultScreen(
+                searchQuery = query,
+                // 상세 페이지로 이동하는 로직 등 추가
+                onItemClick = { itemId ->
+                    /* TODO: 상세 페이지로 이동 */
+                    navController.navigate("itemDetail/$itemId")
+                },
+                onCloses = {
+                    navController.popBackStack()
+                },
+                onNavigateToHome = {
+                    navController.navigate("main_graph") {
+                        popUpTo("searchInput") { inclusive = true }
+
+                    }
+                }
+            )
         }
+
+
+        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
 
 //        composable("locationSetting") {

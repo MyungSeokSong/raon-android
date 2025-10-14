@@ -15,14 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
@@ -32,20 +30,18 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold // 👈 Scaffold import
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -60,110 +56,32 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.example.raon.features.search.ui.model.SearchItemUiModel
 import kotlinx.coroutines.launch
 
-// 데이터 클래스
-data class ProductItem(
-    val id: Int,
-    val title: String,
-    val location: String,
-    val timeAgo: String,
-    val price: Int,
-    val imageUrl: String,
-    val comments: Int,
-    val likes: Int
-)
-
-
-// ✨ 새로 추가된 필터 칩 Row
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CategoryChipsRow() {
-    val categories = listOf("전체", "중고거래", "동네생활", "동네업체", "업체") // Image 1 기준
-    var selectedCategory by remember { mutableStateOf("중고거래") } // 기본 선택
-
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp), // 상단 여백 조절
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(categories) { category ->
-            val isSelected = category == selectedCategory
-            FilterChip(
-                selected = isSelected,
-                onClick = { selectedCategory = category },
-                label = { Text(category) },
-                enabled = true,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.onSurface, // 선택 시 어둡게
-                    selectedLabelColor = Color.White,
-                    containerColor = Color.LightGray.copy(alpha = 0.5f), // 기본 배경색
-                    labelColor = Color.Black // 기본 글씨색
-                ),
-                shape = RoundedCornerShape(20.dp), // 둥근 모양
-                border = null // 보더 없음
-            )
-        }
-    }
-}
 
 // 화면 콘텐츠
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchResultScreen(modifier: Modifier = Modifier) {
-    val productList = remember {
-        listOf(
-            ProductItem(
-                1,
-                "QCY HT10 AilyBuds 무선 이어폰",
-                "화정동",
-                "14시간 전",
-                15000,
-                "https://picsum.photos/id/10/200/200",
-                1,
-                3
-            ),
-            ProductItem(
-                2,
-                "qcy t13 이어폰",
-                "원흥동",
-                "17일 전",
-                20000,
-                "https://picsum.photos/id/20/200/200",
-                0,
-                0
-            ),
-            ProductItem(
-                3,
-                "QCY ailybids pro+ 오픈형 이어폰",
-                "지축동",
-                "19시간 전",
-                20000,
-                "https://picsum.photos/id/30/200/200",
-                0,
-                2
-            ),
-            ProductItem(
-                5,
-                "QCY 블루투스 이어폰 팔아요",
-                "삼송동",
-                "2일 전",
-                13000,
-                "https://picsum.photos/id/40/200/200",
-                5,
-                10
-            ),
-            ProductItem(
-                6,
-                "깨끗한 QCY-T1 판매합니다",
-                "도내동",
-                "5일 전",
-                10000,
-                "https://picsum.photos/id/50/200/200",
-                2,
-                8
-            )
-        )
+fun SearchResultScreen(
+    modifier: Modifier = Modifier,
+    searchQuery: String,
+    searchViewModel: SearchResultViewModel = hiltViewModel(),
+    onItemClick: (Int) -> Unit = {},     // onItemClick, 기본값으로 빈 함수
+    onCloses: () -> Unit = {},  // 닫기 이벤트
+    onNavigateToHome: () -> Unit = {}   // 홈가기 이벤트
+
+) {
+
+    // viewModel의 uistate 구독
+    val uiState by searchViewModel.uiState.collectAsStateWithLifecycle()
+
+    // ✅ 수정: 화면이 처음 나타날 때 전달받은 searchQuery로 검색 시작
+    LaunchedEffect(key1 = searchQuery) {
+        searchViewModel.onSearch(searchQuery)
     }
 
     var showSortBottomSheet by remember { mutableStateOf(false) }
@@ -177,28 +95,35 @@ fun SearchResultScreen(modifier: Modifier = Modifier) {
     val priceBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
-    var searchQuery by remember { mutableStateOf("") }
 
-    // ✅ Scaffold 적용
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            SearchAppBar(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                onSearch = { /* 검색 로직 */ },
-                onBackClick = { /* 뒤로가기 */ },
-                onHomeClick = { /* 홈으로 */ }
-            )
+            Column(modifier = Modifier.statusBarsPadding()) {
+                SearchAppBar(
+                    query = uiState.searchQuery,
+//                    onQueryChange = { newQuery = it },
+                    onQueryChange = { newQuery -> searchViewModel.onQueryChanged(newQuery) },
+
+                    onSearch = { /* 검색 로직 */ },
+                    onBackClick = {
+                        /* 뒤로가기 */
+                        onCloses()
+                    },
+                    onHomeClick = {
+                        /* 홈으로 */
+                        onNavigateToHome()
+                    }
+                )
+            }
         },
-        floatingActionButton = {
-            WritePostFab()
-        }
-    ) { paddingValues -> // ✅ Scaffold가 제공하는 패딩 값
+    ) { paddingValues ->
+        // ✅ 수정: Box 및 로딩/에러 UI 제거, 원래 Column 구조로 복귀
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // ✅ 패딩 적용
+                .padding(paddingValues)
         ) {
             FilterControls(
                 onSortClick = { showSortBottomSheet = true },
@@ -207,7 +132,11 @@ fun SearchResultScreen(modifier: Modifier = Modifier) {
                 onPriceClick = { showPriceBottomSheet = true }
             )
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f))
-            ProductList(products = productList)
+            // ✅ 수정: 임시 데이터인 productList를 전달
+            ProductList(
+                products = uiState.products,
+                onItemClick = onItemClick
+            )
         }
     }
 
@@ -262,21 +191,6 @@ fun SearchResultScreen(modifier: Modifier = Modifier) {
     }
 }
 
-// 글쓰기 버튼
-@Composable
-fun WritePostFab() {
-    FloatingActionButton(
-        onClick = { /* 글쓰기 화면으로 이동 */ },
-        containerColor = Color(0xFFF76707), // 주황색
-        contentColor = Color.White,
-        shape = CircleShape
-    ) {
-        Icon(Icons.Default.Add, contentDescription = "글쓰기")
-    }
-}
-
-
-// --- 이하 부속 Composable 함수들은 변경 없음 ---
 
 @Composable
 fun FilterControls(
@@ -345,20 +259,33 @@ fun FilterDropdownButton(text: String, onClick: () -> Unit) {
 
 
 @Composable
-fun ProductList(products: List<ProductItem>) {
+fun ProductList(
+    products: List<SearchItemUiModel>,
+    onItemClick: (Int) -> Unit
+) {
     LazyColumn {
-        items(products) { product ->
-            ProductListItem(item = product)
+        items(
+            items = products,
+            key = { it.id }
+        ) { product ->
+            ProductListItem(
+                item = product,
+                onClick = { onItemClick(product.id) }
+            )
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
         }
     }
 }
 
 @Composable
-fun ProductListItem(item: ProductItem) {
+fun ProductListItem(
+    item: SearchItemUiModel,
+    onClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
         AsyncImage(

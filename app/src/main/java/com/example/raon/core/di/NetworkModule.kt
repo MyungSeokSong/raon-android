@@ -9,6 +9,7 @@ import com.example.raon.features.category.data.remote.api.CategoryApiService
 import com.example.raon.features.chat.data.remote.api.ChatApiService
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.location.data.remote.api.LocationApiService
+import com.example.raon.features.search.data.remote.api.SearchApiService
 import com.example.raon.features.user.data.remote.UserApiService
 import dagger.Module
 import dagger.Provides
@@ -30,8 +31,8 @@ import javax.inject.Singleton
 object NetworkModule {
 
     // --- 서버별 기본 URL ---
-    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
-//    private const val RAON_SERVER_URL = "http://172.18.16.1:4000/" // 기기 연결용
+//    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
+    private const val RAON_SERVER_URL = "http://192.168.188.222:4000/" // 기기 연결용
 
 //    private const val RAON_SERVER_URL = "http://172.20.10.2:4000/" // 실제 앱 용
 
@@ -216,6 +217,13 @@ object NetworkModule {
         return retrofit.create(LocationApiService::class.java)
     }
 
+
+    // 검색 API (라온마켓 서버용 Retrofit 사용)
+    @Provides
+    @Singleton
+    fun provideSearchApiService(@Named("RaonRetrofit") retrofit: Retrofit): SearchApiService {
+        return retrofit.create(SearchApiService::class.java)
+    }
 
 }
 

@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.HeartBroken
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -36,6 +36,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.raon.features.chat.ui.ChatListScreen
+import com.example.raon.features.chat.ui.ChatListTopAppBar
 import com.example.raon.features.item.ui.list.HomeScreenTopAppBar
 import com.example.raon.features.item.ui.list.ItemListScreen
 import com.example.raon.features.user.ui.ProfileScreen
@@ -67,7 +68,7 @@ fun MainView(
     // 불변 List 자료구조 사용 - 굳이 수정될 이유가 없기 때문
     val navItemList = listOf(
         NavItem("홈", Icons.Default.Home, "home"),
-        NavItem("찜", Icons.Default.HeartBroken, "chatRoomList"),
+        NavItem("검색", Icons.Default.Search, "searchInput"),
         NavItem("등록", Icons.Default.AddCircle, "addItem"),
         NavItem("채팅", Icons.Default.Send, "chatRoomList"),
         NavItem("프로필", Icons.Default.Person, "profile"),
@@ -92,7 +93,7 @@ fun MainView(
                     address = mainaddress ?: "내 주소"
                 )
 
-//                "chat" -> ChatListTopAppBar()
+                "chatRoomList" -> ChatListTopAppBar(navController)
                 "profile" -> ProfileTopAppBar(navController)
             }
         },
@@ -115,6 +116,9 @@ fun MainView(
                             if (navItem.route == "addItem") {
                                 // '등록' 탭을 눌렀을 때, 최상위 navController를 사용하여 새로운 화면으로 이동
                                 navController.navigate("addItem")
+                            } else if (navItem.route == "searchInput") {
+                                navController.navigate("searchInput")
+
                             } else {
                                 // **핵심 변경 4: bottomNavController를 사용하여 해당 탭의 경로로 이동합니다.**
                                 bottomNavController.navigate(navItem.route) {
