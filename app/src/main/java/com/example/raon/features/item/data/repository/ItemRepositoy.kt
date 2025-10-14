@@ -41,5 +41,11 @@ interface ItemRepository {
     // 2. 채팅방이 없을 때 생성하는 함수
     suspend fun createChatForItem(itemId: Long): ApiResult<CreateChatRoomResponseDto>
 
+    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+
+    // Item 조회수 증가 함수
+    suspend fun increaseViewCount(itemId: Int)
+
 
 }

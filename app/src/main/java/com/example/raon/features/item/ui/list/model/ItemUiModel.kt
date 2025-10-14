@@ -10,6 +10,8 @@ data class ItemUiModel( // 이름 변경
     val timeAgo: String,
     val price: Int,
     val imageUrl: String,
-    val comments: Int,
-    val likes: Int
+    val comments: Int,  // 뎃글 개수
+    val likes: Int,     // 좋아요 수, 관심 글 수
+    val viewCount: Int  // 조회수
+
 )

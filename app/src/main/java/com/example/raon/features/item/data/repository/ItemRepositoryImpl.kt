@@ -224,7 +224,8 @@ class ItemRepositoryImpl @Inject constructor(
             price = this.price,
             imageUrl = presignedUrl ?: "",
             likes = this.favoriteCount,
-            comments = 0
+            comments = 0,
+            viewCount = this.viewCount
         )
     }
 
@@ -280,7 +281,7 @@ class ItemRepositoryImpl @Inject constructor(
     }
 
     /**
-     * [수정] toItemDetailModel 함수가 Presigned URL을 받도록 변경
+     *  toItemDetailModel 함수가 Presigned URL을 받도록 변경
      */
     private fun ItemDetailData.toItemDetailModel(presignedUrls: List<String>): ItemDetailModel {
         return ItemDetailModel(
@@ -315,6 +316,25 @@ class ItemRepositoryImpl @Inject constructor(
     }
 
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+
+    // [추가] 조회수 증가 함수 구현
+    override suspend fun increaseViewCount(itemId: Int) {
+        try {
+            val response = itemApiService.increaseViewCount(itemId)
+            if (response.isSuccessful) {
+                Log.d("ItemRepositoryImpl", "View count for item $itemId increased successfully.")
+            } else {
+                Log.e(
+                    "ItemRepositoryImpl",
+                    "Failed to increase view count for item $itemId. Code: ${response.code()}"
+                )
+            }
+        } catch (e: Exception) {
+            // 네트워크 오류 등 예외 발생 시 로그 기록
+            Log.e("ItemRepositoryImpl", "Error increasing view count for item $itemId", e)
+        }
+    }
 
 
 }

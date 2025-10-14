@@ -2,7 +2,6 @@ package com.example.raon.features.item.ui.list
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,11 +18,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -133,6 +132,7 @@ fun ItemList(
     }
 }
 
+
 // 각 item Ui
 @Composable
 fun ItemListItem(
@@ -160,25 +160,12 @@ fun ItemListItem(
             Column(
                 modifier = Modifier.align(Alignment.TopStart)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = item.title,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp,
-                        maxLines = 2,
-                        modifier = Modifier.weight(1f, fill = false)
-                    )
-                    IconButton(
-                        onClick = { /* TODO: 더보기 메뉴 표시 */ },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "더보기")
-                    }
-                }
+                Text(
+                    text = item.title,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    maxLines = 2
+                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${item.location} · ${item.timeAgo}",
@@ -194,12 +181,14 @@ fun ItemListItem(
                     )
                 }
             }
-            // 댓글/좋아요
-            if (item.comments > 0 || item.likes > 0) {
+
+            // [수정] 조회수, 댓글, 좋아요 표시
+            if (item.viewCount > 0 || item.comments > 0 || item.likes > 0) {
                 Row(
                     modifier = Modifier.align(Alignment.BottomEnd),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // 기존 댓글 UI
                     if (item.comments > 0) {
                         Icon(
                             Icons.Outlined.ChatBubbleOutline,
@@ -211,6 +200,22 @@ fun ItemListItem(
                         Text(text = item.comments.toString(), fontSize = 13.sp, color = Color.Gray)
                         Spacer(modifier = Modifier.width(8.dp))
                     }
+
+                    // [수정] 조회수 아이콘 및 UI
+                    if (item.viewCount > 0) {
+                        Icon(
+                            imageVector = Icons.Outlined.RemoveRedEye, // 눈 모양 아이콘
+                            contentDescription = "조회수",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(2.dp)) // 아이콘과 텍스트 간격
+                        Text(text = item.viewCount.toString(), fontSize = 13.sp, color = Color.Gray)
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+
+                    // 기존 좋아요 UI
                     if (item.likes > 0) {
                         Icon(
                             Icons.Outlined.FavoriteBorder,
@@ -226,3 +231,176 @@ fun ItemListItem(
         }
     }
 }
+
+//// 각 item Ui
+//@Composable
+//fun ItemListItem(
+//    item: ItemUiModel,
+//    onClick: () -> Unit // 터치 이벤트 -> ItemDetail 화면을 이동
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable(onClick = onClick)   // 클릭함수 넣어주기
+//            .padding(16.dp)
+//    ) {
+//        AsyncImage(
+//            model = item.imageUrl,
+//            contentDescription = item.title,
+//            modifier = Modifier
+//                .size(100.dp)
+//                .clip(RoundedCornerShape(8.dp))
+//                .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
+//            contentScale = ContentScale.Crop
+//        )
+//        Spacer(modifier = Modifier.width(16.dp))
+//        Box(modifier = Modifier.height(100.dp)) {
+//            // 제목, 위치/시간, 가격
+//            Column(
+//                modifier = Modifier.align(Alignment.TopStart)
+//            ) {
+//                Text(
+//                    text = item.title,
+//                    fontWeight = FontWeight.SemiBold,
+//                    fontSize = 16.sp,
+//                    maxLines = 2
+//                )
+//                Spacer(modifier = Modifier.height(4.dp))
+//                Text(
+//                    text = "${item.location} · ${item.timeAgo}",
+//                    color = Color.Gray,
+//                    fontSize = 13.sp
+//                )
+//                Spacer(modifier = Modifier.height(4.dp))
+//                if (item.price > 0) {
+//                    Text(
+//                        text = "%,d원".format(item.price),
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 17.sp
+//                    )
+//                }
+//            }
+//
+//            // [수정] 조회수, 댓글, 좋아요 표시
+//            if (item.viewCount > 0 || item.comments > 0 || item.likes > 0) {
+//                Row(
+//                    modifier = Modifier.align(Alignment.BottomEnd),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    // [추가] 조회수 UI
+//                    if (item.viewCount > 0) {
+//                        Text(text = "조회 ${item.viewCount}", fontSize = 13.sp, color = Color.Gray)
+//                        Spacer(modifier = Modifier.width(8.dp))
+//                    }
+//
+//                    // 기존 댓글 UI
+//                    if (item.comments > 0) {
+//                        Icon(
+//                            Icons.Outlined.ChatBubbleOutline,
+//                            contentDescription = "댓글",
+//                            modifier = Modifier.size(16.dp),
+//                            tint = Color.Gray
+//                        )
+//                        Spacer(modifier = Modifier.width(2.dp))
+//                        Text(text = item.comments.toString(), fontSize = 13.sp, color = Color.Gray)
+//                        Spacer(modifier = Modifier.width(8.dp))
+//                    }
+//
+//                    // 기존 좋아요 UI
+//                    if (item.likes > 0) {
+//                        Icon(
+//                            Icons.Outlined.FavoriteBorder,
+//                            contentDescription = "좋아요",
+//                            modifier = Modifier.size(16.dp),
+//                            tint = Color.Gray
+//                        )
+//                        Spacer(modifier = Modifier.width(2.dp))
+//                        Text(text = item.likes.toString(), fontSize = 13.sp, color = Color.Gray)
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+
+//// 각 item Ui
+//@Composable
+//fun ItemListItem(
+//    item: ItemUiModel,
+//    onClick: () -> Unit // 터치 이벤트 -> ItemDetail 화면을 이동
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .clickable(onClick = onClick)   // 클릭함수 넣어주기
+//            .padding(16.dp)
+//    ) {
+//        AsyncImage(
+//            model = item.imageUrl,
+//            contentDescription = item.title,
+//            modifier = Modifier
+//                .size(100.dp)
+//                .clip(RoundedCornerShape(8.dp))
+//                .border(1.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
+//            contentScale = ContentScale.Crop
+//        )
+//        Spacer(modifier = Modifier.width(16.dp))
+//        Box(modifier = Modifier.height(100.dp)) {
+//            // 제목, 위치/시간, 가격
+//            Column(
+//                modifier = Modifier.align(Alignment.TopStart)
+//            ) {
+//                Text(
+//                    text = item.title,
+//                    fontWeight = FontWeight.SemiBold,
+//                    fontSize = 16.sp,
+//                    maxLines = 2
+//                )
+//                Spacer(modifier = Modifier.height(4.dp))
+//                Text(
+//                    text = "${item.location} · ${item.timeAgo}",
+//                    color = Color.Gray,
+//                    fontSize = 13.sp
+//                )
+//                Spacer(modifier = Modifier.height(4.dp))
+//                if (item.price > 0) {
+//                    Text(
+//                        text = "%,d원".format(item.price),
+//                        fontWeight = FontWeight.Bold,
+//                        fontSize = 17.sp
+//                    )
+//                }
+//            }
+//            // 댓글/좋아요
+//            if (item.comments > 0 || item.likes > 0) {
+//                Row(
+//                    modifier = Modifier.align(Alignment.BottomEnd),
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
+//                    if (item.comments > 0) {
+//                        Icon(
+//                            Icons.Outlined.ChatBubbleOutline,
+//                            contentDescription = "댓글",
+//                            modifier = Modifier.size(16.dp),
+//                            tint = Color.Gray
+//                        )
+//                        Spacer(modifier = Modifier.width(2.dp))
+//                        Text(text = item.comments.toString(), fontSize = 13.sp, color = Color.Gray)
+//                        Spacer(modifier = Modifier.width(8.dp))
+//                    }
+//                    if (item.likes > 0) {
+//                        Icon(
+//                            Icons.Outlined.FavoriteBorder,
+//                            contentDescription = "좋아요",
+//                            modifier = Modifier.size(16.dp),
+//                            tint = Color.Gray
+//                        )
+//                        Spacer(modifier = Modifier.width(2.dp))
+//                        Text(text = item.likes.toString(), fontSize = 13.sp, color = Color.Gray)
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}

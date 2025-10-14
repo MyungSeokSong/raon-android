@@ -53,7 +53,12 @@ class ItemDetailViewModel @Inject constructor(
     init {
         // NavHost에 정의된 경로의 인자 이름("itemId")과 동일해야 합니다.
         if (itemId != null) {
+
+            // 보여줄 데이터 가져오기
             loadItemDetails(itemId)
+
+            // 조회수 증가 요청
+            increaseViewCount(itemId)
         } else {
             _uiState.update {
                 it.copy(isLoading = false, errorMessage = "상품 ID를 불러올 수 없습니다.")
@@ -67,8 +72,14 @@ class ItemDetailViewModel @Inject constructor(
             try {
                 // Repository에 특정 아이템의 상세 정보를 요청합니다.
                 val itemDetails = itemRepository.getItemDetail(itemId)
+
+                // 사용자에게 미리 조회수 1을 증가시켜서 보여주기 -> 서버로는 별도로 요청
+                val updateItemDetails = itemDetails.copy(
+                    viewCount = itemDetails.viewCount + 1
+                )
+
                 _uiState.update {
-                    it.copy(isLoading = false, item = itemDetails)
+                    it.copy(isLoading = false, item = updateItemDetails)
                 }
             } catch (e: Exception) {
                 _uiState.update {
@@ -153,6 +164,17 @@ class ItemDetailViewModel @Inject constructor(
                 Log.d("ItemDetailViewModel", "채팅방 생성 Exception 발생: ${result.e.message}")
 
             }
+        }
+    }
+
+
+    /**
+     *  상품 조회수를 1 증가시키는 함수
+     */
+    private fun increaseViewCount(itemId: Int) {
+        // UI 상태를 변경하지 않고, 백그라운드에서 조용히 API만 호출합니다.
+        viewModelScope.launch {
+            itemRepository.increaseViewCount(itemId)
         }
     }
 }
