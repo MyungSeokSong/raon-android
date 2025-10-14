@@ -19,6 +19,9 @@ val Yellow = Color(0xFFF7EDE2)
 val YelloLight = Color(0xFFFFFFF2)
 val Dark = Color(0xFF3D405B)
 
+val BrandYellow = Color(0xFFFDCC31)
+val DarkGrayText = Color(0xFF3C3C3C)
+
 //@Immutable
 //data class AppColors {
 //    val background: Color,
