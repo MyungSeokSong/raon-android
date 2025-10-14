@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.raon.features.user.domain.model.User
@@ -30,6 +31,9 @@ class UserDataStore @Inject constructor(@ApplicationContext private val context:
         val KEY_EMAIL = stringPreferencesKey("user_email")
         val KEY_PROFILE_IMAGE = stringPreferencesKey("user_profile_image")
         val KEY_ADDRESS = stringPreferencesKey("user_address")
+
+        val KEY_LOCATION_ID = intPreferencesKey("user_location_id") // ◀◀◀ 이 줄을 추가하세요
+
     }
 
     /**
@@ -43,6 +47,8 @@ class UserDataStore @Inject constructor(@ApplicationContext private val context:
             preferences[KEY_EMAIL] = user.email
             preferences[KEY_PROFILE_IMAGE] = user.profileImage ?: "" // null이면 빈 문자열 저장
             preferences[KEY_ADDRESS] = user.address
+            preferences[KEY_LOCATION_ID] = user.locationId // ◀◀◀ 이 줄을 추가하세요
+
         }
     }
 
@@ -63,7 +69,8 @@ class UserDataStore @Inject constructor(@ApplicationContext private val context:
                 nickname = preferences[KEY_NICKNAME] ?: "사용자",
                 email = preferences[KEY_EMAIL] ?: "",
                 profileImage = preferences[KEY_PROFILE_IMAGE], // null일 수 있음
-                address = preferences[KEY_ADDRESS] ?: ""
+                address = preferences[KEY_ADDRESS] ?: "",
+                locationId = preferences[KEY_LOCATION_ID] ?: 1
             )
         }
     }

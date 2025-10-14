@@ -15,12 +15,14 @@ import com.example.raon.features.item.data.remote.dto.detail.ItemDetailData
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import com.example.raon.features.item.ui.list.model.ItemUiModel
+import com.example.raon.features.user.domain.repository.UserRepository
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
@@ -33,6 +35,7 @@ import javax.inject.Singleton
 class ItemRepositoryImpl @Inject constructor(
     private val itemApiService: ItemApiService,
     private val storageRepository: ImageStorageRepository,
+    private val userRepository: UserRepository,
     @ApplicationContext private val context: Context
 ) : ItemRepository {
 
@@ -88,6 +91,15 @@ class ItemRepositoryImpl @Inject constructor(
         condition: String
     ): ItemResponse {
         try {
+            // ✨✨✨ 핵심 부분 ✨✨✨
+            // 1. userRepository에서 Flow를 가져온 뒤 .first()를 호출해 최신 User 데이터를 꺼냅니다.
+            //    이 작업은 비동기이므로 suspend 함수 내에서만 가능합니다.
+            val currentUser = userRepository.getUserProfile().first()
+
+            // 2. 데이터가 null일 수 있으므로 안전하게 처리합니다.
+            //    사용자 정보가 있으면 그 사용자의 locationId를, 없으면 기본값(예: 435)을 사용합니다.
+            val userLocationId = currentUser?.locationId ?: 1 // 예시: User 모델에 locationId가 있다고 가정
+
 
             Log.d("imageUpload", "imageUris : ${imageUris.size}")
 
@@ -109,7 +121,7 @@ class ItemRepositoryImpl @Inject constructor(
 
             val itemRequest = ItemAddRequest(
                 categoryId = categoryId,
-                locationId = 435,
+                locationId = userLocationId,
                 title = title,
                 description = description,
                 price = price,

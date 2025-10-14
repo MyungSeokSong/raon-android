@@ -30,7 +30,8 @@ class UserRepositoryImpl @Inject constructor(
                 nickname = response.data.nickname,
                 email = response.data.email,
                 profileImage = response.data.profileImage,
-                address = response.data.location.address
+                address = response.data.location.address,
+                locationId = response.data.location.locationId
             )
 
             Log.d("UserData", "UserData 확인1 : ${response.data.userId},")
@@ -38,6 +39,7 @@ class UserRepositoryImpl @Inject constructor(
             Log.d("UserData", "UserData 확인3 : ${response.data.email},")
             Log.d("UserData", "UserData 확인4 : ${response.data.profileImage},")
             Log.d("UserData", "UserData 확인5 : ${response.data.location.address},")
+            Log.d("UserData", "UserData 확인5 : ${response.data.location.locationId},")
 
 
             // DataStore에 저장
