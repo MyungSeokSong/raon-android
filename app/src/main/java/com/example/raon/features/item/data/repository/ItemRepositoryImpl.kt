@@ -83,7 +83,9 @@ class ItemRepositoryImpl @Inject constructor(
         title: String,
         description: String,
         price: Int,
-        imageUris: List<Uri>
+        imageUris: List<Uri>,
+        categoryId: Int?,
+        condition: String
     ): ItemResponse {
         try {
 
@@ -106,12 +108,12 @@ class ItemRepositoryImpl @Inject constructor(
             }
 
             val itemRequest = ItemAddRequest(
-                categoryId = 270,
+                categoryId = categoryId,
                 locationId = 435,
                 title = title,
                 description = description,
                 price = price,
-                condition = "USED",
+                condition = condition,
                 tradeType = "DIRECT",
                 imageList = imageUrls
             )

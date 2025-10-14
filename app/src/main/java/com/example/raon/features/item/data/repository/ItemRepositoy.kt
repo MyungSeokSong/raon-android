@@ -23,7 +23,9 @@ interface ItemRepository {
         title: String,
         description: String,
         price: Int,
-        imageUris: List<Uri>
+        imageUris: List<Uri>,
+        categoryId: Int?,
+        condition: String
     ): ItemResponse
 
 

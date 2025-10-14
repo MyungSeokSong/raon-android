@@ -55,7 +55,7 @@ class CategoryRepositoryImpl @Inject constructor(
         }
     }
 
-    // ✨ 구현 내용을 변경합니다.
+    // 구현 내용을 변경합니다.
     override fun getCategoriesByParentId(parentId: Int?): Flow<List<CategoryEntity>> {
         return categoryDao.getCategoriesByParentId(parentId)
     }

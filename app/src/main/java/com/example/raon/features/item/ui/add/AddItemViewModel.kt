@@ -25,13 +25,46 @@ class AddItemViewModel @Inject constructor(
                 _uiState.update { it.copy(title = event.title) }
             }
 
+
+            is AddItemEvent.CategorySelected -> {   // 카테고리 변경 이벤
+                Log.d(
+                    "AddItemViewModel1",
+                    "CategorySelected event received! ID: ${event.id}, Name: ${event.name}"
+                )
+
+                _uiState.update {
+                    it.copy(
+                        isCategoryValid = true,
+                        selectedCategoryId = event.id,
+                        selectedCategoryName = event.name
+                    )
+                }
+            }
+
+            is AddItemEvent.ProductConditionChanged -> {
+
+                _uiState.update { it.copy(productCondition = event.condition) }
+
+            }
+
             is AddItemEvent.DescriptionChanged -> { // description이 바뀌었을 때 새 객체 만들어서 업데이트
                 _uiState.update { it.copy(description = event.description) }
             }
 
             is AddItemEvent.PriceChanged -> {   // 가격이 바뀌었을 때 새 객체 만들어서 업데이트
+
+                val newPrice = event.price.filter { it.isDigit() } // 숫자만 입력되도록 필터링
+                // 유효성 검사: 숫자로 변환 가능하고, 0보다 큰 값인지 확인 (비즈니스 로직에 따라 변경 가능)
+                val isValid = newPrice.toIntOrNull()?.let { it > 0 } ?: false
+
+
                 // 숫자만 입력되도록 필터링하는 로직 등을 추가할 수 있음
-                _uiState.update { it.copy(price = event.price.toIntOrNull() ?: 0) }
+                _uiState.update {
+                    it.copy(
+                        price = event.price,
+                        isPriceValid = isValid  // 가격 유효성 검사 통과하면 true
+                    )
+                }
             }
 
             is AddItemEvent.AddImages -> {  // 이미지가 추가됬을 때
@@ -66,8 +99,10 @@ class AddItemViewModel @Inject constructor(
                 val response = itemRepository.postNewItem(  // 서버 통신 코드
                     title = currentState.title,
                     description = currentState.description,
-                    price = currentState.price,
-                    imageUris = currentState.seletedImages
+                    price = currentState.price.toInt(),
+                    imageUris = currentState.seletedImages,
+                    categoryId = uiState.value.selectedCategoryId,
+                    condition = uiState.value.productCondition.toString()
                 )
 
                 Log.d("addItem", "local imageUris: {${currentState.seletedImages}}")

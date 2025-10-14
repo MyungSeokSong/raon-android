@@ -1,86 +1,191 @@
 package com.example.raon.features.category.ui
 
-
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.raon.features.category.data.local.CategoryEntity // import 추가
+import kotlinx.coroutines.delay
 
-/**
- * 카테고리 목록을 보여주는 재사용 가능한 화면입니다.
- * NavController를 통해 parentId를 받아 하위 카테고리를 표시합니다.
- *
- * @param navController 화면 간 탐색을 처리하는 NavController.
- * @param viewModel 이 화면의 상태와 로직을 관리하는 CategoryViewModel.
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryScreen(
-    onCategoryClick: (categoryId: Long) -> Unit,
-//    navController: NavController,
+    onBackClick: () -> Unit,
+    onCategoryClick: (category: CategoryEntity) -> Unit, // 클릭 시 객체 전체를 넘기도록 변경
     viewModel: CategoryViewModel = hiltViewModel()
 ) {
-    // ViewModel의 StateFlow를 구독합니다.
-    // lifecycle-aware 방식으로 상태를 수집하여 안전하고 효율적입니다.
-    val categories by viewModel.categories.collectAsStateWithLifecycle()
+    // ViewModel의 StateFlow들을 구독합니다.
+    val categories by viewModel.categories.collectAsStateWithLifecycle()    // viewmodel에서 받아오는 카테고리 데이터들
+    val categoryPath by viewModel.categoryPath.collectAsStateWithLifecycle()    // 카테고리 경로들
 
-    // 로딩 상태 처리: categories가 아직 로드되지 않았다면 로딩 인디케이터를 표시합니다.
-    // 초기값이 emptyList()이므로, DB 조회가 끝나기 전까지 이 조건이 참이 됩니다.
-    if (categories.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else {
-        // 데이터가 있으면 LazyColumn으로 리스트를 보여줍니다.
-        // LazyColumn은 화면에 보이는 아이템만 렌더링하여 성능을 최적화합니다.
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp) // 좌우 패딩 추가
-        ) {
-            items(
-                items = categories,
-                key = { category -> category.categoryId } // 각 아이템의 고유 키 지정 (성능 최적화)
-            ) { category ->
-                // 각 카테고리 아이템 UI
-                CategoryItem(
-                    categoryName = category.name,
-                    onItemClick = {
+    var visible by remember { mutableStateOf(false) }
 
-                        // 람다함수에 categoryId를 담아서 전달
-                        onCategoryClick(category.categoryId)
+    LaunchedEffect(Unit) {
+        delay(50)
+        visible = true
+    }
 
-
-                        // 아이템 클릭 시, 현재 카테고리의 id를 parentId로 넘겨주며
-                        // 자기 자신(category_screen)을 다시 호출합니다.
-//                        navController.navigate("category_screen?parentId=${category.categoryId}")
+    AnimatedVisibility(
+        visible = visible,
+        modifier = Modifier.fillMaxSize(),
+        enter = slideInHorizontally(
+            initialOffsetX = { fullWidth -> fullWidth },
+            animationSpec = tween(durationMillis = 400)
+        ) + fadeIn(animationSpec = tween(durationMillis = 300))
+    ) {
+        Scaffold(
+            topBar = {
+                Column {
+                    TopAppBar(
+                        title = { Text("카테고리") },
+                        navigationIcon = {
+                            IconButton(onClick = onBackClick) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "뒤로 가기"
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                    )
+                    // 구독한 categoryPath를 Breadcrumb Composable에 전달
+                    Breadcrumb(path = categoryPath)
+                }
+            }
+        ) { innerPadding ->
+            if (categories.isEmpty() && visible) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 8.dp)
+                ) {
+                    items(
+                        items = categories,
+                        key = { category -> category.categoryId }
+                    ) { category ->
+                        CategoryItem(
+                            categoryName = category.name,
+                            onItemClick = {
+                                // 클릭된 카테고리 객체 전체를 전달
+                                onCategoryClick(category)
+                            }
+                        )
                     }
+                }
+            }
+        }
+    }
+}
+
+
+//@Composable
+//private fun Breadcrumb(path: List<String>) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 16.dp, vertical = 8.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        path.forEachIndexed { index, item ->
+//            val isLastItem = index == path.lastIndex
+//            Text(
+//                text = item,
+//                fontSize = 14.sp,
+//                fontWeight = if (isLastItem) FontWeight.Bold else FontWeight.Normal,
+//                color = if (isLastItem) Color.Black else Color.Gray
+//            )
+//            if (!isLastItem && item != "") {
+//                Text(
+//                    text = " > ",
+//                    fontSize = 14.sp,
+//                    color = Color.Gray,
+//                    modifier = Modifier.padding(horizontal = 4.dp)
+//                )
+//            }
+//        }
+//    }
+//}
+
+
+@Composable
+private fun Breadcrumb(path: List<String>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // ✨ 변경 사항 시작: path.forEachIndexed 대신 일반 forEach를 사용하고,
+        //                 리스트의 크기에 따라 > 표시 여부를 결정합니다.
+        path.forEachIndexed { index, item ->
+            val isLastItem = index == path.lastIndex
+
+            Text(
+                text = item,
+                fontSize = 14.sp,
+                fontWeight = if (isLastItem) FontWeight.Bold else FontWeight.Normal,
+                color = if (isLastItem) Color.Black else Color.Gray
+            )
+
+            // ✨ 변경: 마지막 아이템이면서 동시에 path 리스트에 "전체" 외의 다른 아이템이 없을 때만 '>'를 그리지 않습니다.
+            // 즉, path가 ["전체"] 일 때는 '>'를 그리지 않고,
+            // path가 ["전체", "남성의류"] 일 때는 "남성의류" 뒤에 '>'를 그리지 않습니다.
+            // 그리고 path에 "전체" 외의 다른 아이템이 있다면 (index < path.lastIndex), ">"를 그립니다.
+            if (index < path.lastIndex) { // 현재 아이템이 마지막 아이템이 아닐 때만 '>'를 그립니다.
+                Text(
+                    text = " > ",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
         }
     }
 }
 
-/**
- * 개별 카테고리 아이템을 표시하는 Composable.
- *
- * @param categoryName 표시할 카테고리의 이름.
- * @param onItemClick 아이템이 클릭되었을 때 호출될 람다 함수.
- */
 @Composable
 private fun CategoryItem(
     categoryName: String,
@@ -90,7 +195,7 @@ private fun CategoryItem(
         text = categoryName,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onItemClick) // 클릭 이벤트 처리
+            .clickable(onClick = onItemClick)
             .padding(16.dp)
     )
 }

@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ItemAddRequest(
     @SerializedName("categoryId")   // 실제 JSON 필드 이름과 매칭시킴
-    val categoryId: Int,
+    val categoryId: Int?,
     @SerializedName("locationId")
     val locationId: Int,
     @SerializedName("title")
