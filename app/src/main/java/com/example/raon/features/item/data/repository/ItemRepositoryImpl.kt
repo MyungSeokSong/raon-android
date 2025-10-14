@@ -229,26 +229,58 @@ class ItemRepositoryImpl @Inject constructor(
         )
     }
 
+
+    /**
+     * 시간 문자열을 "N년 전"과 같은 상대 시간으로 변환하는 함수
+     */
     private fun formatTimeAgo(createdAt: String): String {
         return try {
             val createdTime = OffsetDateTime.parse(createdAt)
             val now = OffsetDateTime.now()
 
-            val minutes = ChronoUnit.MINUTES.between(createdTime, now)
-            val hours = ChronoUnit.HOURS.between(createdTime, now)
+            // 년, 월, 일, 시, 분 단위로 시간 차이를 계산합니다.
+            val years = ChronoUnit.YEARS.between(createdTime, now)
+            val months = ChronoUnit.MONTHS.between(createdTime, now)
             val days = ChronoUnit.DAYS.between(createdTime, now)
+            val hours = ChronoUnit.HOURS.between(createdTime, now)
+            val minutes = ChronoUnit.MINUTES.between(createdTime, now)
 
+            // [핵심 로직] 년 > 월 > 일 > 시간 > 분 순서로 확인합니다.
             when {
-                minutes < 1 -> "방금 전"
-                minutes < 60 -> "${minutes}분 전"
-                hours < 24 -> "${hours}시간 전"
-                days < 7 -> "${days}일 전"
-                else -> "${createdTime.toLocalDate()}"
+                years > 0 -> "${years}년 전"
+                months > 0 -> "${months}달 전"
+                days > 0 -> "${days}일 전"
+                hours > 0 -> "${hours}시간 전"
+                minutes > 0 -> "${minutes}분 전"
+                else -> "방금 전"
             }
         } catch (e: Exception) {
+            // 날짜 형식이 잘못되었을 경우를 대비한 예외 처리
             "시간 정보 없음"
         }
     }
+
+
+//    private fun formatTimeAgo(createdAt: String): String {
+//        return try {
+//            val createdTime = OffsetDateTime.parse(createdAt)
+//            val now = OffsetDateTime.now()
+//
+//            val minutes = ChronoUnit.MINUTES.between(createdTime, now)
+//            val hours = ChronoUnit.HOURS.between(createdTime, now)
+//            val days = ChronoUnit.DAYS.between(createdTime, now)
+//
+//            when {
+//                minutes < 1 -> "방금 전"
+//                minutes < 60 -> "${minutes}분 전"
+//                hours < 24 -> "${hours}시간 전"
+//                days < 7 -> "${days}일 전"
+//                else -> "${createdTime.toLocalDate()}"
+//            }
+//        } catch (e: Exception) {
+//            "시간 정보 없음"
+//        }
+//    }
 
 
     // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ItemDtail 데이터 가져오기 부분이 추가 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
@@ -292,7 +324,7 @@ class ItemRepositoryImpl @Inject constructor(
             sellerAddress = this.location.address,
             title = this.title,
             category = this.categories.joinToString(" > ") { it.name },
-            createdAt = formatTimeAgo(this.createdAt),
+            createdAt = formatTimeAgo(this.createdAt),  // 날짜 받아서 과거형으로 변경
             description = this.description,
             favoriteCount = this.favoriteCount,
             viewCount = this.viewCount,

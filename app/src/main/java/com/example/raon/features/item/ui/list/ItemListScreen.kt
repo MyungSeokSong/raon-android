@@ -56,6 +56,11 @@ fun ItemListScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+
+
+
+
+
     Box(modifier = modifier.fillMaxSize()) {
 
         // uiState.items 상테로 바꾸기 -> itemList를 가져와서 UI로 보여줌
@@ -139,6 +144,11 @@ fun ItemListItem(
     item: ItemUiModel,
     onClick: () -> Unit // 터치 이벤트 -> ItemDetail 화면을 이동
 ) {
+    // 마지막 동만 추출한 텍스트
+    val lastlocation = item.location.split(" ").lastOrNull()
+
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -155,7 +165,11 @@ fun ItemListItem(
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Box(modifier = Modifier.height(100.dp)) {
+        Box(
+            modifier = Modifier
+                .height(100.dp)
+                .weight(1f)
+        ) {
             // 제목, 위치/시간, 가격
             Column(
                 modifier = Modifier.align(Alignment.TopStart)
@@ -168,7 +182,7 @@ fun ItemListItem(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${item.location} · ${item.timeAgo}",
+                    text = "${lastlocation} · ${item.timeAgo}",
                     color = Color.Gray,
                     fontSize = 13.sp
                 )
@@ -201,6 +215,20 @@ fun ItemListItem(
                         Spacer(modifier = Modifier.width(8.dp))
                     }
 
+                    
+                    // 기존 좋아요 UI
+                    if (item.likes > 0) {
+                        Icon(
+                            Icons.Outlined.FavoriteBorder,
+                            contentDescription = "좋아요",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(text = item.likes.toString(), fontSize = 13.sp, color = Color.Gray)
+                    }
+
+
                     // [수정] 조회수 아이콘 및 UI
                     if (item.viewCount > 0) {
                         Icon(
@@ -214,18 +242,6 @@ fun ItemListItem(
                         Spacer(modifier = Modifier.width(8.dp))
                     }
 
-
-                    // 기존 좋아요 UI
-                    if (item.likes > 0) {
-                        Icon(
-                            Icons.Outlined.FavoriteBorder,
-                            contentDescription = "좋아요",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Text(text = item.likes.toString(), fontSize = 13.sp, color = Color.Gray)
-                    }
                 }
             }
         }
