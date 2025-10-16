@@ -133,6 +133,7 @@ fun ItemDetailScreen(
                             ProductInfo(
                                 title = item.title,
                                 price = item.price,
+                                condition = item.condition,
                                 category = "${item.category} ",  //·
                                 time = "${item.createdAt}",
                                 description = item.description,
@@ -255,6 +256,7 @@ private fun SellerProfile(nickname: String, profileUrl: String?, address: String
 private fun ProductInfo(
     title: String,
     price: Int,
+    condition: String,
     category: String,
     time: String,
     description: String,
@@ -274,6 +276,7 @@ private fun ProductInfo(
             fontSize = 18.sp
         )
         Text(text = category, color = Color.Gray, fontSize = 13.sp)
+        Text(text = condition, color = Color.Gray, fontSize = 13.sp)
         Text(text = time, color = Color.Gray, fontSize = 13.sp)
 
         Text(text = description, fontSize = 16.sp, lineHeight = 24.sp)

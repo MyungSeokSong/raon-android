@@ -9,6 +9,7 @@ data class ItemDetailModel(
     val sellerProfileUrl: String?,
     val sellerAddress: String,
     val title: String,
+    val condition: String,
     val category: String, // 카테고리는 하나의 문자열로 합쳐서 사용
     val createdAt: String, // 시간 표시는 나중에 변환
     val description: String,
@@ -16,4 +17,5 @@ data class ItemDetailModel(
     val viewCount: Int,
     val price: Int,
     val isFavorite: Boolean // 내 관심 목록 인지 판단
+
 )

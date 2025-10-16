@@ -263,32 +263,10 @@ class ItemRepositoryImpl @Inject constructor(
     }
 
 
-//    private fun formatTimeAgo(createdAt: String): String {
-//        return try {
-//            val createdTime = OffsetDateTime.parse(createdAt)
-//            val now = OffsetDateTime.now()
-//
-//            val minutes = ChronoUnit.MINUTES.between(createdTime, now)
-//            val hours = ChronoUnit.HOURS.between(createdTime, now)
-//            val days = ChronoUnit.DAYS.between(createdTime, now)
-//
-//            when {
-//                minutes < 1 -> "방금 전"
-//                minutes < 60 -> "${minutes}분 전"
-//                hours < 24 -> "${hours}시간 전"
-//                days < 7 -> "${days}일 전"
-//                else -> "${createdTime.toLocalDate()}"
-//            }
-//        } catch (e: Exception) {
-//            "시간 정보 없음"
-//        }
-//    }
-
-
     // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ItemDtail 데이터 가져오기 부분이 추가 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
     /**
-     * [수정] ItemDetail을 가져올 때 Presigned URL을 함께 처리하도록 변경
+     * ItemDetail을 가져올 때 Presigned URL을 함께 처리하도록 변경
      */
     override suspend fun getItemDetail(itemId: Int): ItemDetailModel {
         // 1. 메인 서버에서 아이템 상세 정보(S3 Object Key 포함)를 가져옵니다.
@@ -318,6 +296,14 @@ class ItemRepositoryImpl @Inject constructor(
      *  toItemDetailModel 함수가 Presigned URL을 받도록 변경
      */
     private fun ItemDetailData.toItemDetailModel(presignedUrls: List<String>): ItemDetailModel {
+
+        // this.condition 값("New", "Used")을 한글로 변환
+        val productStatus = when (this.condition) {
+            "NEW" -> "새 상품"
+            "USED" -> "중고 상품"
+            else -> "제품 상태" // "New", "Used" 외의 값이면 원본 값을 그대로 사용
+        }
+
         return ItemDetailModel(
             id = this.productId,
             imageUrls = presignedUrls, // S3 Object Key 대신 Presigned URL 사용
@@ -331,7 +317,8 @@ class ItemRepositoryImpl @Inject constructor(
             favoriteCount = this.favoriteCount,
             viewCount = this.viewCount,
             price = this.price,
-            isFavorite = this.isFavorite
+            isFavorite = this.isFavorite,
+            condition = productStatus
         )
     }
 
