@@ -29,7 +29,9 @@ data class ItemDetailData(
     @SerializedName("tradeType") val tradeType: String,
     @SerializedName("status") val status: String,
     @SerializedName("createdAt") val createdAt: String,
-)
+    @SerializedName("isFavorite") val isFavorite: Boolean,
+
+    )
 
 data class Seller(
     @SerializedName("userId") val userId: Int,

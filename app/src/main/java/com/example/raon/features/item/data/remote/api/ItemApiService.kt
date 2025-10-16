@@ -4,6 +4,7 @@ import com.example.raon.features.chat.data.remote.dto.CreateChatRoomResponseDto
 import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
+import com.example.raon.features.item.data.remote.dto.detail.FavoriteRequest
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemListResponse
 import retrofit2.Response
@@ -11,6 +12,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -62,9 +64,17 @@ interface ItemApiService {
 
     // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 기타  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
-    // [추가] 조회수 증가 API
+    // 조회수 증가 API
     @PATCH("api/v1/products/{productId}/views")
     suspend fun increaseViewCount(@Path("productId") productId: Int): Response<Unit>
+
+
+    // 찜(관심상품) 상태 변경 API
+    @PUT("api/v1/products/{productId}/favorites")
+    suspend fun updateFavoriteStatus(
+        @Path("productId") productId: Int,
+        @Body favoriteRequest: FavoriteRequest
+    ): Response<Unit>
 }
 
 

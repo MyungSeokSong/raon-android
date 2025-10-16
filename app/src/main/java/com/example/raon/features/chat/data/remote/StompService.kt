@@ -62,10 +62,12 @@ class StompService @Inject constructor(
             Log.d("StompService", "토큰 형식: $connectHeaders") // ⬅️ 여기서 원본 JSON 확인!
 
 
-            val webSocketUrl = "ws://10.0.2.2:4000/ws" // -> 애뮬레이터 용
+//            val webSocketUrl = "ws://10.0.2.2:4000/ws" // -> 애뮬레이터 용
 //            val webSocketUrl = "ws://192.168.111.183:4000/ws" // -> 기기 연결 용
 
-//            val webSocketUrl = "ws://172.20.10.2:4000/ws" // 실제 서버 엔드포인트로 교체
+            val webSocketUrl = "ws://158.179.164.210/ws" // 실제 서버 엔드포인트로 교체
+
+//            private const val RAON_SERVER_URL = "https://158.179.164.210/" // 실제 앱 용
 
 
             // 헤더에 AccessToken 넣어서 만들기

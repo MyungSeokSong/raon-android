@@ -11,6 +11,7 @@ import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
+import com.example.raon.features.item.data.remote.dto.detail.FavoriteRequest
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailData
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
@@ -225,8 +226,9 @@ class ItemRepositoryImpl @Inject constructor(
             imageUrl = presignedUrl ?: "",
             likes = this.favoriteCount,
             comments = 0,
-            viewCount = this.viewCount
-        )
+            viewCount = this.viewCount,
+
+            )
     }
 
 
@@ -328,7 +330,8 @@ class ItemRepositoryImpl @Inject constructor(
             description = this.description,
             favoriteCount = this.favoriteCount,
             viewCount = this.viewCount,
-            price = this.price
+            price = this.price,
+            isFavorite = this.isFavorite
         )
     }
 
@@ -350,7 +353,7 @@ class ItemRepositoryImpl @Inject constructor(
 // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
 
-    // [추가] 조회수 증가 함수 구현
+    // 조회수 증가 함수 구현
     override suspend fun increaseViewCount(itemId: Int) {
         try {
             val response = itemApiService.increaseViewCount(itemId)
@@ -365,6 +368,26 @@ class ItemRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             // 네트워크 오류 등 예외 발생 시 로그 기록
             Log.e("ItemRepositoryImpl", "Error increasing view count for item $itemId", e)
+        }
+    }
+
+
+    // 찜(관심상품) 상태 변경 함수 구현
+    override suspend fun updateFavoriteStatus(itemId: Int, isFavorite: Boolean) {
+        try {
+            val request = FavoriteRequest(isFavorite = isFavorite)
+            val response = itemApiService.updateFavoriteStatus(itemId, request)
+            if (!response.isSuccessful) {
+                // 서버에서 2xx 이외의 응답을 주었을 때 로그 기록
+                Log.e(
+                    "ItemRepositoryImpl",
+                    "Failed to update favorite status for item $itemId. Code: ${response.code()}"
+                )
+            }
+        } catch (e: Exception) {
+            // 네트워크 오류 등 예외 발생 시 로그 기록
+            Log.e("ItemRepositoryImpl", "Error updating favorite status for item $itemId", e)
+            throw e // 예외를 ViewModel로 다시 던져서 UI 롤백 처리
         }
     }
 

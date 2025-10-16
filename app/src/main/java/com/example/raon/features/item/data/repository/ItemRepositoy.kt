@@ -47,5 +47,8 @@ interface ItemRepository {
     // Item 조회수 증가 함수
     suspend fun increaseViewCount(itemId: Int)
 
+    // Item 찜(관심상품) 상태 변경 함수
+    suspend fun updateFavoriteStatus(itemId: Int, isFavorite: Boolean)
+
 
 }

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 fun SearchAppBar(
     query: String, // 1. 표시할 검색어 (상태)
     onQueryChange: (String) -> Unit, // 2. 검색어가 변경될 때 호출될 함수 (이벤트)
+    enabled: Boolean = true, // 3. TextField의 활성화 여부 (기본값: true)
     onSearch: () -> Unit, // 3. 키보드의 검색 버튼을 눌렀을 때 호출될 함수 (이벤트)
     onBackClick: () -> Unit, // 4. 뒤로가기 버튼을 눌렀을 때 호출될 함수 (이벤트)
     onHomeClick: () -> Unit, // 5. 홈 버튼을 눌렀을 때 호출될 함수 (이벤트)
@@ -47,6 +48,7 @@ fun SearchAppBar(
         TextField(
             value = query,
             onValueChange = onQueryChange,
+            enabled = enabled,
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 4.dp),

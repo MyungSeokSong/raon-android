@@ -6,6 +6,8 @@ import com.example.raon.features.search.data.remote.api.SearchApiService
 import com.example.raon.features.search.data.remote.dto.toDomain
 import com.example.raon.features.search.domain.repository.SearchRepository
 import com.example.raon.features.search.ui.model.SearchItemUiModel
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 /**
@@ -49,8 +51,9 @@ class SearchRepositoryImpl @Inject constructor(
                 maxPrice = maxPrice,
                 condition = condition,
                 tradeType = tradeType,
-                status = status
-            )
+                status = status,
+
+                )
 
             // 서버 응답(DTO)을 UI에서 사용할 데이터(Domain Model)로 변환합니다.
             val domainModelList = responseDto.data.items.map { it.toDomain() }
@@ -67,5 +70,35 @@ class SearchRepositoryImpl @Inject constructor(
             // 발생한 예외를 실패 결과(Result.failure)로 감싸서 반환합니다.
             Result.failure(e)
         }
+    }
+}
+
+/**
+ * 시간 문자열을 "N년 전"과 같은 상대 시간으로 변환하는 함수
+ */
+private fun formatTimeAgo(createdAt: String): String {
+    return try {
+        val createdTime = OffsetDateTime.parse(createdAt)
+        val now = OffsetDateTime.now()
+
+        // 년, 월, 일, 시, 분 단위로 시간 차이를 계산합니다.
+        val years = ChronoUnit.YEARS.between(createdTime, now)
+        val months = ChronoUnit.MONTHS.between(createdTime, now)
+        val days = ChronoUnit.DAYS.between(createdTime, now)
+        val hours = ChronoUnit.HOURS.between(createdTime, now)
+        val minutes = ChronoUnit.MINUTES.between(createdTime, now)
+
+        // [핵심 로직] 년 > 월 > 일 > 시간 > 분 순서로 확인합니다.
+        when {
+            years > 0 -> "${years}년 전"
+            months > 0 -> "${months}달 전"
+            days > 0 -> "${days}일 전"
+            hours > 0 -> "${hours}시간 전"
+            minutes > 0 -> "${minutes}분 전"
+            else -> "방금 전"
+        }
+    } catch (e: Exception) {
+        // 날짜 형식이 잘못되었을 경우를 대비한 예외 처리
+        "시간 정보 없음"
     }
 }

@@ -32,9 +32,11 @@ object NetworkModule {
 
     // --- 서버별 기본 URL ---
 //    private const val RAON_SERVER_URL = "http://10.0.2.2:4000/" // 에뮬레이터용
-    private const val RAON_SERVER_URL = "http://192.168.188.222:4000/" // 기기 연결용
+//    private const val RAON_SERVER_URL = "http://192.168.188.222:4000/" // 기기 연결용
 
-//    private const val RAON_SERVER_URL = "http://172.20.10.2:4000/" // 실제 앱 용
+    //    private const val RAON_SERVER_URL = "https://158.179.164.210/" // 실제 앱 용
+    private const val RAON_SERVER_URL = "https://raon.store/" // 실제 앱 용
+
 
     // 잊지 말고 API Gateway ID를 꼭 수정 -> 바뀌면
     private const val AWS_API_GATEWAY_URL =

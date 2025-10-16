@@ -14,5 +14,6 @@ data class ItemDetailModel(
     val description: String,
     val favoriteCount: Int,
     val viewCount: Int,
-    val price: Int
+    val price: Int,
+    val isFavorite: Boolean // 내 관심 목록 인지 판단
 )

@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -85,8 +86,10 @@ fun ItemDetailScreen(
             ProductDetailTopAppBar(onBackClick = onBackClick)
         },
         bottomBar = {
-            uiState.item?.let {
+            uiState.item?.let { item ->
                 ProductBottomBar(
+                    isFavorited = item.isFavorite,
+                    onFavoriteClick = viewModel::onFavoriteButtonClicked,
 //                    price = it.price,
                     onChatClick = {
                         viewModel.onChatButtonClicked()
@@ -279,8 +282,13 @@ private fun ProductInfo(
 }
 
 
+// ItemDetail BottomBar
 @Composable
-private fun ProductBottomBar(onChatClick: () -> Unit) {
+private fun ProductBottomBar(
+    isFavorited: Boolean,
+    onFavoriteClick: () -> Unit,
+    onChatClick: () -> Unit
+) {
     // Surface를 사용하여 그림자 효과를 줍니다.
     Surface(shadowElevation = 8.dp) {
         // Column을 사용하여 상단 구분선과 버튼 영역을 나눕니다.
@@ -295,10 +303,13 @@ private fun ProductBottomBar(onChatClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 클릭 가능한 좋아요 아이콘 버튼
-                IconButton(onClick = { /* TODO: 좋아요 기능 구현 */ }) {
+                IconButton(onClick = onFavoriteClick) {
+                    /* TODO: 좋아요 기능 구현 */
                     Icon(
-                        Icons.Outlined.FavoriteBorder,
+                        // 상태에 따라 이이콘 색상 수정
+                        imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "관심",
+                        tint = if (isFavorited) Color.Red else Color.Unspecified,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -322,57 +333,3 @@ private fun ProductBottomBar(onChatClick: () -> Unit) {
         }
     }
 }
-
-
-//@Composable
-//private fun ProductBottomBar(
-//    price: Int,
-//    onChatClick: () -> Unit
-//) { // price 인자는 더 이상 사용되지 않지만, 기존 호출부와의 호환성을 위해 유지합니다.
-//    Surface(shadowElevation = 8.dp) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 16.dp, vertical = 12.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            // 좋아요 아이콘
-//            Icon(
-//                Icons.Outlined.FavoriteBorder,
-//                contentDescription = "관심",
-//                modifier = Modifier.size(28.dp)
-//            )
-////            // Spacer를 사용하여 남은 공간을 모두 차지하게 하여 채팅하기 버튼을 오른쪽 끝으로 밀어냅니다.
-////            Spacer(Modifier.weight(1f))
-//            // 채팅하기 버튼
-//            Button(onClick = onChatClick) {
-//                Text("채팅하기")
-//            }
-//        }
-//    }
-//}
-
-//@Composable
-//private fun ProductBottomBar(price: Int, onChatClick: () -> Unit) {
-//    Surface(shadowElevation = 8.dp) {
-//        Row(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(horizontal = 16.dp, vertical = 12.dp),
-//            verticalAlignment = Alignment.CenterVertically
-//        ) {
-//            Icon(
-//                Icons.Outlined.FavoriteBorder,
-//                contentDescription = "관심",
-//                modifier = Modifier.size(28.dp)
-//            )
-//            Spacer(Modifier.width(16.dp))
-//            Column(modifier = Modifier.weight(1f)) {
-//                Text(text = "%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
-//            }
-//            Button(onClick = onChatClick) {
-//                Text("채팅하기")
-//            }
-//        }
-//    }
-//}

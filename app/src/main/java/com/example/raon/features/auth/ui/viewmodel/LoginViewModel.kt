@@ -36,7 +36,7 @@ class LoginViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI 상태 관리를 위한 변수들
-    var email by mutableStateOf("test102@email.com")
+    var email by mutableStateOf("test100@email.com")
         private set
     var password by mutableStateOf("test1234")
         private set

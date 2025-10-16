@@ -3,6 +3,8 @@ package com.example.raon.features.search.data.remote.dto
 
 import com.example.raon.features.search.ui.model.SearchItemUiModel
 import com.google.gson.annotations.SerializedName
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 
 // 전체 응답 구조
 data class SearchItemListDto(
@@ -62,8 +64,42 @@ fun SearchItemDto.toDomain(): SearchItemUiModel {
         price = this.price,
         imageUrl = this.thumbnail.toString(),
         likes = this.favoriteCount,
-        timeAgo = this.createdAt,
+//        timeAgo = this.createdAt,
+        timeAgo = formatTimeAgo(this.createdAt),
+
         viewCount = this.viewCount,
         comments = 0
     )
+
+}
+
+
+/**
+ * 시간 문자열을 "N년 전"과 같은 상대 시간으로 변환하는 함수
+ */
+private fun formatTimeAgo(createdAt: String): String {
+    return try {
+        val createdTime = OffsetDateTime.parse(createdAt)
+        val now = OffsetDateTime.now()
+
+        // 년, 월, 일, 시, 분 단위로 시간 차이를 계산합니다.
+        val years = ChronoUnit.YEARS.between(createdTime, now)
+        val months = ChronoUnit.MONTHS.between(createdTime, now)
+        val days = ChronoUnit.DAYS.between(createdTime, now)
+        val hours = ChronoUnit.HOURS.between(createdTime, now)
+        val minutes = ChronoUnit.MINUTES.between(createdTime, now)
+
+        // [핵심 로직] 년 > 월 > 일 > 시간 > 분 순서로 확인합니다.
+        when {
+            years > 0 -> "${years}년 전"
+            months > 0 -> "${months}달 전"
+            days > 0 -> "${days}일 전"
+            hours > 0 -> "${hours}시간 전"
+            minutes > 0 -> "${minutes}분 전"
+            else -> "방금 전"
+        }
+    } catch (e: Exception) {
+        // 날짜 형식이 잘못되었을 경우를 대비한 예외 처리
+        "시간 정보 없음"
+    }
 }

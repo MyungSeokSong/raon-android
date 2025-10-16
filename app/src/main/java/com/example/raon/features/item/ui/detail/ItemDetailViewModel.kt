@@ -8,6 +8,7 @@ import com.example.raon.core.network.ApiResult
 import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -177,4 +178,54 @@ class ItemDetailViewModel @Inject constructor(
             itemRepository.increaseViewCount(itemId)
         }
     }
+
+
+    /**
+     * UI에서 '하트(찜)' 버튼을 눌렀을 때 호출되는 함수
+     */
+    fun onFavoriteButtonClicked() {
+
+        Log.d("ItemDetailViewModel", "Favorite button clicked")
+
+        val currentItem = _uiState.value.item ?: return
+
+        // 1. UI를 먼저 낙관적으로 업데이트
+        val newFavoriteState = !currentItem.isFavorite
+        val newFavoriteCount = if (newFavoriteState) {
+            currentItem.favoriteCount + 1
+        } else {
+            currentItem.favoriteCount - 1
+        }
+
+        _uiState.update {
+            it.copy(
+                item = currentItem.copy(
+                    isFavorite = newFavoriteState,
+                    favoriteCount = newFavoriteCount
+                )
+            )
+        }
+
+        // 2. 백그라운드에서 서버에 API 요청
+        viewModelScope.launch {
+            try {
+                itemRepository.updateFavoriteStatus(currentItem.id, newFavoriteState)
+                // 성공 시: 아무것도 하지 않음 (이미 UI는 업데이트 됨)
+                Log.d("ItemDetailViewModel", "Favorite status updated successfully.")
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+
+                // 3. 실패 시: UI를 원래 상태로 롤백
+                _uiState.update {
+                    it.copy(item = currentItem)
+                }
+
+                // 사용자에게 실패 알림
+                _eventFlow.emit(ItemChatEvent.ShowError("찜 상태 변경에 실패했습니다."))
+                Log.e("ItemDetailViewModel", "Failed to update favorite status.", e)
+            }
+        }
+    }
+
+
 }

@@ -105,6 +105,7 @@ fun SearchResultScreen(
                     query = uiState.searchQuery,
 //                    onQueryChange = { newQuery = it },
                     onQueryChange = { newQuery -> searchViewModel.onQueryChanged(newQuery) },
+                    false,
 
                     onSearch = { /* 검색 로직 */ },
                     onBackClick = {
@@ -200,13 +201,29 @@ fun FilterControls(
     onCategoryClick: () -> Unit
 ) {
     var isChecked by remember { mutableStateOf(true) }
-    Row(
+
+    // ✨ 변경점: Row를 Column으로 변경하여 요소들을 세로로 쌓습니다.
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalArrangement = Arrangement.spacedBy(10.dp) // 행 사이의 간격 추가
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        // 상단 행: 필터 드롭다운 버튼들
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterDropdownButton(text = "최신순", onClick = onSortClick)
+            FilterDropdownButton(text = "위치 정렬", onClick = onLocationClick) // 요청에 따라 텍스트 변경
+            FilterDropdownButton(text = "가격", onClick = onPriceClick)
+            FilterDropdownButton(text = "카테고리", onClick = onCategoryClick)
+        }
+
+        // 하단 행: '판매중만 보기' 스위치
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Switch(
                 checked = isChecked,
                 onCheckedChange = { isChecked = it },
@@ -224,19 +241,9 @@ fun FilterControls(
             Spacer(modifier = Modifier.width(8.dp))
             Text("판매중만 보기", fontSize = 14.sp)
         }
-        Spacer(modifier = Modifier.weight(1f))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FilterDropdownButton(text = "최신순", onClick = onSortClick)
-            FilterDropdownButton(text = "대자동 외 44", onClick = onLocationClick)
-            FilterDropdownButton(text = "가격", onClick = onPriceClick)
-            FilterDropdownButton(text = "카테고리", onClick = onCategoryClick)
-        }
     }
 }
+
 
 @Composable
 fun FilterDropdownButton(text: String, onClick: () -> Unit) {
@@ -282,6 +289,12 @@ fun ProductListItem(
     item: SearchItemUiModel,
     onClick: () -> Unit
 ) {
+
+
+    // 마지막 동만 추출한 텍스트
+    val lastlocation = item.location.split(" ").lastOrNull()
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -310,7 +323,12 @@ fun ProductListItem(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${item.location} · ${item.timeAgo}",
+                    text = "${lastlocation}",
+                    color = Color.Gray,
+                    fontSize = 13.sp
+                )
+                Text(
+                    text = "${item.timeAgo}",
                     color = Color.Gray,
                     fontSize = 13.sp
                 )
