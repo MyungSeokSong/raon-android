@@ -82,7 +82,6 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -90,10 +89,17 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.androidx.material3)
+
 
     //
     // 추가한 라이브러리들
     //
+    // meterial3 안정하 버전
+    implementation("androidx.compose.material3:material3:1.4.0")    // 새로고침을 사용하기 위한 버전
+
+    // 새로고침 사용하기 위한 라이브러리
+//    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
 
     // Compose integration for Jatpack Navigation
     implementation("androidx.navigation:navigation-compose:2.8.9")

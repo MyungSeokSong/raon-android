@@ -17,7 +17,8 @@ data class ItemListUiState(
     val items: List<ItemUiModel> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val currentPage: Int = 0
+    val currentPage: Int = 0,
+    val isRefreshing: Boolean = false // 새로고침 상
 )
 
 @HiltViewModel
@@ -31,9 +32,41 @@ class ItemListViewModel @Inject constructor(
 
 
     init {
-        loadItems()
-
+        loadItems() // ViewModel 시작하자마자 첫 화면 데이터 가져오기
     }
+
+    // 새로고침 함수
+    fun refresh() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isRefreshing = true, // 새로고침 시작
+                    items = emptyList(), // 기존 목록 초기화
+                    currentPage = 0      // 페이지 번호 초기화
+                )
+            }
+            try {
+                // 첫 페이지(page = 0) 데이터를 다시 불러오기
+                val refreshedItems = itemRepository.getItemsWithViewableUrls(page = 0)
+                _uiState.update {
+                    it.copy(
+                        isRefreshing = false, // 새로고침 완료
+                        items = refreshedItems,
+                        currentPage = 1, // 다음 페이지는 1
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isRefreshing = false, // 새로고침 실패
+                        errorMessage = "데이터를 새로고침하는데 실패했습니다."
+                    )
+                }
+            }
+        }
+    }
+
 
     private fun loadItems() {
         if (_uiState.value.isLoading) return

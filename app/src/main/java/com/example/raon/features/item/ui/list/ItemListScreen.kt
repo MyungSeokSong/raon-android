@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)    // 이걸 사용해야 Meterial3의 새로고침 사용가능
+
 package com.example.raon.features.item.ui.list
 
 import androidx.compose.foundation.border
@@ -22,9 +24,12 @@ import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.RemoveRedEye
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -53,33 +58,40 @@ fun ItemListScreen(
 
     val uiState by viewModel.uiState.collectAsState()
 
+    // PullToRefresh 상태 관리
+    val pullToRefreshState = rememberPullToRefreshState()
 
+    // Refresh 기능
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = { viewModel.refresh() },
+        modifier = modifier
+    ) {
+        Box(modifier = modifier.fillMaxSize()) {
 
-
-
-
-    Box(modifier = modifier.fillMaxSize()) {
-
-        // uiState.items 상테로 바꾸기 -> itemList를 가져와서 UI로 보여줌
-        ItemList(
-            items = uiState.items,
-            onItemClick = onItemClick
-        )
-
-        if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-        }
-
-        uiState.errorMessage?.let { message ->
-            Text(
-                text = message,
-                color = Color.Red,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(16.dp)
+            // uiState.items 상테로 바꾸기 -> itemList를 가져와서 UI로 보여줌
+            ItemList(
+                items = uiState.items,
+                onItemClick = onItemClick
             )
+
+            if (uiState.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = Color.Red,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp)
+                )
+            }
         }
     }
+
+
 }
 
 // --- 이하 부속 Composable 함수들 ---
