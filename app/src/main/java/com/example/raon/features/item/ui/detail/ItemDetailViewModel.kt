@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import javax.inject.Inject
 
 // ------------------- UI State -------------------
@@ -27,9 +28,11 @@ data class ItemDetailUiState(
 
 // ------------------- UI Event -------------------
 // 채팅방 이동, 오류 메시지 등 일회성 이벤트를 처리하기 위한 Sealed Class
-sealed class ItemChatEvent {
-    data class NavigateToChatRoom(val chatId: Long) : ItemChatEvent()
-    data class ShowError(val message: String) : ItemChatEvent()
+sealed class ItemDetailEvent {
+    data class NavigateToChatRoom(val chatId: Long) : ItemDetailEvent()
+    data class ShowError(val message: String) : ItemDetailEvent()
+    object ProductDeleted : ItemDetailEvent() // 삭제 성공 이벤트
+    object ShowProductNotFoundError : ItemDetailEvent() // 404 에러 처리를 위한 이벤트
 }
 
 
@@ -45,7 +48,7 @@ class ItemDetailViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     // 화면 이동 등 '이벤트'를 관리
-    private val _eventFlow = MutableSharedFlow<ItemChatEvent>()
+    private val _eventFlow = MutableSharedFlow<ItemDetailEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
     // ViewModel 전체에서 사용할 수 있도록 itemId를 멤버 변수로 저장
@@ -82,13 +85,69 @@ class ItemDetailViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(isLoading = false, item = updateItemDetails)
                 }
-            } catch (e: Exception) {
+            } catch (e: Exception) {    // http 에러 code
+                val errorMessage = if (e is HttpException && e.code() == 404) {
+
+                    // 404 에러일 경우, 에러 메시지 State 대신 팝업을 띄우라는 Event
+                    _eventFlow.emit(ItemDetailEvent.ShowProductNotFoundError)
+                    _uiState.update { it.copy(isLoading = false) } // 로딩 상태는 종료
+
+                    "404 에러 존재하지 않는 상품이거나 삭제되었습니다."
+                } else {
+                    "데이터를 불러오는 중 오류가 발생했습니다."
+                }
                 _uiState.update {
-                    it.copy(isLoading = false, errorMessage = "데이터를 불러오는 중 오류가 발생했습니다.")
+                    it.copy(isLoading = false, errorMessage = errorMessage)
+                }
+
+            }
+        }
+    }
+
+
+    // [ Item 삭제 ]
+    /**
+     * UI에서 '삭제' 확인 버튼을 눌렀을 때 호출되는 함수
+     */
+    fun deleteProduct() {
+        if (itemId == null) {
+            viewModelScope.launch {
+                _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 삭제할 수 없습니다."))
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            when (val result = itemRepository.deleteProduct(itemId)) {
+                is ApiResult.Success -> {
+                    // 성공 시 -> 삭제 완료 이벤트를 UI에 전달
+                    _eventFlow.emit(ItemDetailEvent.ProductDeleted)
+                    Log.d("ItemDetailViewModel", "상품 삭제 성공. itemId: $itemId")
+                }
+
+                is ApiResult.Error -> {
+                    // 실패 시 -> 에러 메시지 이벤트를 UI에 전달
+                    val errorMessage = result.errorBody?.message ?: "삭제 중 오류가 발생했습니다."
+                    _eventFlow.emit(ItemDetailEvent.ShowError(errorMessage))
+                    Log.e(
+                        "ItemDetailViewModel",
+                        "상품 삭제 실패. Code: ${result.code}, Message: $errorMessage"
+                    )
+                }
+
+                is ApiResult.Exception -> {
+                    // 예외 발생 시 -> 에러 메시지 이벤트를 UI에 전달
+                    _eventFlow.emit(
+                        ItemDetailEvent.ShowError(
+                            result.e.message ?: "알 수 없는 오류가 발생했습니다."
+                        )
+                    )
+                    Log.e("ItemDetailViewModel", "상품 삭제 중 예외 발생", result.e)
                 }
             }
         }
     }
+
 
     /**
      * UI에서 '채팅하기' 버튼을 눌렀을 때 호출되는 함수
@@ -96,7 +155,7 @@ class ItemDetailViewModel @Inject constructor(
     fun onChatButtonClicked() {
         if (itemId == null) {
             viewModelScope.launch {
-                _eventFlow.emit(ItemChatEvent.ShowError("상품 ID가 없어 채팅을 시작할 수 없습니다."))
+                _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 채팅을 시작할 수 없습니다."))
             }
             return
         }
@@ -106,7 +165,7 @@ class ItemDetailViewModel @Inject constructor(
             when (val result = itemRepository.getChatRoomForItem(itemId.toLong())) {
                 is ApiResult.Success -> {
                     // 성공 시 -> 바로 채팅방으로 이동 이벤트 발생
-                    _eventFlow.emit(ItemChatEvent.NavigateToChatRoom(result.data.data.chatId))
+                    _eventFlow.emit(ItemDetailEvent.NavigateToChatRoom(result.data.data.chatId))
 
                     Log.d(
                         "ItemDetailViewModel",
@@ -127,7 +186,7 @@ class ItemDetailViewModel @Inject constructor(
 
                         // 그 외 모든 에러 (상품 없음(PROD_404), 서버 에러 등)는 사용자에게 알림
                         val errorMessage = result.errorBody?.message ?: "에러 코드: ${result.code}"
-                        _eventFlow.emit(ItemChatEvent.ShowError(errorMessage))
+                        _eventFlow.emit(ItemDetailEvent.ShowError(errorMessage))
 
                         Log.d("ItemDetailViewModel", "에러 발생: $errorMessage")
 
@@ -136,7 +195,7 @@ class ItemDetailViewModel @Inject constructor(
                 }
 
                 is ApiResult.Exception -> {
-                    _eventFlow.emit(ItemChatEvent.ShowError(result.e.message ?: "알 수 없는 오류"))
+                    _eventFlow.emit(ItemDetailEvent.ShowError(result.e.message ?: "알 수 없는 오류"))
                 }
             }
         }
@@ -149,19 +208,19 @@ class ItemDetailViewModel @Inject constructor(
         when (val result = itemRepository.createChatForItem(itemId)) {
             is ApiResult.Success -> {
                 // 생성 성공 시 -> 생성된 chatId로 채팅방 이동 이벤트 발생
-                _eventFlow.emit(ItemChatEvent.NavigateToChatRoom(result.data.data.chatId))
+                _eventFlow.emit(ItemDetailEvent.NavigateToChatRoom(result.data.data.chatId))
                 Log.d("ItemDetailViewModel", "채팅방 생성 성공")
 
             }
 
             is ApiResult.Error -> {
-                _eventFlow.emit(ItemChatEvent.ShowError("채팅방 생성 실패: ${result.code}"))
+                _eventFlow.emit(ItemDetailEvent.ShowError("채팅방 생성 실패: ${result.code}"))
                 Log.d("ItemDetailViewModel", "채팅방 생성 에러 발생: ${result.code}")
 
             }
 
             is ApiResult.Exception -> {
-                _eventFlow.emit(ItemChatEvent.ShowError(result.e.message ?: "알 수 없는 오류"))
+                _eventFlow.emit(ItemDetailEvent.ShowError(result.e.message ?: "알 수 없는 오류"))
                 Log.d("ItemDetailViewModel", "채팅방 생성 Exception 발생: ${result.e.message}")
 
             }
@@ -221,7 +280,7 @@ class ItemDetailViewModel @Inject constructor(
                 }
 
                 // 사용자에게 실패 알림
-                _eventFlow.emit(ItemChatEvent.ShowError("찜 상태 변경에 실패했습니다."))
+                _eventFlow.emit(ItemDetailEvent.ShowError("찜 상태 변경에 실패했습니다."))
                 Log.e("ItemDetailViewModel", "Failed to update favorite status.", e)
             }
         }

@@ -9,6 +9,7 @@ import com.example.raon.features.item.data.remote.dto.detail.ItemDetailResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemListResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -19,6 +20,8 @@ import retrofit2.http.Query
 
 // Item과 관련된 모든 API 통신을 정의하는 인터페이스
 interface ItemApiService {
+
+    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 게시글 리스트, 게시글 CRUD ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
     // --- 게시글 등록 API  ---
     @POST("api/v1/products")
@@ -45,6 +48,12 @@ interface ItemApiService {
     suspend fun getItemDetail(
         @Path("id") itemId: Int // @Path("id")는 {id} 자리에 파라미터 itemId 값을 넣으라는 의미
     ): ItemDetailResponse // 서버 응답을 받을 데이터 클래스 (DTO)
+
+    // [ Item 삭제 API  ]
+    @DELETE("api/v1/products/{productId}")
+    suspend fun deleteProduct(
+        @Path("productId") productId: Int
+    ): Response<Unit>
 
 
     // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 채팅 관련 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ

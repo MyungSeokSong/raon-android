@@ -394,6 +394,12 @@ class ItemRepositoryImpl @Inject constructor(
     }
 
 
+    // [ Item 삭제 ]
+    override suspend fun deleteProduct(productId: Int): ApiResult<Unit> {
+        return handleApi { itemApiService.deleteProduct(productId) }
+    }
+
+
 }
 
 

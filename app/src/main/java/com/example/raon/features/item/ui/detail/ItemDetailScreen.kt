@@ -3,6 +3,7 @@ package com.example.raon.features.item.ui.detail
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +22,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -33,13 +38,21 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.launch
 
 // 채팅하기 버튼 색
 private val BrandYellow = Color(0xFFFDCC31)
@@ -65,6 +79,13 @@ fun ItemDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    // 삭제 확인 다이얼로그 표시 여부를 관리하는 상태
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    // 404 에러 팝업 상태 추가
+    var showNotFoundErrorDialog by remember { mutableStateOf(false) }
 
     // 내 물품인지 확인
     val isMine = uiState.item?.isMine ?: false
@@ -73,21 +94,184 @@ fun ItemDetailScreen(
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is ItemChatEvent.NavigateToChatRoom -> {
-                    // 전달받은 람다를 호출하여 화면 이동 요청
+                is ItemDetailEvent.NavigateToChatRoom -> {
                     onNavigateToChatRoom(event.chatId)
                 }
 
-                is ItemChatEvent.ShowError -> {
+                // ProductDeleted 이벤트 처리 추가
+                is ItemDetailEvent.ProductDeleted -> {
+                    Toast.makeText(context, "상품이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    onBackClick() // 이전 화면으로 이동
+                }
+
+                // 404 에러 이벤트를 받으면 팝업을 띄우도록 상태 변경
+                is ItemDetailEvent.ShowProductNotFoundError -> {
+                    showNotFoundErrorDialog = true
+                }
+
+
+                is ItemDetailEvent.ShowError -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+            }
+        }
+    }
+
+
+    // [ 404 에러 AlertDialog 추가 ]
+    if (showNotFoundErrorDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // 팝업 바깥을 눌러도 뒤로 가도록 처리
+                showNotFoundErrorDialog = false
+                onBackClick()
+            },
+            title = { Text("알림") },
+            text = { Text("존재하지 않는 상품이거나 삭제되었습니다.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showNotFoundErrorDialog = false
+                        onBackClick() // '확인' 버튼 누르면 뒤로가기
+                    }
+                ) {
+                    Text("확인")
+                }
+            }
+        )
+    }
+
+
+    // ModalBottomSheet를 조건부로 표시합니다.
+    if (sheetState.isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch { sheetState.hide() }
+            },
+            sheetState = sheetState
+        ) {
+            Column(modifier = Modifier.padding(bottom = 32.dp)) {
+                // 수정
+                ListItem(
+                    headlineContent = { Text("수정", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Filled.Edit, contentDescription = "수정") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            // TODO: 수정 화면으로 이동하는 로직 구현
+                            Toast.makeText(context, "수정", Toast.LENGTH_SHORT).show()
+                            scope.launch { sheetState.hide() }
+                        }
+                )
+                Divider()
+                // 상태 변경
+                ListItem(
+                    headlineContent = { Text("상태 변경", fontWeight = FontWeight.Medium) },
+                    leadingContent = { Icon(Icons.Filled.SwapHoriz, contentDescription = "상태 변경") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            // TODO: 상태 변경 로직 구현
+                            Toast.makeText(context, "상태 변경", Toast.LENGTH_SHORT).show()
+                            scope.launch { sheetState.hide() }
+                        }
+                )
+                Divider()
+                // 삭제
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            "삭제",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
+                    },
+                    leadingContent = {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = "삭제",
+                            tint = Color.Red
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            scope.launch { sheetState.hide() } // 바텀 시트 먼저 닫기
+                            showDeleteDialog = true // 삭제 다이얼로그 표시
+                        }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 닫기 버튼
+                Button(
+                    onClick = { scope.launch { sheetState.hide() } },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.LightGray.copy(alpha = 0.5f),
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text("닫기", fontWeight = FontWeight.Bold)
                 }
             }
         }
     }
 
+    // 삭제 확인 AlertDialog 추가
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                // 다이얼로그 바깥 클릭 또는 뒤로가기 시 다이얼로그 숨김
+                showDeleteDialog = false
+            },
+            title = {
+                Text(text = "게시글을 삭제할까요?", fontWeight = FontWeight.Bold)
+            },
+            confirmButton = {
+                // 삭제 버튼 (빨간색)
+                Button(
+                    onClick = {
+                        // TODO 주석을 viewModel.deleteProduct() 호출로 변경
+                        viewModel.deleteProduct()
+                        showDeleteDialog = false // 다이얼로그는 바로 닫기
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Red,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("삭제")
+                }
+            },
+            dismissButton = {
+                // 취소 버튼
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false // 다이얼로그 닫기
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.DarkGray)
+                ) {
+                    Text("취소")
+                }
+            }
+        )
+    }
+
+
     Scaffold(
         topBar = {
-            ProductDetailTopAppBar(onBackClick = onBackClick, isMine, onMoreClick = {})
+            ProductDetailTopAppBar(
+                onBackClick = onBackClick,
+                isMine = isMine,
+                onMoreClick = {
+                    // 더보기 버튼 클릭 시 바텀 시트 표시
+                    scope.launch { sheetState.show() }
+                }
+            )
         },
         bottomBar = {
             if (!isMine) {
@@ -95,14 +279,12 @@ fun ItemDetailScreen(
                     ProductBottomBar(
                         isFavorited = item.isFavorite,
                         onFavoriteClick = viewModel::onFavoriteButtonClicked,
-//                    price = it.price,
                         onChatClick = {
                             viewModel.onChatButtonClicked()
                         }
                     )
                 }
             }
-
         }
     ) { paddingValues ->
         Box(
@@ -141,7 +323,7 @@ fun ItemDetailScreen(
                                 title = item.title,
                                 price = item.price,
                                 condition = item.condition,
-                                category = "${item.category} ",  //·
+                                category = "${item.category} ",
                                 time = "${item.createdAt}",
                                 description = item.description,
                                 stats = "관심 ${item.favoriteCount} · 조회 ${item.viewCount}"
@@ -160,42 +342,9 @@ fun ItemDetailScreen(
 @Composable
 private fun ProductDetailTopAppBar(
     onBackClick: () -> Unit,
-    isMine: Boolean,    // 내 상품인지 확인
-    onMoreClick: () -> Unit   // 더보기 버튼 클릭
+    isMine: Boolean,
+    onMoreClick: () -> Unit
 ) {
-//    TopAppBar(
-//        title = {
-//            // isMine이 true일 때만 "내 상품" 텍스트를 표시합니다.
-//            if (isMine) {
-//                Text(
-//                    text = "내 상품",
-//                    fontWeight = FontWeight.Bold // 텍스트를 좀 더 강조하고 싶다면 추가
-//                )
-//            }
-//        },
-//        navigationIcon = {
-//            IconButton(onClick = onBackClick) {
-//                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
-//            }
-//        },
-//        actions = {
-//
-//            if (isMine) {
-//                IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
-//                    Icon(Icons.Default.MoreVert, contentDescription = "더보기")
-//                }
-//            }
-//
-////            IconButton(onClick = { /* TODO: 홈 화면 이동 */ }) {
-////                Icon(Icons.Outlined.Home, contentDescription = "홈")
-////            }
-////            IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
-////                Icon(Icons.Default.MoreVert, contentDescription = "더보기")
-////            }
-//        }
-//    )
-
-    // TopAppBar -> CenterAlignedTopAppBar 로 변경
     CenterAlignedTopAppBar(
         title = {
             if (isMine) {
@@ -212,7 +361,7 @@ private fun ProductDetailTopAppBar(
         },
         actions = {
             if (isMine) {
-                IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
+                IconButton(onClick = onMoreClick) {
                     Icon(Icons.Default.MoreVert, contentDescription = "더보기")
                 }
             }
@@ -319,7 +468,6 @@ private fun ProductInfo(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-        // 👇 추가된 가격 Text 입니다.
         Text(
             text = "%,d원".format(price),
             fontWeight = FontWeight.Bold,
@@ -328,56 +476,41 @@ private fun ProductInfo(
         Text(text = category, color = Color.Gray, fontSize = 13.sp)
         Text(text = condition, color = Color.Gray, fontSize = 13.sp)
         Text(text = time, color = Color.Gray, fontSize = 13.sp)
-
         Text(text = description, fontSize = 16.sp, lineHeight = 24.sp)
         Text(text = stats, color = Color.Gray, fontSize = 13.sp)
     }
 }
 
-
-// ItemDetail BottomBar
 @Composable
 private fun ProductBottomBar(
     isFavorited: Boolean,
     onFavoriteClick: () -> Unit,
     onChatClick: () -> Unit
 ) {
-    // Surface를 사용하여 그림자 효과를 줍니다.
     Surface(shadowElevation = 8.dp) {
-        // Column을 사용하여 상단 구분선과 버튼 영역을 나눕니다.
         Column {
-            // 상단에 회색 구분선을 추가합니다.
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp), // 패딩을 조절합니다.
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 클릭 가능한 좋아요 아이콘 버튼
                 IconButton(onClick = onFavoriteClick) {
-                    /* TODO: 좋아요 기능 구현 */
                     Icon(
-                        // 상태에 따라 이이콘 색상 수정
                         imageVector = if (isFavorited) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = "관심",
                         tint = if (isFavorited) Color.Red else Color.Unspecified,
                         modifier = Modifier.size(28.dp)
                     )
                 }
-
-                Spacer(Modifier.width(16.dp)) // 아이콘과 버튼 사이의 간격
-
-                // 채팅하기 버튼
+                Spacer(Modifier.width(16.dp))
                 Button(
                     onClick = onChatClick,
-                    // weight(1f)를 사용하여 남은 가로 공간을 모두 차지하게 합니다.
                     modifier = Modifier.weight(1f),
-                    // 👇 이 부분을 추가하여 버튼 색상을 지정합니다.
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandYellow, // 버튼 배경색
-                        contentColor = DarkGrayText   // 버튼 안의 글자색
+                        containerColor = BrandYellow,
+                        contentColor = DarkGrayText
                     )
                 ) {
                     Text("채팅하기")

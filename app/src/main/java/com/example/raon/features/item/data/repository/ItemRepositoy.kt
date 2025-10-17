@@ -12,6 +12,9 @@ import com.example.raon.features.item.ui.list.model.ItemUiModel
 // 아이템 데이터 처리를 위한 인터페이스
 interface ItemRepository {
 
+    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 게시글 리스트, 게시글 CURD ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+
     // --- Presigned URL을 포함한 UI 모델을 반환하는 새 함수 추가 ---
     suspend fun getItemsWithViewableUrls(page: Int): List<ItemUiModel>
 
@@ -31,6 +34,10 @@ interface ItemRepository {
 
     // 상세 페이지 모델을 가져오는 함수 정의
     suspend fun getItemDetail(itemId: Int): ItemDetailModel
+
+    // [ Item 삭제 ]
+    suspend fun deleteProduct(productId: Int): ApiResult<Unit>
+
 
     // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 채팅관련 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
