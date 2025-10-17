@@ -26,7 +26,7 @@ class UserDataStore @Inject constructor(@ApplicationContext private val context:
 
     // DataStore에 데이터를 저장할 때 사용할 Key들을 정의합니다.
     private companion object {
-        val KEY_USER_ID = stringPreferencesKey("user_id")
+        val KEY_USER_ID = intPreferencesKey("user_id")
         val KEY_NICKNAME = stringPreferencesKey("user_nickname")
         val KEY_EMAIL = stringPreferencesKey("user_email")
         val KEY_PROFILE_IMAGE = stringPreferencesKey("user_profile_image")
@@ -61,7 +61,7 @@ class UserDataStore @Inject constructor(@ApplicationContext private val context:
         val userId = preferences[KEY_USER_ID]
 
         // userId가 존재하지 않으면 로그인하지 않은 상태로 간주하여 null을 반환합니다.
-        if (userId.isNullOrBlank()) {
+        if (userId == null) {
             null
         } else {
             User(

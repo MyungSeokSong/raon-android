@@ -15,7 +15,7 @@ data class SendMessageResponseDto(
 )
 
 data class SenderData(
-    @SerializedName("userId") val userId: Long,
+    @SerializedName("userId") val userId: Int,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("profileImage") val profileImage: String?,
     @SerializedName("isDeleted") val isDeleted: Boolean

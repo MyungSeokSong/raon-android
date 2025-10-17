@@ -22,9 +22,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,7 +36,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -65,6 +66,9 @@ fun ItemDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    // 내 물품인지 확인
+    val isMine = uiState.item?.isMine ?: false
+
     // ViewModel의 일회성 이벤트를 구독하고 처리
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -83,19 +87,22 @@ fun ItemDetailScreen(
 
     Scaffold(
         topBar = {
-            ProductDetailTopAppBar(onBackClick = onBackClick)
+            ProductDetailTopAppBar(onBackClick = onBackClick, isMine, onMoreClick = {})
         },
         bottomBar = {
-            uiState.item?.let { item ->
-                ProductBottomBar(
-                    isFavorited = item.isFavorite,
-                    onFavoriteClick = viewModel::onFavoriteButtonClicked,
+            if (!isMine) {
+                uiState.item?.let { item ->
+                    ProductBottomBar(
+                        isFavorited = item.isFavorite,
+                        onFavoriteClick = viewModel::onFavoriteButtonClicked,
 //                    price = it.price,
-                    onChatClick = {
-                        viewModel.onChatButtonClicked()
-                    }
-                )
+                        onChatClick = {
+                            viewModel.onChatButtonClicked()
+                        }
+                    )
+                }
             }
+
         }
     ) { paddingValues ->
         Box(
@@ -151,21 +158,64 @@ fun ItemDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProductDetailTopAppBar(onBackClick: () -> Unit) {
-    TopAppBar(
-        title = {},
+private fun ProductDetailTopAppBar(
+    onBackClick: () -> Unit,
+    isMine: Boolean,    // 내 상품인지 확인
+    onMoreClick: () -> Unit   // 더보기 버튼 클릭
+) {
+//    TopAppBar(
+//        title = {
+//            // isMine이 true일 때만 "내 상품" 텍스트를 표시합니다.
+//            if (isMine) {
+//                Text(
+//                    text = "내 상품",
+//                    fontWeight = FontWeight.Bold // 텍스트를 좀 더 강조하고 싶다면 추가
+//                )
+//            }
+//        },
+//        navigationIcon = {
+//            IconButton(onClick = onBackClick) {
+//                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+//            }
+//        },
+//        actions = {
+//
+//            if (isMine) {
+//                IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
+//                    Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+//                }
+//            }
+//
+////            IconButton(onClick = { /* TODO: 홈 화면 이동 */ }) {
+////                Icon(Icons.Outlined.Home, contentDescription = "홈")
+////            }
+////            IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
+////                Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+////            }
+//        }
+//    )
+
+    // TopAppBar -> CenterAlignedTopAppBar 로 변경
+    CenterAlignedTopAppBar(
+        title = {
+            if (isMine) {
+                Text(
+                    text = "내 상품",
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
             }
         },
         actions = {
-//            IconButton(onClick = { /* TODO: 홈 화면 이동 */ }) {
-//                Icon(Icons.Outlined.Home, contentDescription = "홈")
-//            }
-//            IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
-//                Icon(Icons.Default.MoreVert, contentDescription = "더보기")
-//            }
+            if (isMine) {
+                IconButton(onClick = { /* TODO: 더보기 메뉴 */ }) {
+                    Icon(Icons.Default.MoreVert, contentDescription = "더보기")
+                }
+            }
         }
     )
 }

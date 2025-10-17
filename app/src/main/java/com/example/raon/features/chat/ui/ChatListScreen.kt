@@ -58,7 +58,7 @@ fun ChatListTopAppBar(navController: NavController) {
 
 @Composable
 fun ChatListScreen(
-    onChatRoomClick: (chatRoomId: Long, sellerId: Long) -> Unit,
+    onChatRoomClick: (chatRoomId: Long, sellerId: Int) -> Unit,
     chatRooms: List<ChatRoomInfo>
 ) {
     LazyColumn(

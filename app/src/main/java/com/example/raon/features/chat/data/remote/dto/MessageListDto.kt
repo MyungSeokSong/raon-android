@@ -29,7 +29,7 @@ data class MessageDto(
 
 // "sender" 필드의 구조 (다른 DTO 파일에 이미 있다면 재사용 가능)
 data class SenderData2(
-    @SerializedName("userId") val userId: Long,
+    @SerializedName("userId") val userId: Int,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("profileImage") val profileImage: String?,
     @SerializedName("isDeleted") val isDeleted: Boolean

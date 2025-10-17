@@ -41,7 +41,7 @@ class ChatRoomViewModel @Inject constructor(
     // 파싱을 위한 Gson
     private val gson = Gson()
 
-    private val _myUserId = MutableStateFlow<Long?>(null)
+    private val _myUserId = MutableStateFlow<Int?>(null)
     val myUserId = _myUserId.asStateFlow() // 외부에 공개할 때는 StateFlow로
 
 
@@ -56,26 +56,20 @@ class ChatRoomViewModel @Inject constructor(
         Log.d("채팅프로세스", "채팅방 ID : $chatRoomId")
         Log.d("ChatRoomViewModel", "ChatRoomViewModel User ID : $myUserId")
 
-
         if (chatRoomId != -1L) {    // chatRoomId 잘 받았을 때
-
             loadInitialDataAndConnect() // 초기 데이터 가져오기, Stomp 소켓 연결
-
         } else {
             _uiState.update { it.copy(isLoading = false, errorMessage = "유효하지 않은 채팅방입니다.") }
         }
-
 
         // ViewModel이 생성될 때 UserRepository에서 사용자 프로필을 가져옴
         viewModelScope.launch {
             userRepository.getUserProfile()
                 .collect { user -> // Flow<User?>를 수집
                     // user 객체가 null이 아닐 경우 userId를 상태에 업데이트
-                    _myUserId.value = user?.userId?.toLongOrNull() // 👈 .toLongOrNull() 추가
+                    _myUserId.value = user?.userId
                 }
         }
-
-
     }
 
 
@@ -114,15 +108,7 @@ class ChatRoomViewModel @Inject constructor(
 
                     } catch (e: Exception) {
                         Log.e("ChatViewModel", "STOMP 메시지 파싱 실패: $jsonString", e)
-
                     }
-
-//                    val newUiMessage = messageDto
-//                    _uiState.update { currentState ->
-//                        currentState.copy(messages = newUiMessage + currentState.messages)
-//
-////                        currentState.copy(messages = listOf(newUiMessage) + currentState.messages)
-//                    }
                 }
 
             } finally {
@@ -130,15 +116,12 @@ class ChatRoomViewModel @Inject constructor(
                 Log.d("StompService", "1 ViewModel cleared. Disconnecting STOMP...")
                 chatRepository.disconnectStomp()
                 Log.d("StompService", "2 ViewModel cleared. Disconnecting STOMP...")
-
             }
-
         }
     }
 
 
     // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 함수들 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
 
     //  과거 메시지를 불러오는 함수
     private suspend fun loadInitialMessages() {
@@ -170,7 +153,6 @@ class ChatRoomViewModel @Inject constructor(
                 }
             }
         }
-//        }
     }
 
     // 채팅 전송 함수 (기존과 거의 동일)
@@ -233,7 +215,7 @@ class ChatRoomViewModel @Inject constructor(
 
 
 // 과거 메시지(HTTP) DTO를 ChatMessage 모델로 변환
-private fun MessageDto.toDomainModel(myUserId: Long?): ChatMessage {
+private fun MessageDto.toDomainModel(myUserId: Int?): ChatMessage {
     return ChatMessage(
         messageId = this.messageId,
         chatRoomId = this.chatId,
@@ -250,7 +232,7 @@ private fun MessageDto.toDomainModel(myUserId: Long?): ChatMessage {
 }
 
 // 실시간 메시지(STOMP) DTO를 ChatMessage 모델로 변환
-private fun ChatMessageDto.toDomainModel(myUserId: Long?): ChatMessage {
+private fun ChatMessageDto.toDomainModel(myUserId: Int?): ChatMessage {
     return ChatMessage(
         messageId = this.messageId,
         chatRoomId = this.chatId,

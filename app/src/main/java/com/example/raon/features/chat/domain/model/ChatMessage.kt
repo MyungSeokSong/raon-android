@@ -5,7 +5,7 @@ package com.example.raon.features.chat.domain.model
 data class ChatMessage(
     val messageId: Long,
     val chatRoomId: Long,
-    val senderId: Long,
+    val senderId: Int,
     val senderNickname: String,
     val senderProfileUrl: String?,
     val content: String,

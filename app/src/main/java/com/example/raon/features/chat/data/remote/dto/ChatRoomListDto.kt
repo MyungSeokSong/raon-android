@@ -39,7 +39,7 @@ data class ProductInChatList(
 
 // 채팅 목록 안의 유저 정보 (기존과 동일)
 data class UserInChatList(
-    @SerializedName("userId") val userId: Long,
+    @SerializedName("userId") val userId: Int,
     @SerializedName("nickname") val nickname: String,
     @SerializedName("profileImage") val profileImage: String?
 )

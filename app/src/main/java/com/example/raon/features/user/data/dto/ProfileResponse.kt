@@ -9,7 +9,7 @@ data class ProfileResponse(
 )
 
 data class UserData(
-    val userId: String,
+    val userId: Int,
     val nickname: String,
     val email: String,
     val profileImage: String?, // null일 수 있으므로 Nullable

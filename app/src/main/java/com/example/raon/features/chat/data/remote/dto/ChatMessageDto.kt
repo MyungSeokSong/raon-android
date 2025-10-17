@@ -14,7 +14,7 @@ data class ChatMessageDto(
 )
 
 data class SenderDto(
-    val userId: Long,
+    val userId: Int,
     val nickname: String,
     val profileImage: String?,
     val isDeleted: Boolean

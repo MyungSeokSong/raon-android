@@ -42,8 +42,8 @@ class ChatRepositoryImpl @Inject constructor(
         // 실제로는 WebSocket이나 API를 통해 메시지를 수신하는 로직이 들어갑니다.
         // 여기서는 1초마다 더미 데이터를 방출하는 예시를 보여줍니다.
         val dummyHistory = listOf(
-            ChatMessage(1L, chatRoomId, 2L, "상대방", null, "안녕하세요", null, "오후 2:30", true),
-            ChatMessage(2L, chatRoomId, 1L, "나", null, "네 안녕하세요!", null, "오후 2:31", false)
+            ChatMessage(1L, chatRoomId, 2, "상대방", null, "안녕하세요", null, "오후 2:30", true),
+            ChatMessage(2L, chatRoomId, 1, "나", null, "네 안녕하세요!", null, "오후 2:31", false)
         )
         emit(dummyHistory) // 초기 메시지 전송
         delay(1000)
@@ -51,7 +51,7 @@ class ChatRepositoryImpl @Inject constructor(
             dummyHistory + ChatMessage(
                 3L,
                 chatRoomId,
-                2L,
+                2,
                 "상대방",
                 null,
                 "혹시 네고 가능한가요?",

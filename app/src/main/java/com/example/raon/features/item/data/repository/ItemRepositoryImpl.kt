@@ -269,11 +269,21 @@ class ItemRepositoryImpl @Inject constructor(
      * ItemDetail을 가져올 때 Presigned URL을 함께 처리하도록 변경
      */
     override suspend fun getItemDetail(itemId: Int): ItemDetailModel {
-        // 1. 메인 서버에서 아이템 상세 정보(S3 Object Key 포함)를 가져옵니다.
+        // 메인 서버에서 아이템 상세 정보(S3 Object Key 포함)를 가져옵니다.
         val responseDto = itemApiService.getItemDetail(itemId)
         val itemData = responseDto.data
 
-        // 2. 각 이미지의 Object Key로 Presigned URL을 병렬로 요청합니다.
+
+        // DataStore에서 현재 로그인한 사용자의 정보를 가져오기
+        // .first()를 호출해 Flow에서 현재 값을 꺼내기 (로그인 안 했으면 null)
+        val loggedInUserId = userRepository.getUserProfile().first()?.userId
+
+        // '내 상품' 여부를 확인
+        // (로그인 상태이고 && 판매자 ID와 내 ID가 같으면 true)
+        val isMine = (loggedInUserId != null) && (itemData.seller.userId == loggedInUserId)
+
+
+        // 각 이미지의 Object Key로 Presigned URL을 병렬로 요청합니다.
         val viewableImageUrls = coroutineScope {
             val urlJobs = itemData.imageUrls.map { key ->
                 async {
@@ -287,15 +297,18 @@ class ItemRepositoryImpl @Inject constructor(
             urlJobs.awaitAll().filterNotNull()
         }
 
-        // 3. 최종 UI 모델로 변환하여 반환합니다.
+        // 최종 UI 모델로 변환하여 반환합니다.
         // 이때, 기존 S3 Object Key 대신 방금 받은 Presigned URL 목록을 사용합니다.
-        return itemData.toItemDetailModel(presignedUrls = viewableImageUrls)
+        return itemData.toItemDetailModel(presignedUrls = viewableImageUrls, isMine)
     }
 
     /**
      *  toItemDetailModel 함수가 Presigned URL을 받도록 변경
      */
-    private fun ItemDetailData.toItemDetailModel(presignedUrls: List<String>): ItemDetailModel {
+    private fun ItemDetailData.toItemDetailModel(
+        presignedUrls: List<String>,
+        isMine: Boolean
+    ): ItemDetailModel {
 
         // this.condition 값("New", "Used")을 한글로 변환
         val productStatus = when (this.condition) {
@@ -318,7 +331,9 @@ class ItemRepositoryImpl @Inject constructor(
             viewCount = this.viewCount,
             price = this.price,
             isFavorite = this.isFavorite,
-            condition = productStatus
+            condition = productStatus,
+            sellerId = seller.userId,
+            isMine = isMine
         )
     }
 
