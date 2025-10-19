@@ -11,7 +11,7 @@ import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
-import com.example.raon.features.item.data.remote.dto.detail.FavoriteRequest
+import com.example.raon.features.item.data.remote.dto.detail.ChangeFavoriteStatusRequest
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailData
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
@@ -377,7 +377,7 @@ class ItemRepositoryImpl @Inject constructor(
     // 찜(관심상품) 상태 변경 함수 구현
     override suspend fun updateFavoriteStatus(itemId: Int, isFavorite: Boolean) {
         try {
-            val request = FavoriteRequest(isFavorite = isFavorite)
+            val request = ChangeFavoriteStatusRequest(isFavorite = isFavorite)
             val response = itemApiService.updateFavoriteStatus(itemId, request)
             if (!response.isSuccessful) {
                 // 서버에서 2xx 이외의 응답을 주었을 때 로그 기록
@@ -397,6 +397,13 @@ class ItemRepositoryImpl @Inject constructor(
     // [ Item 삭제 ]
     override suspend fun deleteProduct(productId: Int): ApiResult<Unit> {
         return handleApi { itemApiService.deleteProduct(productId) }
+    }
+
+    // 찜 상태 조회 함수 구현
+    override suspend fun getFavoriteStatus(productId: Int): Boolean {
+        // API 호출이 실패하면 Exception이 발생하여 ViewModel의 catch 블록에서 처리됩니다.
+        // 성공 시 'isFavorite' 값만 반환합니다.
+        return itemApiService.getFavoriteStatus(productId).data.isFavorite
     }
 
 

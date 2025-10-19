@@ -1,6 +1,5 @@
 package com.example.raon.features.item.ui.detail
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +8,7 @@ import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -19,49 +19,38 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 // ------------------- UI State -------------------
-// 이 객체로 UI의 상태를 알 수 있음
 data class ItemDetailUiState(
-    val item: ItemDetailModel? = null,  // 가져온 상품 데이터
-    val isLoading: Boolean = true,      // 로딩중인지
-    val errorMessage: String? = null    // 데이터 불러오기 실패, 에러
+    val item: ItemDetailModel? = null,
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null
 )
 
 // ------------------- UI Event -------------------
-// 채팅방 이동, 오류 메시지 등 일회성 이벤트를 처리하기 위한 Sealed Class
 sealed class ItemDetailEvent {
     data class NavigateToChatRoom(val chatId: Long) : ItemDetailEvent()
     data class ShowError(val message: String) : ItemDetailEvent()
-    object ProductDeleted : ItemDetailEvent() // 삭제 성공 이벤트
-    object ShowProductNotFoundError : ItemDetailEvent() // 404 에러 처리를 위한 이벤트
+    object ProductDeleted : ItemDetailEvent()
+    object ShowProductNotFoundError : ItemDetailEvent()
 }
-
 
 // ------------------- ViewModel -------------------
 @HiltViewModel
 class ItemDetailViewModel @Inject constructor(
     private val itemRepository: ItemRepository,
-    savedStateHandle: SavedStateHandle // 내비게이션 argument를 받기 위함
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // 화면의 '상태'를 관리 (로딩, 아이템 정보 등)
     private val _uiState = MutableStateFlow(ItemDetailUiState())
     val uiState = _uiState.asStateFlow()
 
-    // 화면 이동 등 '이벤트'를 관리
     private val _eventFlow = MutableSharedFlow<ItemDetailEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    // ViewModel 전체에서 사용할 수 있도록 itemId를 멤버 변수로 저장
     private val itemId: Int? = savedStateHandle["itemId"]
 
     init {
-        // NavHost에 정의된 경로의 인자 이름("itemId")과 동일해야 합니다.
         if (itemId != null) {
-
-            // 보여줄 데이터 가져오기
             loadItemDetails(itemId)
-
-            // 조회수 증가 요청
             increaseViewCount(itemId)
         } else {
             _uiState.update {
@@ -74,24 +63,29 @@ class ItemDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                // Repository에 특정 아이템의 상세 정보를 요청합니다.
-                val itemDetails = itemRepository.getItemDetail(itemId)
+                // 1. 상품 상세 정보와 찜 상태를 '동시에' 비동기로 요청합니다.
+                val detailDeferred = async { itemRepository.getItemDetail(itemId) }
+                val favoriteStatusDeferred = async { itemRepository.getFavoriteStatus(itemId) }
 
-                // 사용자에게 미리 조회수 1을 증가시켜서 보여주기 -> 서버로는 별도로 요청
-                val updateItemDetails = itemDetails.copy(
-                    viewCount = itemDetails.viewCount + 1
+                // 2. 두 요청이 모두 끝날 때까지 기다립니다.
+                val itemDetails = detailDeferred.await()
+                val isFavorite = favoriteStatusDeferred.await()
+
+                // 3. 두 결과를 합쳐서 최종 UI 모델을 만듭니다.
+                val finalItemDetails = itemDetails.copy(
+                    isFavorite = isFavorite, // 찜 상태 API 결과를 모델에 반영
+                    viewCount = itemDetails.viewCount + 1 // 조회수 1 증가시켜서 보여주기
                 )
 
+                // 4. 합쳐진 데이터로 UI 상태를 업데이트합니다.
                 _uiState.update {
-                    it.copy(isLoading = false, item = updateItemDetails)
+                    it.copy(isLoading = false, item = finalItemDetails)
                 }
-            } catch (e: Exception) {    // http 에러 code
+
+            } catch (e: Exception) {
                 val errorMessage = if (e is HttpException && e.code() == 404) {
-
-                    // 404 에러일 경우, 에러 메시지 State 대신 팝업을 띄우라는 Event
                     _eventFlow.emit(ItemDetailEvent.ShowProductNotFoundError)
-                    _uiState.update { it.copy(isLoading = false) } // 로딩 상태는 종료
-
+                    _uiState.update { it.copy(isLoading = false) }
                     "404 에러 존재하지 않는 상품이거나 삭제되었습니다."
                 } else {
                     "데이터를 불러오는 중 오류가 발생했습니다."
@@ -99,98 +93,56 @@ class ItemDetailViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(isLoading = false, errorMessage = errorMessage)
                 }
-
             }
         }
     }
 
-
-    // [ Item 삭제 ]
-    /**
-     * UI에서 '삭제' 확인 버튼을 눌렀을 때 호출되는 함수
-     */
     fun deleteProduct() {
         if (itemId == null) {
-            viewModelScope.launch {
-                _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 삭제할 수 없습니다."))
-            }
+            viewModelScope.launch { _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 삭제할 수 없습니다.")) }
             return
         }
 
         viewModelScope.launch {
             when (val result = itemRepository.deleteProduct(itemId)) {
                 is ApiResult.Success -> {
-                    // 성공 시 -> 삭제 완료 이벤트를 UI에 전달
                     _eventFlow.emit(ItemDetailEvent.ProductDeleted)
-                    Log.d("ItemDetailViewModel", "상품 삭제 성공. itemId: $itemId")
                 }
 
                 is ApiResult.Error -> {
-                    // 실패 시 -> 에러 메시지 이벤트를 UI에 전달
                     val errorMessage = result.errorBody?.message ?: "삭제 중 오류가 발생했습니다."
                     _eventFlow.emit(ItemDetailEvent.ShowError(errorMessage))
-                    Log.e(
-                        "ItemDetailViewModel",
-                        "상품 삭제 실패. Code: ${result.code}, Message: $errorMessage"
-                    )
                 }
 
                 is ApiResult.Exception -> {
-                    // 예외 발생 시 -> 에러 메시지 이벤트를 UI에 전달
                     _eventFlow.emit(
                         ItemDetailEvent.ShowError(
                             result.e.message ?: "알 수 없는 오류가 발생했습니다."
                         )
                     )
-                    Log.e("ItemDetailViewModel", "상품 삭제 중 예외 발생", result.e)
                 }
             }
         }
     }
 
-
-    /**
-     * UI에서 '채팅하기' 버튼을 눌렀을 때 호출되는 함수
-     */
     fun onChatButtonClicked() {
         if (itemId == null) {
-            viewModelScope.launch {
-                _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 채팅을 시작할 수 없습니다."))
-            }
+            viewModelScope.launch { _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 채팅을 시작할 수 없습니다.")) }
             return
         }
 
         viewModelScope.launch {
-            // 1. 기존 채팅방이 있는지 확인
             when (val result = itemRepository.getChatRoomForItem(itemId.toLong())) {
                 is ApiResult.Success -> {
-                    // 성공 시 -> 바로 채팅방으로 이동 이벤트 발생
                     _eventFlow.emit(ItemDetailEvent.NavigateToChatRoom(result.data.data.chatId))
-
-                    Log.d(
-                        "ItemDetailViewModel",
-                        "채팅방이 이미 존재합니다. chatId: ${result.data.data.chatId}"
-                    )
-
                 }
 
                 is ApiResult.Error -> {
                     if (result.code == 404 && result.errorBody?.code == "CHAT_404") {
-
-                        Log.d("ItemDetailViewModel", "채팅방 없음")
-
-                        // 채팅방이 없으면(404 + CHAT_404 메시지) -> 채팅방 생성 시도
                         createChatRoom(itemId.toLong())
-
                     } else {
-
-                        // 그 외 모든 에러 (상품 없음(PROD_404), 서버 에러 등)는 사용자에게 알림
                         val errorMessage = result.errorBody?.message ?: "에러 코드: ${result.code}"
                         _eventFlow.emit(ItemDetailEvent.ShowError(errorMessage))
-
-                        Log.d("ItemDetailViewModel", "에러 발생: $errorMessage")
-
-//                        _eventFlow.emit(ItemChatEvent.ShowError("에러 코드: ${result.code}"))
                     }
                 }
 
@@ -201,60 +153,34 @@ class ItemDetailViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 채팅방이 없을 경우, 새로운 채팅방을 생성하도록 서버에 요청하는 함수
-     */
     private suspend fun createChatRoom(itemId: Long) {
         when (val result = itemRepository.createChatForItem(itemId)) {
             is ApiResult.Success -> {
-                // 생성 성공 시 -> 생성된 chatId로 채팅방 이동 이벤트 발생
                 _eventFlow.emit(ItemDetailEvent.NavigateToChatRoom(result.data.data.chatId))
-                Log.d("ItemDetailViewModel", "채팅방 생성 성공")
-
             }
 
             is ApiResult.Error -> {
                 _eventFlow.emit(ItemDetailEvent.ShowError("채팅방 생성 실패: ${result.code}"))
-                Log.d("ItemDetailViewModel", "채팅방 생성 에러 발생: ${result.code}")
-
             }
 
             is ApiResult.Exception -> {
                 _eventFlow.emit(ItemDetailEvent.ShowError(result.e.message ?: "알 수 없는 오류"))
-                Log.d("ItemDetailViewModel", "채팅방 생성 Exception 발생: ${result.e.message}")
-
             }
         }
     }
 
-
-    /**
-     *  상품 조회수를 1 증가시키는 함수
-     */
     private fun increaseViewCount(itemId: Int) {
-        // UI 상태를 변경하지 않고, 백그라운드에서 조용히 API만 호출합니다.
         viewModelScope.launch {
             itemRepository.increaseViewCount(itemId)
         }
     }
 
-
-    /**
-     * UI에서 '하트(찜)' 버튼을 눌렀을 때 호출되는 함수
-     */
     fun onFavoriteButtonClicked() {
-
-        Log.d("ItemDetailViewModel", "Favorite button clicked")
-
         val currentItem = _uiState.value.item ?: return
 
-        // 1. UI를 먼저 낙관적으로 업데이트
         val newFavoriteState = !currentItem.isFavorite
-        val newFavoriteCount = if (newFavoriteState) {
-            currentItem.favoriteCount + 1
-        } else {
-            currentItem.favoriteCount - 1
-        }
+        val newFavoriteCount =
+            if (newFavoriteState) currentItem.favoriteCount + 1 else currentItem.favoriteCount - 1
 
         _uiState.update {
             it.copy(
@@ -265,26 +191,16 @@ class ItemDetailViewModel @Inject constructor(
             )
         }
 
-        // 2. 백그라운드에서 서버에 API 요청
         viewModelScope.launch {
             try {
                 itemRepository.updateFavoriteStatus(currentItem.id, newFavoriteState)
-                // 성공 시: 아무것도 하지 않음 (이미 UI는 업데이트 됨)
-                Log.d("ItemDetailViewModel", "Favorite status updated successfully.")
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-
-                // 3. 실패 시: UI를 원래 상태로 롤백
                 _uiState.update {
                     it.copy(item = currentItem)
                 }
-
-                // 사용자에게 실패 알림
                 _eventFlow.emit(ItemDetailEvent.ShowError("찜 상태 변경에 실패했습니다."))
-                Log.e("ItemDetailViewModel", "Failed to update favorite status.", e)
             }
         }
     }
-
-
 }

@@ -4,7 +4,8 @@ import com.example.raon.features.chat.data.remote.dto.CreateChatRoomResponseDto
 import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
-import com.example.raon.features.item.data.remote.dto.detail.FavoriteRequest
+import com.example.raon.features.item.data.remote.dto.detail.ChangeFavoriteStatusRequest
+import com.example.raon.features.item.data.remote.dto.detail.GetFavoriteStatusResponse
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemListResponse
 import retrofit2.Response
@@ -82,8 +83,15 @@ interface ItemApiService {
     @PUT("api/v1/products/{productId}/favorites")
     suspend fun updateFavoriteStatus(
         @Path("productId") productId: Int,
-        @Body favoriteRequest: FavoriteRequest
+        @Body favoriteRequest: ChangeFavoriteStatusRequest
     ): Response<Unit>
+
+
+    // 새로 추가할 찜 상태 조회 API
+    @GET("api/v1/products/{productId}/favorites/me")
+    suspend fun getFavoriteStatus(
+        @Path("productId") productId: Int
+    ): GetFavoriteStatusResponse
 }
 
 

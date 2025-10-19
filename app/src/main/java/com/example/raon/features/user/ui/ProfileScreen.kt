@@ -62,6 +62,7 @@ private val DarkGrayText = Color(0xFF3C3C3C)
 @Composable
 fun ProfileScreen(
     onNavigateToSalesHistoryScreen: () -> Unit,
+    onNavigateToFavoritesScreen: () -> Unit,
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -90,7 +91,11 @@ fun ProfileScreen(
         }
 
         Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)
-        ProfileMenuList(navController = navController, onNavigateToSalesHistoryScreen)
+        ProfileMenuList(
+            navController = navController,
+            onNavigateToSalesHistoryScreen,
+            onNavigateToFavoritesScreen
+        )
     }
 }
 
@@ -168,7 +173,8 @@ fun ProfileHeader(user: User) {
 @Composable
 fun ProfileMenuList(
     navController: NavController,
-    onNavigateToSalesHistoryScreen: () -> Unit
+    onNavigateToSalesHistoryScreen: () -> Unit,
+    onNavigateToFavoritesScreen: () -> Unit
 ) {
     Column {
         Text(
@@ -180,12 +186,18 @@ fun ProfileMenuList(
         )
         MenuRow(icon = Icons.Filled.ShoppingCart, title = "구매내역", onClick = { /*TODO*/ })
         Divider(modifier = Modifier.padding(horizontal = 16.dp))
+
+        // 판매내역
         MenuRow(
             icon = Icons.AutoMirrored.Filled.ReceiptLong,
             title = "판매내역",
             onClick = { onNavigateToSalesHistoryScreen() })
         Divider(modifier = Modifier.padding(horizontal = 16.dp))
-        MenuRow(icon = Icons.Filled.FavoriteBorder, title = "관심목록", onClick = { /*TODO*/ })
+
+        // 관심목록
+        MenuRow(
+            icon = Icons.Filled.FavoriteBorder, title = "관심목록",
+            onClick = { onNavigateToFavoritesScreen() })
         Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)
         Text(
             text = "기타",

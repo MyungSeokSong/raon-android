@@ -13,5 +13,6 @@ data class ItemListUiModel( // 이름 변경
     val comments: Int,  // 뎃글 개수
     val likes: Int,     // 좋아요 수, 관심 글 수
     val viewCount: Int,  // 조회수
-    val status: String  // 상품 상태 -> (판매중, 예약중, 판매 완료)
+    val status: String,  // 상품 상태 -> (판매중, 예약중, 판매 완료)
+    val isFavorite: Boolean = false // 기본값을 true로 설정
 )

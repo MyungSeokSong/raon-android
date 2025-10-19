@@ -57,5 +57,8 @@ interface ItemRepository {
     // Item 찜(관심상품) 상태 변경 함수
     suspend fun updateFavoriteStatus(itemId: Int, isFavorite: Boolean)
 
+    // 찜 상태 조회 함수 추가 (Boolean을 직접 반환하도록 단순화)
+    suspend fun getFavoriteStatus(productId: Int): Boolean
+
 
 }

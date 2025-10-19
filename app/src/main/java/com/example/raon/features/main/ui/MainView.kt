@@ -52,8 +52,8 @@ fun MainView(
     mainViewModel: MainViewModel = hiltViewModel()  // MainViewModel 실
 ) {
 
-    // 👇 이 한 줄이 '구독'을 시작하게 만드는 핵심 코드입니다!
-    // 이 코드가 실행되는 순간, ViewModel의 userProfile Flow가 활성화됩니다.
+    // 구독 시작 코드
+    // 이 코드가 실행되는 순간, ViewModel의 userProfile Flow가 활성화
     val userProfile by mainViewModel.userProfile.collectAsStateWithLifecycle()
 
 //    val mainaddress = userProfile.address.split("").last()
@@ -195,6 +195,9 @@ fun MainView(
                 ProfileScreen(
                     onNavigateToSalesHistoryScreen = {
                         navController.navigate("salesHistory")
+                    },
+                    onNavigateToFavoritesScreen = {
+                        navController.navigate("favorites")
                     },
                     navController
                 )

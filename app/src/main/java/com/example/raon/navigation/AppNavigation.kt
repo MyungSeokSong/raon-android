@@ -22,6 +22,7 @@ import com.example.raon.features.item.ui.add.AddItemEvent
 import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.add.AddItemViewModel
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
+import com.example.raon.features.profile.ui.FavoritesScreen
 import com.example.raon.features.profile.ui.SalesHistoryScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
@@ -238,7 +239,16 @@ fun AppNavigation(
 //        composable("salesHistory") { SalesHistoryScreen { } }
 
         // 관심 내역 페이지
-//        composable("salesHistory") { SalesHistoryScreen { } }
+        composable("favorites") {
+            FavoritesScreen(
+                onItemClick = { itemId ->
+                    navController.navigate("itemDetail/$itemId")    // 보여줄 itemId 넘겨주기
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
 
     }
