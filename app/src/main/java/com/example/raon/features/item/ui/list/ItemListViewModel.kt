@@ -73,8 +73,7 @@ class ItemListViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            // 👇 2. 데이터 로딩을 '시작'하는 시점을 알려주는 로그
-
+            // 2. 데이터 로딩을 '시작'하는 시점을 알려주는 로그
             Log.d(
                 "ItemListViewModel",
                 "Start loading items for page: ${_uiState.value.currentPage}"

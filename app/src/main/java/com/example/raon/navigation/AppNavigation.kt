@@ -22,6 +22,7 @@ import com.example.raon.features.item.ui.add.AddItemEvent
 import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.add.AddItemViewModel
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
+import com.example.raon.features.profile.ui.SalesHistoryScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
 
@@ -54,9 +55,7 @@ fun AppNavigation(
                     navController.popBackStack()    // 뒤로가기 버튼 눌렀을 때
                 },
                 { category ->
-
                     if (category.isLeaf) {
-
                         // 2. 이전 화면(AddItemScreen)의 SavedStateHandle에 접근해
                         //    전달할 데이터를 key-value 형태로 저장합니다.
                         navController.getBackStackEntry("addItem")?.savedStateHandle?.apply {
@@ -65,8 +64,6 @@ fun AppNavigation(
                         }
                         // 3. 현재 화면을 닫고 이전 화면으로 돌아갑니다.
                         navController.popBackStack("addItem", inclusive = false)
-
-
                     } else {
                         // 1. 현재 화면의 경로를 ViewModel에서 가져옵니다. (예: "여성의류")
                         val currentPath = viewModel.pathString2
@@ -80,12 +77,8 @@ fun AppNavigation(
                             // 결과: "여성의류,아우터"
                             "$currentPath,${category.name}"
                         }
-
                         navController.navigate("category?parentId=${category.categoryId}&path=${newPath}")
                     }
-
-
-//                    navController.navigate("category?parentId=${category.categoryId}&path=${category.name}")  // 수정전
                 })
         }
 
@@ -98,11 +91,11 @@ fun AppNavigation(
         // Item 등록 뷰
         composable("addItem") { backStackEntry ->
 
-            // ✨ 1. AddItemViewModel의 인스턴스를 가져옵니다.
+            // 1. AddItemViewModel의 인스턴스를 가져옵니다.
             val addItemViewModel: AddItemViewModel = hiltViewModel()
 
 
-            // ✨ 2. backStackEntry의 SavedStateHandle에서 StateFlow로 데이터를 관찰합니다.
+            // 2. backStackEntry의 SavedStateHandle에서 StateFlow로 데이터를 관찰합니다.
             val categoryNameResult by backStackEntry.savedStateHandle
                 .getStateFlow<String?>("selectedCategoryName", null)
                 .collectAsStateWithLifecycle()
@@ -114,7 +107,7 @@ fun AppNavigation(
             Log.d("카카테고리0", "카테고리 선택 이벤트 name! : ${categoryNameResult}")
 
 
-            // ✨ 3. 결과가 도착했을 때 "딱 한 번만" ViewModel에 이벤트를 보냅니다.
+            // 3. 결과가 도착했을 때 "딱 한 번만" ViewModel에 이벤트를 보냅니다.
             LaunchedEffect(categoryIdResult, categoryNameResult) {
 
                 // 2. 받은 Long을 우리가 필요한 Int로 안전하게 변환합니다.
@@ -183,19 +176,8 @@ fun AppNavigation(
         // 채팅 방 뷰
         composable("chatRoom/{chatRoomId}") { ChatRoomScreen() }
 
-        // 설정 화면
-//        composable("settings_screen") {
-//            SettingsScreen({    // 로그아웃 화면 전환
-//                navController.navigate("auth") {
-//                    popUpTo("main") {
-//                        inclusive = true
-//                    }
-//                }
-//            }, navController)
-//        }
 
         // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 검색 화면 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
         composable("searchInput") {
             SearchInputScreen(
                 { query ->
@@ -209,14 +191,10 @@ fun AppNavigation(
                     navController.navigate("main_graph") {
                         popUpTo("searchInput") { inclusive = true }
                     }
-//                    navController.popBackStack()
                 }
             )
         }
 
-//        composable("searchResult") {
-//            SearchResultScreen()
-//        }
 
         // 2. 검색 결과 화면
         composable(
@@ -244,13 +222,24 @@ fun AppNavigation(
             )
         }
 
+        // 판매 내역 페이지
+        composable("salesHistory") {
+            SalesHistoryScreen(
+                onItemClick = { itemId ->
+                    navController.navigate("itemDetail/$itemId")    // 보여줄 itemId 넘겨주기
+                },
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
-        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+        // 구매 내역 페이지
+//        composable("salesHistory") { SalesHistoryScreen { } }
 
+        // 관심 내역 페이지
+//        composable("salesHistory") { SalesHistoryScreen { } }
 
-//        composable("locationSetting") {
-//            LocationSearchScreen()
-//        }
 
     }
 }

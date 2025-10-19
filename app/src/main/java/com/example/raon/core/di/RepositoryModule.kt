@@ -9,6 +9,8 @@ import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.data.repository.ItemRepositoryImpl
 import com.example.raon.features.location.data.repository.LocationRepositoryImpl
 import com.example.raon.features.location.domain.repository.LocationRepository
+import com.example.raon.features.profile.data.repository.ProfileRepositoryImpl
+import com.example.raon.features.profile.domain.repository.ProfileRepository
 import com.example.raon.features.search.data.repository.SearchRepositoryImpl
 import com.example.raon.features.search.domain.repository.SearchRepository
 import com.example.raon.features.user.data.repository.UserRepositoryImpl
@@ -73,4 +75,12 @@ abstract class RepositoryModule {
     abstract fun bindSearchRepository(
         searchRepositoryImpl: SearchRepositoryImpl
     ): SearchRepository // SearchRepository를 요청하면 -> SearchRepositoryImpl을 주입
+
+
+    // 👇 2. 이 부분을 파일의 다른 Binds 함수들 사이에 추가하세요.
+    @Binds
+    @Singleton
+    abstract fun bindProfileRepository(
+        profileRepositoryImpl: ProfileRepositoryImpl
+    ): ProfileRepository // ProfileRepository를 요청하면 -> ProfileRepositoryImpl을 주입
 }

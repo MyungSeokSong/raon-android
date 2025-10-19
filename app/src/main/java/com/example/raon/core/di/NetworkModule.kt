@@ -9,6 +9,7 @@ import com.example.raon.features.category.data.remote.api.CategoryApiService
 import com.example.raon.features.chat.data.remote.api.ChatApiService
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.location.data.remote.api.LocationApiService
+import com.example.raon.features.profile.data.remote.ProfileApiService
 import com.example.raon.features.search.data.remote.api.SearchApiService
 import com.example.raon.features.user.data.remote.UserApiService
 import dagger.Module
@@ -225,6 +226,13 @@ object NetworkModule {
     @Singleton
     fun provideSearchApiService(@Named("RaonRetrofit") retrofit: Retrofit): SearchApiService {
         return retrofit.create(SearchApiService::class.java)
+    }
+
+    // 👇 2. 이 부분을 다른 ApiService 제공 함수들 사이에 추가하세요.
+    @Provides
+    @Singleton
+    fun provideProfileApiService(@Named("RaonRetrofit") retrofit: Retrofit): ProfileApiService {
+        return retrofit.create(ProfileApiService::class.java)
     }
 
 }

@@ -61,6 +61,7 @@ private val DarkGrayText = Color(0xFF3C3C3C)
  */
 @Composable
 fun ProfileScreen(
+    onNavigateToSalesHistoryScreen: () -> Unit,
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
@@ -89,7 +90,7 @@ fun ProfileScreen(
         }
 
         Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)
-        ProfileMenuList(navController = navController)
+        ProfileMenuList(navController = navController, onNavigateToSalesHistoryScreen)
     }
 }
 
@@ -165,7 +166,10 @@ fun ProfileHeader(user: User) {
  * 프로필 메뉴 리스트 UI
  */
 @Composable
-fun ProfileMenuList(navController: NavController) {
+fun ProfileMenuList(
+    navController: NavController,
+    onNavigateToSalesHistoryScreen: () -> Unit
+) {
     Column {
         Text(
             text = "나의 거래",
@@ -179,7 +183,7 @@ fun ProfileMenuList(navController: NavController) {
         MenuRow(
             icon = Icons.AutoMirrored.Filled.ReceiptLong,
             title = "판매내역",
-            onClick = { /*TODO*/ })
+            onClick = { onNavigateToSalesHistoryScreen() })
         Divider(modifier = Modifier.padding(horizontal = 16.dp))
         MenuRow(icon = Icons.Filled.FavoriteBorder, title = "관심목록", onClick = { /*TODO*/ })
         Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)

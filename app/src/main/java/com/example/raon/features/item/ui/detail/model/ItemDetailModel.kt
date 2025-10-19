@@ -19,6 +19,4 @@ data class ItemDetailModel(
     val isFavorite: Boolean, // 내 관심 목록 인지 판단
     val sellerId: Int,   // item 판매자의 userId
     val isMine: Boolean // 내 상품 여부 확인
-
-
 )

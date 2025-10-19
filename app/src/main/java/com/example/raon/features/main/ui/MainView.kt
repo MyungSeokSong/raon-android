@@ -135,7 +135,6 @@ fun MainView(
                             }
 
 
-//                            selectedIndex = index
                         },
                         icon = {
                             Icon(imageVector = navItem.icon, contentDescription = "Icon")
@@ -166,7 +165,6 @@ fun MainView(
 
     ) { innerPadding ->
         // **핵심 변경 5: MainView 내부의 NavHost - 바텀 내비게이션 탭의 콘텐츠를 렌더링합니다.**
-
         NavHost(
             navController = bottomNavController,        // <-- 여기서는 bottomNavController를 사용합니다.
             startDestination = navItemList[0].route,    // MainView 진입 시 기본으로 보여줄 탭 (예: "home_tab")
@@ -180,9 +178,6 @@ fun MainView(
                     },
                     onItemClick = { itemId ->
                         navController.navigate("itemDetail/$itemId")
-//                        navController.navigate("itemDetail")
-
-
                     }
                 )
             }
@@ -196,9 +191,15 @@ fun MainView(
                     chatRooms = mainUiState.chatRooms // ◀◀ 이 부분이 핵심입니다.
                 )
             }
-            composable("profile") { ProfileScreen(navController) }
+            composable("profile") {
+                ProfileScreen(
+                    onNavigateToSalesHistoryScreen = {
+                        navController.navigate("salesHistory")
+                    },
+                    navController
+                )
+            }
         }
-
     }
 }
 

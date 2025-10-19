@@ -2,6 +2,7 @@
 
 package com.example.raon.features.item.ui.list
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -139,7 +140,6 @@ fun ItemList(
             ItemListItem(
                 item = item,
                 onClick = { onItemClick(item.id) }
-
             )
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
         }
@@ -156,14 +156,14 @@ fun ItemListItem(
     // 마지막 동만 추출한 텍스트
     val lastlocation = item.location.split(" ").lastOrNull()
 
-
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)   // 클릭함수 넣어주기
             .padding(16.dp)
     ) {
+        Log.d("ItemListItem", "imageUrl: ${item.imageUrl}")
+
         AsyncImage(
             model = item.imageUrl,
             contentDescription = item.title,
@@ -238,7 +238,7 @@ fun ItemListItem(
                     }
 
 
-                    // [수정] 조회수 아이콘 및 UI
+                    // 조회수 아이콘 및 UI
                     if (item.viewCount > 0) {
                         Icon(
                             imageVector = Icons.Outlined.RemoveRedEye, // 눈 모양 아이콘
