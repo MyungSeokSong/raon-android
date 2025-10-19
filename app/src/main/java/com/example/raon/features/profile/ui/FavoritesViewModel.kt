@@ -1,5 +1,3 @@
-// features/profile/ui/FavoritesViewModel.kt
-
 package com.example.raon.features.profile.ui
 
 import android.util.Log
@@ -18,12 +16,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// 일회성 이벤트를 위한 Sealed Class
+/**
+ * UI에 일회성으로 전달할 이벤트 (예: Toast 메시지)
+ */
 sealed class FavoritesEvent {
     data class ShowError(val message: String) : FavoritesEvent()
 }
 
-// UI 상태 데이터 클래스
+/**
+ * FavoritesScreen의 UI 상태를 나타내는 데이터 클래스
+ */
 data class FavoritesUiState(
     val favoriteItems: List<ItemListUiModel> = emptyList(),
     val isLoading: Boolean = false,
@@ -33,13 +35,12 @@ data class FavoritesUiState(
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
-    private val itemRepository: ItemRepository // 찜 상태 변경을 위해 ItemRepository 주입
+    private val itemRepository: ItemRepository // 찜 상태 변경 API 호출을 위해 주입
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FavoritesUiState())
     val uiState = _uiState.asStateFlow()
 
-    // 이벤트 처리를 위한 SharedFlow
     private val _eventFlow = MutableSharedFlow<FavoritesEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
@@ -47,6 +48,9 @@ class FavoritesViewModel @Inject constructor(
         fetchFavorites()
     }
 
+    /**
+     * 서버로부터 찜 목록을 가져오는 함수
+     */
     fun fetchFavorites() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -66,15 +70,15 @@ class FavoritesViewModel @Inject constructor(
     }
 
     /**
-     * UI에서 하트 아이콘을 클릭했을 때 호출되는 함수
+     * 'FavoritesScreen' 내에서 하트 아이콘을 클릭했을 때 호출되는 함수.
+     * 낙관적 UI 업데이트를 사용하여 서버에 찜 상태 변경을 요청합니다.
      */
     fun toggleFavoriteStatus(itemId: Int) {
         viewModelScope.launch {
-            // 1. 현재 상태에서 클릭된 아이템을 찾습니다.
             val currentItem = _uiState.value.favoriteItems.find { it.id == itemId } ?: return@launch
             val newFavoriteState = !currentItem.isFavorite
 
-            // 2. '낙관적 UI 업데이트': 서버 응답을 기다리지 않고 UI를 즉시 변경합니다.
+            // 1. UI를 즉시 업데이트 (낙관적 업데이트)
             _uiState.update { currentState ->
                 val updatedList = currentState.favoriteItems.map { item ->
                     if (item.id == itemId) item.copy(isFavorite = newFavoriteState) else item
@@ -82,10 +86,9 @@ class FavoritesViewModel @Inject constructor(
                 currentState.copy(favoriteItems = updatedList)
             }
 
-            // 3. 백그라운드에서 서버에 API를 요청합니다.
+            // 2. 백그라운드에서 서버에 API 요청
             try {
                 itemRepository.updateFavoriteStatus(itemId, newFavoriteState)
-                // 성공! UI는 이미 변경되었으므로 아무것도 하지 않습니다.
                 Log.d(
                     "FavoritesViewModel",
                     "찜 상태 변경 성공: itemId=$itemId, isFavorite=$newFavoriteState"
@@ -93,7 +96,7 @@ class FavoritesViewModel @Inject constructor(
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
 
-                // 4. 실패! UI를 원래 상태로 되돌리고(롤백), 사용자에게 에러 메시지를 보냅니다.
+                // 3. 실패 시 UI 롤백 및 에러 이벤트 발생
                 _uiState.update { currentState ->
                     val rolledBackList = currentState.favoriteItems.map { item ->
                         if (item.id == itemId) item.copy(isFavorite = currentItem.isFavorite) else item
@@ -104,5 +107,19 @@ class FavoritesViewModel @Inject constructor(
                 Log.e("FavoritesViewModel", "찜 상태 변경 실패: itemId=$itemId", e)
             }
         }
+    }
+
+    /**
+     * 'ItemDetailScreen'에서 뒤로가기 시 전달된 결과를 받아 목록 상태를 업데이트하는 함수
+     */
+    fun updateFavoriteStatusFromResult(itemId: Int, isFavorite: Boolean) {
+        // 관심 목록에서는 찜이 취소되면(isFavorite = false) 목록에서 해당 아이템을 제거합니다.
+        if (!isFavorite) {
+            _uiState.update { currentState ->
+                val updatedList = currentState.favoriteItems.filterNot { it.id == itemId }
+                currentState.copy(favoriteItems = updatedList)
+            }
+        }
+        // isFavorite가 true인 경우는 이미 목록에 있으므로 별도로 처리할 필요가 없습니다.
     }
 }

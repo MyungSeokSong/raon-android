@@ -73,7 +73,7 @@ private val DarkGrayText = Color(0xFF3C3C3C)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemDetailScreen(
-    onBackClick: () -> Unit,
+    onBackClick: (isFavorite: Boolean) -> Unit,
     onNavigateToChatRoom: (Long) -> Unit,
     viewModel: ItemDetailViewModel = hiltViewModel()
 ) {
@@ -82,15 +82,11 @@ fun ItemDetailScreen(
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // 삭제 확인 다이얼로그 표시 여부를 관리하는 상태
     var showDeleteDialog by remember { mutableStateOf(false) }
-    // 404 에러 팝업 상태 추가
     var showNotFoundErrorDialog by remember { mutableStateOf(false) }
 
-    // 내 물품인지 확인
     val isMine = uiState.item?.isMine ?: false
 
-    // ViewModel의 일회성 이벤트를 구독하고 처리
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
@@ -98,34 +94,27 @@ fun ItemDetailScreen(
                     onNavigateToChatRoom(event.chatId)
                 }
 
-                // ProductDeleted 이벤트 처리 추가
                 is ItemDetailEvent.ProductDeleted -> {
                     Toast.makeText(context, "상품이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                    onBackClick() // 이전 화면으로 이동
+                    onBackClick(false) // 삭제 성공 시 찜 상태는 false로 전달
                 }
 
-                // 404 에러 이벤트를 받으면 팝업을 띄우도록 상태 변경
                 is ItemDetailEvent.ShowProductNotFoundError -> {
                     showNotFoundErrorDialog = true
                 }
 
-
                 is ItemDetailEvent.ShowError -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
-
             }
         }
     }
 
-
-    // [ 404 에러 AlertDialog 추가 ]
     if (showNotFoundErrorDialog) {
         AlertDialog(
             onDismissRequest = {
-                // 팝업 바깥을 눌러도 뒤로 가도록 처리
                 showNotFoundErrorDialog = false
-                onBackClick()
+                onBackClick(uiState.item?.isFavorite ?: false)
             },
             title = { Text("알림") },
             text = { Text("존재하지 않는 상품이거나 삭제되었습니다.") },
@@ -133,7 +122,7 @@ fun ItemDetailScreen(
                 TextButton(
                     onClick = {
                         showNotFoundErrorDialog = false
-                        onBackClick() // '확인' 버튼 누르면 뒤로가기
+                        onBackClick(uiState.item?.isFavorite ?: false)
                     }
                 ) {
                     Text("확인")
@@ -142,43 +131,34 @@ fun ItemDetailScreen(
         )
     }
 
-
-    // ModalBottomSheet를 조건부로 표시합니다.
     if (sheetState.isVisible) {
         ModalBottomSheet(
-            onDismissRequest = {
-                scope.launch { sheetState.hide() }
-            },
+            onDismissRequest = { scope.launch { sheetState.hide() } },
             sheetState = sheetState
         ) {
             Column(modifier = Modifier.padding(bottom = 32.dp)) {
-                // 수정
                 ListItem(
                     headlineContent = { Text("수정", fontWeight = FontWeight.Medium) },
                     leadingContent = { Icon(Icons.Filled.Edit, contentDescription = "수정") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            // TODO: 수정 화면으로 이동하는 로직 구현
                             Toast.makeText(context, "수정", Toast.LENGTH_SHORT).show()
                             scope.launch { sheetState.hide() }
                         }
                 )
                 Divider()
-                // 상태 변경
                 ListItem(
                     headlineContent = { Text("상태 변경", fontWeight = FontWeight.Medium) },
                     leadingContent = { Icon(Icons.Filled.SwapHoriz, contentDescription = "상태 변경") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            // TODO: 상태 변경 로직 구현
                             Toast.makeText(context, "상태 변경", Toast.LENGTH_SHORT).show()
                             scope.launch { sheetState.hide() }
                         }
                 )
                 Divider()
-                // 삭제
                 ListItem(
                     headlineContent = {
                         Text(
@@ -197,14 +177,11 @@ fun ItemDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            scope.launch { sheetState.hide() } // 바텀 시트 먼저 닫기
-                            showDeleteDialog = true // 삭제 다이얼로그 표시
+                            scope.launch { sheetState.hide() }
+                            showDeleteDialog = true
                         }
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // 닫기 버튼
                 Button(
                     onClick = { scope.launch { sheetState.hide() } },
                     modifier = Modifier
@@ -221,54 +198,38 @@ fun ItemDetailScreen(
         }
     }
 
-    // 삭제 확인 AlertDialog 추가
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = {
-                // 다이얼로그 바깥 클릭 또는 뒤로가기 시 다이얼로그 숨김
-                showDeleteDialog = false
-            },
-            title = {
-                Text(text = "게시글을 삭제할까요?", fontWeight = FontWeight.Bold)
-            },
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text(text = "게시글을 삭제할까요?", fontWeight = FontWeight.Bold) },
             confirmButton = {
-                // 삭제 버튼 (빨간색)
                 Button(
                     onClick = {
-                        // TODO 주석을 viewModel.deleteProduct() 호출로 변경
                         viewModel.deleteProduct()
-                        showDeleteDialog = false // 다이얼로그는 바로 닫기
+                        showDeleteDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Red,
-                        contentColor = Color.White
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {
                     Text("삭제")
                 }
             },
             dismissButton = {
-                // 취소 버튼
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false // 다이얼로그 닫기
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = Color.DarkGray)
-                ) {
+                TextButton(onClick = { showDeleteDialog = false }) {
                     Text("취소")
                 }
             }
         )
     }
 
-
     Scaffold(
         topBar = {
             ProductDetailTopAppBar(
-                onBackClick = onBackClick,
+                onBackClick = {
+                    val currentFavoriteState = uiState.item?.isFavorite ?: false
+                    onBackClick(currentFavoriteState)
+                },
                 isMine = isMine,
                 onMoreClick = {
-                    // 더보기 버튼 클릭 시 바텀 시트 표시
                     scope.launch { sheetState.show() }
                 }
             )
@@ -279,9 +240,7 @@ fun ItemDetailScreen(
                     ProductBottomBar(
                         isFavorited = item.isFavorite,
                         onFavoriteClick = viewModel::onFavoriteButtonClicked,
-                        onChatClick = {
-                            viewModel.onChatButtonClicked()
-                        }
+                        onChatClick = viewModel::onChatButtonClicked
                     )
                 }
             }
@@ -298,18 +257,13 @@ fun ItemDetailScreen(
                 }
 
                 uiState.errorMessage != null -> {
-                    Text(
-                        text = uiState.errorMessage!!,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Text(text = uiState.errorMessage!!, modifier = Modifier.align(Alignment.Center))
                 }
 
                 uiState.item != null -> {
                     val item = uiState.item!!
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        item {
-                            ProductImagePager(imageUrls = item.imageUrls)
-                        }
+                        item { ProductImagePager(imageUrls = item.imageUrls) }
                         item {
                             SellerProfile(
                                 nickname = item.sellerNickname,
@@ -324,7 +278,7 @@ fun ItemDetailScreen(
                                 price = item.price,
                                 condition = item.condition,
                                 category = "${item.category} ",
-                                time = "${item.createdAt}",
+                                time = item.createdAt,
                                 description = item.description,
                                 stats = "관심 ${item.favoriteCount} · 조회 ${item.viewCount}"
                             )
@@ -336,8 +290,6 @@ fun ItemDetailScreen(
     }
 }
 
-// --- 이하 부속 Composable 함수들 ---
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProductDetailTopAppBar(
@@ -348,10 +300,7 @@ private fun ProductDetailTopAppBar(
     CenterAlignedTopAppBar(
         title = {
             if (isMine) {
-                Text(
-                    text = "내 상품",
-                    fontWeight = FontWeight.Bold
-                )
+                Text(text = "내 상품", fontWeight = FontWeight.Bold)
             }
         },
         navigationIcon = {
@@ -468,11 +417,7 @@ private fun ProductInfo(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-        Text(
-            text = "%,d원".format(price),
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
-        )
+        Text(text = "%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Text(text = category, color = Color.Gray, fontSize = 13.sp)
         Text(text = condition, color = Color.Gray, fontSize = 13.sp)
         Text(text = time, color = Color.Gray, fontSize = 13.sp)

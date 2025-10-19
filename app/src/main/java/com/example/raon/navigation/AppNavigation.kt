@@ -1,8 +1,5 @@
 package com.example.raon.navigation
 
-//import com.example.raon.features.item.ui.detail.ItemDetailScreen
-//import com.example.raon.features.item.ui.detail.SellerInfo
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -31,7 +28,6 @@ import com.example.raon.features.search.ui.SearchResultScreen
 fun AppNavigation(
     modifier: Modifier = Modifier,
 ) {
-    // navController 생성
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "auth_graph") {
 
@@ -39,64 +35,43 @@ fun AppNavigation(
             "category?parentId={parentId}&path={path}",
             arguments = listOf(
                 navArgument("parentId") {
-                    type = NavType.IntType // 타입은 Int
-                    defaultValue = -1    // 기본값은 -1
+                    type = NavType.IntType
+                    defaultValue = -1
                 },
                 navArgument("path") {
-                    type = NavType.StringType // 타입은 String
-                    defaultValue = ""    // 기본값은 -1
+                    type = NavType.StringType
+                    defaultValue = ""
                 }
-
-            )) {
-            // 현재 화면의 ViewModel을 가져옵니다.
+            )
+        ) {
             val viewModel: CategoryViewModel = hiltViewModel()
-
             CategoryScreen(
-                onBackClick = {
-                    navController.popBackStack()    // 뒤로가기 버튼 눌렀을 때
-                },
-                { category ->
+                onBackClick = { navController.popBackStack() },
+                onCategoryClick = { category ->
                     if (category.isLeaf) {
-                        // 2. 이전 화면(AddItemScreen)의 SavedStateHandle에 접근해
-                        //    전달할 데이터를 key-value 형태로 저장합니다.
-                        navController.getBackStackEntry("addItem")?.savedStateHandle?.apply {
+                        navController.previousBackStackEntry?.savedStateHandle?.apply {
                             set("selectedCategoryName", category.name)
                             set("selectedCategoryId", category.categoryId)
                         }
-                        // 3. 현재 화면을 닫고 이전 화면으로 돌아갑니다.
-                        navController.popBackStack("addItem", inclusive = false)
+                        navController.popBackStack()
                     } else {
-                        // 1. 현재 화면의 경로를 ViewModel에서 가져옵니다. (예: "여성의류")
                         val currentPath = viewModel.pathString2
-
-                        // 2. 새로운 전체 경로를 만듭니다.
                         val newPath = if (currentPath.isNullOrEmpty()) {
-                            // 현재 경로가 없으면(최상위 화면), 클릭한 카테고리 이름이 새 경로가 됩니다.
                             category.name
                         } else {
-                            // 현재 경로가 있으면(예: "여성의류"), 쉼표(,)로 연결합니다.
-                            // 결과: "여성의류,아우터"
                             "$currentPath,${category.name}"
                         }
                         navController.navigate("category?parentId=${category.categoryId}&path=${newPath}")
                     }
-                })
+                }
+            )
         }
 
+        authGraph(navController)
+        mainGraph(navController)
 
-        // 그래프
-        authGraph(navController)    // auth 관련 화면
-        mainGraph(navController)    // main 관련 화면
-
-
-        // Item 등록 뷰
         composable("addItem") { backStackEntry ->
-
-            // 1. AddItemViewModel의 인스턴스를 가져옵니다.
             val addItemViewModel: AddItemViewModel = hiltViewModel()
-
-
-            // 2. backStackEntry의 SavedStateHandle에서 StateFlow로 데이터를 관찰합니다.
             val categoryNameResult by backStackEntry.savedStateHandle
                 .getStateFlow<String?>("selectedCategoryName", null)
                 .collectAsStateWithLifecycle()
@@ -104,85 +79,60 @@ fun AppNavigation(
                 .getStateFlow<Long?>("selectedCategoryId", null)
                 .collectAsStateWithLifecycle()
 
-            Log.d("카카테고리0", "카테고리 선택 이벤트 id! : ${categoryIdResult}")
-            Log.d("카카테고리0", "카테고리 선택 이벤트 name! : ${categoryNameResult}")
-
-
-            // 3. 결과가 도착했을 때 "딱 한 번만" ViewModel에 이벤트를 보냅니다.
             LaunchedEffect(categoryIdResult, categoryNameResult) {
-
-                // 2. 받은 Long을 우리가 필요한 Int로 안전하게 변환합니다.
-                val categoryId = categoryIdResult?.toInt()   // Long -> Int로 변환
+                val categoryId = categoryIdResult?.toInt()
                 val categoryName = categoryNameResult
 
-                if (categoryIdResult != null && categoryNameResult != null) {
+                if (categoryId != null && categoryName != null) {
                     addItemViewModel.onEvent(
                         AddItemEvent.CategorySelected(
-                            categoryId!!,
-                            categoryNameResult!!
+                            categoryId,
+                            categoryName
                         )
                     )
-
-                    Log.d("카카테고리1", "카테고리 선택 이벤트 id! : ${categoryIdResult}")
-                    Log.d("카카테고리1", "카테고리 선택 이벤트 name! : ${categoryNameResult}")
-
-
-                    // ViewModel에 전달 후에는 값을 지워서 중복 처리를 방지합니다.
                     backStackEntry.savedStateHandle.remove<String>("selectedCategoryName")
-                    backStackEntry.savedStateHandle.remove<Int>("selectedCategoryId")
+                    backStackEntry.savedStateHandle.remove<Long>("selectedCategoryId")
                 }
             }
 
-
             AddItemScreen(
-                modifier,
-                // 여기에 ViewModel을 만들어서 전달하는 것이 더 좋습니다.
-                // 우선은 UI에 바로 전달하는 예시입니다.
-                onUploadSuccess = {
-                    navController.popBackStack()
-                    // 후에 업로드 성공시 ItemDetail 뷰 보이게 해야함
-                },
-                onNavigationToCategory = {
-                    navController.navigate("category")
-                },
-                onClose = {          // onClose 파라미터에 뒤로 가기 동작을 전달
-                    navController.popBackStack()
-                },
-                // (권장) ViewModel에 데이터를 전달했다면, 한 번 사용한 값은 제거합니다.
+                modifier = modifier,
+                onUploadSuccess = { navController.popBackStack() },
+                onNavigationToCategory = { navController.navigate("category") },
+                onClose = { navController.popBackStack() },
                 onClearCategoryResult = {
                     backStackEntry.savedStateHandle.remove<String>("selectedCategoryName")
-                    backStackEntry.savedStateHandle.remove<Int>("selectedCategoryId")
+                    backStackEntry.savedStateHandle.remove<Long>("selectedCategoryId")
                 }
             )
         }
 
-        // Item 상세보기 뷰
         composable(
-            route = "itemDetail/{itemId}",   // 경로에 변수가 포함됨을 정의
-            arguments = listOf(navArgument("itemId") {
-                type = NavType.IntType  // itemId는 Int 타입으로 정의
-            })
-        ) {
+            route = "itemDetail/{itemId}",
+            arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val itemId = backStackEntry.arguments?.getInt("itemId") ?: -1
             ItemDetailScreen(
-                onBackClick = {
-                    navController.popBackStack()    // 뒤로가기 버튼 눌렀을 때
+                onBackClick = { isFavorite ->
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("favorite_result", itemId to isFavorite)
+                    navController.popBackStack()
                 },
-                onNavigateToChatRoom = { chatRoomId ->  // 채팅방 ID 넘겨주기
-                    navController.navigate("chatroom/$chatRoomId")
+                onNavigateToChatRoom = { chatRoomId ->
+                    navController.navigate("chatRoom/$chatRoomId")
                 }
             )
         }
 
-
-        // 채팅 방 뷰
         composable("chatRoom/{chatRoomId}") { ChatRoomScreen() }
 
-
-        // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 검색 화면 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+        // ❗️ 검색 화면 수정
         composable("searchInput") {
+            
             SearchInputScreen(
-                { query ->
-
+                // 👇 "onSearch =" 이름을 명시적으로 추가
+                onNavigateToSearchResult = { query ->
                     navController.navigate("searchResult/$query")
                 },
                 onCloses = {
@@ -196,61 +146,37 @@ fun AppNavigation(
             )
         }
 
-
-        // 2. 검색 결과 화면
         composable(
-            route = "searchResult/{query}", // {query} 부분으로 검색어를 전달받음
+            route = "searchResult/{query}",
             arguments = listOf(navArgument("query") { type = NavType.StringType })
         ) { backStackEntry ->
-            // 전달받은 검색어를 추출
             val query = backStackEntry.arguments?.getString("query") ?: ""
             SearchResultScreen(
                 searchQuery = query,
-                // 상세 페이지로 이동하는 로직 등 추가
-                onItemClick = { itemId ->
-                    /* TODO: 상세 페이지로 이동 */
-                    navController.navigate("itemDetail/$itemId")
-                },
-                onCloses = {
-                    navController.popBackStack()
-                },
+                onItemClick = { itemId -> navController.navigate("itemDetail/$itemId") },
+                onCloses = { navController.popBackStack() },
                 onNavigateToHome = {
                     navController.navigate("main_graph") {
                         popUpTo("searchInput") { inclusive = true }
-
                     }
                 }
             )
         }
 
-        // 판매 내역 페이지
         composable("salesHistory") {
             SalesHistoryScreen(
-                onItemClick = { itemId ->
-                    navController.navigate("itemDetail/$itemId")    // 보여줄 itemId 넘겨주기
-                },
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                onItemClick = { itemId -> navController.navigate("itemDetail/$itemId") },
+                onBackClick = { navController.popBackStack() }
             )
         }
 
-        // 구매 내역 페이지
-//        composable("salesHistory") { SalesHistoryScreen { } }
-
-        // 관심 내역 페이지
         composable("favorites") {
             FavoritesScreen(
-                onItemClick = { itemId ->
-                    navController.navigate("itemDetail/$itemId")    // 보여줄 itemId 넘겨주기
-                },
-                onBackClick = {
-                    navController.popBackStack()
-                }
+                navController = navController,
+                onItemClick = { itemId -> navController.navigate("itemDetail/$itemId") },
+                onBackClick = { navController.popBackStack() }
             )
         }
-
-
     }
 }
 

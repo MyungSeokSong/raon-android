@@ -98,8 +98,6 @@ dependencies {
     // meterial3 안정하 버전
     implementation("androidx.compose.material3:material3:1.4.0")    // 새로고침을 사용하기 위한 버전
 
-    // 새로고침 사용하기 위한 라이브러리
-//    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
 
     // Compose integration for Jatpack Navigation
     implementation("androidx.navigation:navigation-compose:2.8.9")
@@ -169,5 +167,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
     // await() 함수를 사용하기 위한 라이브러리 -> android gps는 await()를 사용해야함
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+
 
 }

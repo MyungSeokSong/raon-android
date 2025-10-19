@@ -1,5 +1,3 @@
-// features/profile/ui/FavoritesScreen.kt
-
 package com.example.raon.features.profile.ui
 
 import android.widget.Toast
@@ -23,19 +21,37 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.raon.core.ui.component.ItemListComponoents
+import kotlinx.coroutines.flow.filterNotNull
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
+    navController: NavController,
     onBackClick: () -> Unit,
     onItemClick: (itemId: Int) -> Unit,
     viewModel: FavoritesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val context = LocalContext.current // Toast를 위해 context 가져오기
+    val context = LocalContext.current
 
-    // ViewModel의 일회성 이벤트를 구독하고 처리하는 부분
+    // ❗️ `by` 키워드를 사용하지 않고 LaunchedEffect에서 직접 Flow를 구독합니다.
+    LaunchedEffect(Unit) {
+        // 1. 현재 화면의 SavedStateHandle에서 StateFlow를 가져옵니다.
+        val resultFlow = navController.currentBackStackEntry
+            ?.savedStateHandle
+            ?.getStateFlow<Pair<Int, Boolean>?>("favorite_result", null)
+
+        // 2. Flow가 null이 아닐 때만 구독을 시작합니다.
+        resultFlow?.filterNotNull()?.collect { (itemId, isFavorite) ->
+            // 3. ViewModel을 업데이트하고, 처리가 끝나면 즉시 null로 되돌려 중복 실행을 막습니다.
+            viewModel.updateFavoriteStatusFromResult(itemId, isFavorite)
+            navController.currentBackStackEntry?.savedStateHandle?.set("favorite_result", null)
+        }
+    }
+
+    // ViewModel의 일회성 이벤트(예: Toast)를 구독하고 처리합니다.
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
@@ -87,7 +103,6 @@ fun FavoritesScreen(
                         items = uiState.favoriteItems,
                         onItemClick = onItemClick,
                         isFavoriteList = true,
-                        // ViewModel의 함수를 하트 클릭 콜백에 연결
                         onFavoriteClick = viewModel::toggleFavoriteStatus
                     )
                 }

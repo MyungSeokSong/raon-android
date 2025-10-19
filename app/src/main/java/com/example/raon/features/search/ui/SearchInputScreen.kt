@@ -142,10 +142,3 @@ fun RecentSearchItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewSearchInputScreen() {
-    MaterialTheme {
-        SearchInputScreen()
-    }
-}
