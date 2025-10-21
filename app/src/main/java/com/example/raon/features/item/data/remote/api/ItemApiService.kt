@@ -4,6 +4,7 @@ import com.example.raon.features.chat.data.remote.dto.CreateChatRoomResponseDto
 import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
+import com.example.raon.features.item.data.remote.dto.add.ItemUpdateRequest
 import com.example.raon.features.item.data.remote.dto.detail.ChangeFavoriteStatusRequest
 import com.example.raon.features.item.data.remote.dto.detail.GetFavoriteStatusResponse
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailResponse
@@ -24,11 +25,19 @@ interface ItemApiService {
 
     // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 게시글 리스트, 게시글 CRUD ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
 
-    // --- 게시글 등록 API  ---
+    // [ 게시글 등록 API ]
     @POST("api/v1/products")
     suspend fun postItem(
         @Body itemData: ItemAddRequest
     ): ItemResponse
+
+    // [ 상품 수정 API ]
+    @PUT("api/v1/products/{productId}")
+    suspend fun updateItem(
+        @Path("productId") productId: Int,
+        @Body itemData: ItemUpdateRequest // postItem과 다른 DTO 사용 -> 이미지를 삭제해야하기 때문
+    ): Response<Unit> // 성공 여부만 받으므로 Unit으로 설정
+
 
     // 아이템 목록을 가져오는 API
     // @param page 페이지 번호 (0부터 시작)

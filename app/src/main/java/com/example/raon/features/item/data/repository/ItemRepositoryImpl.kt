@@ -11,6 +11,7 @@ import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.api.ItemApiService
 import com.example.raon.features.item.data.remote.dto.add.ItemAddRequest
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
+import com.example.raon.features.item.data.remote.dto.add.ItemUpdateRequest
 import com.example.raon.features.item.data.remote.dto.detail.ChangeFavoriteStatusRequest
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailData
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
@@ -39,9 +40,7 @@ class ItemRepositoryImpl @Inject constructor(
     private val userRepository: UserRepository,
     @ApplicationContext private val context: Context
 ) : ItemRepository {
-
     private val S3_BASE_URL = "https://raon-market-images-prod.s3.ap-northeast-2.amazonaws.com/"
-
 
     // itemList 가져오기
     override suspend fun getItems(page: Int): List<ItemDto> {
@@ -75,14 +74,13 @@ class ItemRepositoryImpl @Inject constructor(
             val presignedUrls = urlJobs.awaitAll()
             itemsDto.zip(presignedUrls) // (ItemDto, PresignedUrl) 쌍으로 묶기
         }
-
         // 3. 최종 UI 모델로 변환하여 반환
         return itemsWithPresignedUrl.map { (itemDto, presignedUrl) ->
             itemDto.toUiModel(presignedUrl)
         }
     }
 
-    // 새 item 게시글 등록
+    // [ New item 등록 ]
     override suspend fun postNewItem(
         title: String,
         description: String,
@@ -92,7 +90,6 @@ class ItemRepositoryImpl @Inject constructor(
         condition: String
     ): ItemResponse {
         try {
-            // ✨✨✨ 핵심 부분 ✨✨✨
             // 1. userRepository에서 Flow를 가져온 뒤 .first()를 호출해 최신 User 데이터를 꺼냅니다.
             //    이 작업은 비동기이므로 suspend 함수 내에서만 가능합니다.
             val currentUser = userRepository.getUserProfile().first()
@@ -108,7 +105,6 @@ class ItemRepositoryImpl @Inject constructor(
             val imageUrls = uploadImagesAndGetS3Urls(imageUris)
 
             Log.d("imageUpload", "imageUrls : ${imageUrls}")
-
 
             // 앱에서 선택한 이미지 존재 && presigned url 경로 없을 때
             // -> 이미지를 업로드 하려다가 서버에서 실패한 상황
@@ -130,9 +126,7 @@ class ItemRepositoryImpl @Inject constructor(
                 tradeType = "DIRECT",
                 imageList = imageUrls
             )
-
             Log.d("imageUpload", "서버 저장 이미지 url : ${imageUrls}")
-
 
             return itemApiService.postItem(itemRequest)
 
@@ -161,6 +155,53 @@ class ItemRepositoryImpl @Inject constructor(
                 data = null
             )
         }
+    }
+
+
+    // [ Item 수정 ]
+    override suspend fun updateItem(
+        itemId: Int,
+        title: String,
+        description: String,
+        price: Int,
+        categoryId: Int?,
+        condition: String,
+        newImageUris: List<Uri>,
+        existingImageUrls: List<String>
+    ): ApiResult<Unit> {
+        // 1. 현재 사용자의 locationId를 가져옵니다 (postNewItem과 동일한 로직). -> 수정본은 사용자의 위치를 따라야하기 때문
+        val currentUser = userRepository.getUserProfile().first()
+        val userLocationId = currentUser?.locationId ?: 1 // 기본값 또는 에러 처리 필요
+
+        // TODO: 이미지 수정 로직 구현 (현재는 텍스트만 수정)
+//        val finalImageUrls = emptyList<String>() // 임시로 빈 리스트
+
+        // 1. 새로 추가된 이미지가 있다면 S3에 업로드하고 URL을 받습니다.
+        val newImageUrls = if (newImageUris.isNotEmpty()) {
+            uploadImagesAndGetS3Urls(newImageUris)
+        } else {
+            emptyList()
+        }
+
+        // 2. 최종 이미지 목록 = (기존에 있던 이미지 URL) + (새로 업로드한 이미지 URL)
+        val finalImageUrls = existingImageUrls + newImageUrls
+
+        val request = ItemUpdateRequest(
+            categoryId = categoryId,
+            locationId = userLocationId, // 2. 가져온 locationId를 DTO에 포함시킵니다.
+            title = title,
+            description = description,
+            price = price,
+            condition = condition,
+            tradeType = "DIRECT",
+            imageUrls = finalImageUrls
+        )
+
+        Log.e("AddItemViewModel_Repository", "request : ${request}")
+
+
+        // 3. API를 호출합니다.
+        return handleApi { itemApiService.updateItem(itemId, request) }
     }
 
 
@@ -325,6 +366,7 @@ class ItemRepositoryImpl @Inject constructor(
             sellerAddress = this.location.address,
             title = this.title,
             category = this.categories.joinToString(" > ") { it.name },
+            categoryId = this.categories.lastOrNull()?.categoryId,
             createdAt = formatTimeAgo(this.createdAt),  // 날짜 받아서 과거형으로 변경
             description = this.description,
             favoriteCount = this.favoriteCount,

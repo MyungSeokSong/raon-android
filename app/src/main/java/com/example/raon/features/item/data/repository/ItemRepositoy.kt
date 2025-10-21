@@ -21,15 +21,30 @@ interface ItemRepository {
     // 아이템 목록 조회. 실패 시 예외를 던짐
     suspend fun getItems(page: Int): List<ItemDto> // 이름 및 반환 타입 변경
 
-    // 새 아이템 등록
+    // [ New Item 등록 }
     suspend fun postNewItem(
         title: String,
         description: String,
         price: Int,
         imageUris: List<Uri>,
         categoryId: Int?,
-        condition: String
+        condition: String,
     ): ItemResponse
+
+    // [ Item 수정 ]
+    suspend fun updateItem(
+        itemId: Int,
+        title: String,
+//        locationId: Int,
+        description: String,
+        price: Int,
+        // TODO: 이미지 수정 로직 구현 시 파라미터 변경 필요
+        // imageUris: List<Uri>,
+        categoryId: Int?,
+        condition: String,
+        newImageUris: List<Uri>,
+        existingImageUrls: List<String>
+    ): ApiResult<Unit>
 
 
     // 상세 페이지 모델을 가져오는 함수 정의

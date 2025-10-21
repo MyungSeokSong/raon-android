@@ -18,5 +18,9 @@ sealed class AddItemEvent {
     data class PriceChanged(val price: String) : AddItemEvent()
     data class AddImages(val uris: List<Uri>) : AddItemEvent()
     data class RemoveImage(val uri: Uri) : AddItemEvent()
+
+    // 기존 이미지를 삭제하는 이벤트 추가
+    data class RemoveExistingImage(val url: String) : AddItemEvent()
+
     object Submit : AddItemEvent()
 }

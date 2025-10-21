@@ -11,6 +11,8 @@ data class ItemDetailModel(
     val title: String,
     val condition: String,
     val category: String, // 카테고리는 하나의 문자열로 합쳐서 사용
+    // 👇 이 필드를 추가해주세요.
+    val categoryId: Int?, // 실제 마지막 카테고리의 ID (예: 270)
     val createdAt: String, // 시간 표시는 나중에 변환
     val description: String,
     val favoriteCount: Int,

@@ -24,12 +24,12 @@ class CategoryViewModel @Inject constructor(
     private val argParentId: Int = savedStateHandle.get<Int>("parentId") ?: -1
     private val parentId: Int? = if (argParentId == -1) null else argParentId
 
-    // ✨ 1. 화면 이동 시 전달받은 경로 문자열 (예: "여성의류,상의")
+    //  1. 화면 이동 시 전달받은 경로 문자열 (예: "여성의류,상의")
     private val pathString: String? = savedStateHandle.get<String>("path")
 
     val pathString2 = pathString
 
-    // ✨ 2. UI에 표시할 최종 경로 리스트 StateFlow -> 경로 스트링 리스트
+    //  2. UI에 표시할 최종 경로 리스트 StateFlow -> 경로 스트링 리스트
     private val _categoryPath = MutableStateFlow<List<String>>(emptyList())
     val categoryPath: StateFlow<List<String>> = _categoryPath.asStateFlow()
 
@@ -38,7 +38,7 @@ class CategoryViewModel @Inject constructor(
         Log.d("CategoryViewModel", "Nav argument로 받은 parentId: $argParentId")
         Log.d("CategoryViewModel", "Nav argument로 받은 path: $pathString")
 
-        // ✨ 3. 전달받은 경로 문자열을 리스트로 변환하고 맨 앞에 "전체"를 추가
+        //  3. 전달받은 경로 문자열을 리스트로 변환하고 맨 앞에 "전체"를 추가
         val currentPath = pathString?.split(",")
             ?.filter { it.isNotEmpty() } ?: emptyList()
         _categoryPath.value = listOf("전체") + currentPath

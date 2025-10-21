@@ -75,6 +75,8 @@ private val DarkGrayText = Color(0xFF3C3C3C)
 fun ItemDetailScreen(
     onBackClick: (isFavorite: Boolean) -> Unit,
     onNavigateToChatRoom: (Long) -> Unit,
+    // ❗️ onNavigateToEdit이 상품 ID를 전달하도록 파라미터 타입을 변경합니다.
+    onNavigateToEdit: (itemId: Int) -> Unit,
     viewModel: ItemDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -90,22 +92,18 @@ fun ItemDetailScreen(
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is ItemDetailEvent.NavigateToChatRoom -> {
-                    onNavigateToChatRoom(event.chatId)
-                }
-
+                is ItemDetailEvent.NavigateToChatRoom -> onNavigateToChatRoom(event.chatId)
                 is ItemDetailEvent.ProductDeleted -> {
                     Toast.makeText(context, "상품이 삭제되었습니다.", Toast.LENGTH_SHORT).show()
-                    onBackClick(false) // 삭제 성공 시 찜 상태는 false로 전달
+                    onBackClick(false)
                 }
 
-                is ItemDetailEvent.ShowProductNotFoundError -> {
-                    showNotFoundErrorDialog = true
-                }
-
-                is ItemDetailEvent.ShowError -> {
-                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
-                }
+                is ItemDetailEvent.ShowProductNotFoundError -> showNotFoundErrorDialog = true
+                is ItemDetailEvent.ShowError -> Toast.makeText(
+                    context,
+                    event.message,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -119,14 +117,10 @@ fun ItemDetailScreen(
             title = { Text("알림") },
             text = { Text("존재하지 않는 상품이거나 삭제되었습니다.") },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        showNotFoundErrorDialog = false
-                        onBackClick(uiState.item?.isFavorite ?: false)
-                    }
-                ) {
-                    Text("확인")
-                }
+                TextButton(onClick = {
+                    showNotFoundErrorDialog = false
+                    onBackClick(uiState.item?.isFavorite ?: false)
+                }) { Text("확인") }
             }
         )
     }
@@ -143,7 +137,10 @@ fun ItemDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            Toast.makeText(context, "수정", Toast.LENGTH_SHORT).show()
+                            // ❗️ 현재 상품 ID를 가져와 onNavigateToEdit 콜백을 호출합니다.
+                            uiState.item?.id?.let { itemId ->
+                                onNavigateToEdit(itemId)
+                            }
                             scope.launch { sheetState.hide() }
                         }
                 )
@@ -191,9 +188,7 @@ fun ItemDetailScreen(
                         containerColor = Color.LightGray.copy(alpha = 0.5f),
                         contentColor = Color.Black
                     )
-                ) {
-                    Text("닫기", fontWeight = FontWeight.Bold)
-                }
+                ) { Text("닫기", fontWeight = FontWeight.Bold) }
             }
         }
     }
@@ -201,7 +196,7 @@ fun ItemDetailScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text(text = "게시글을 삭제할까요?", fontWeight = FontWeight.Bold) },
+            title = { Text("게시글을 삭제할까요?", fontWeight = FontWeight.Bold) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -209,14 +204,10 @@ fun ItemDetailScreen(
                         showDeleteDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) {
-                    Text("삭제")
-                }
+                ) { Text("삭제") }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("취소")
-                }
+                TextButton(onClick = { showDeleteDialog = false }) { Text("취소") }
             }
         )
     }
@@ -229,9 +220,7 @@ fun ItemDetailScreen(
                     onBackClick(currentFavoriteState)
                 },
                 isMine = isMine,
-                onMoreClick = {
-                    scope.launch { sheetState.show() }
-                }
+                onMoreClick = { scope.launch { sheetState.show() } }
             )
         },
         bottomBar = {
@@ -252,13 +241,11 @@ fun ItemDetailScreen(
                 .padding(paddingValues)
         ) {
             when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
-
-                uiState.errorMessage != null -> {
-                    Text(text = uiState.errorMessage!!, modifier = Modifier.align(Alignment.Center))
-                }
+                uiState.isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                uiState.errorMessage != null -> Text(
+                    uiState.errorMessage!!,
+                    modifier = Modifier.align(Alignment.Center)
+                )
 
                 uiState.item != null -> {
                     val item = uiState.item!!
@@ -277,7 +264,7 @@ fun ItemDetailScreen(
                                 title = item.title,
                                 price = item.price,
                                 condition = item.condition,
-                                category = "${item.category} ",
+                                category = item.category,
                                 time = item.createdAt,
                                 description = item.description,
                                 stats = "관심 ${item.favoriteCount} · 조회 ${item.viewCount}"
@@ -299,9 +286,7 @@ private fun ProductDetailTopAppBar(
 ) {
     CenterAlignedTopAppBar(
         title = {
-            if (isMine) {
-                Text(text = "내 상품", fontWeight = FontWeight.Bold)
-            }
+            if (isMine) Text("내 상품", fontWeight = FontWeight.Bold)
         },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
@@ -328,18 +313,11 @@ private fun ProductImagePager(imageUrls: List<String>) {
                 .aspectRatio(1f)
                 .background(Color.LightGray),
             contentAlignment = Alignment.Center
-        ) {
-            Text("이미지가 없습니다.")
-        }
+        ) { Text("이미지가 없습니다.") }
         return
     }
-
     val pagerState = rememberPagerState(pageCount = { imageUrls.size })
-
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
@@ -353,13 +331,8 @@ private fun ProductImagePager(imageUrls: List<String>) {
                 contentScale = ContentScale.Crop
             )
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            Modifier.padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
+        Spacer(Modifier.height(8.dp))
+        Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center) {
             repeat(pagerState.pageCount) { iteration ->
                 val color =
                     if (pagerState.currentPage == iteration) Color.DarkGray else Color.LightGray
@@ -392,10 +365,10 @@ private fun SellerProfile(nickname: String, profileUrl: String?, address: String
                 .background(Color.LightGray),
             contentScale = ContentScale.Crop
         )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = nickname, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-            Text(text = address, color = Color.Gray, fontSize = 13.sp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(nickname, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(address, color = Color.Gray, fontSize = 13.sp)
         }
     }
 }
@@ -416,13 +389,13 @@ private fun ProductInfo(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(text = title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
-        Text(text = "%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text(text = category, color = Color.Gray, fontSize = 13.sp)
-        Text(text = condition, color = Color.Gray, fontSize = 13.sp)
-        Text(text = time, color = Color.Gray, fontSize = 13.sp)
-        Text(text = description, fontSize = 16.sp, lineHeight = 24.sp)
-        Text(text = stats, color = Color.Gray, fontSize = 13.sp)
+        Text(title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text("%,d원".format(price), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(category, color = Color.Gray, fontSize = 13.sp)
+        Text(condition, color = Color.Gray, fontSize = 13.sp)
+        Text(time, color = Color.Gray, fontSize = 13.sp)
+        Text(description, fontSize = 16.sp, lineHeight = 24.sp)
+        Text(stats, color = Color.Gray, fontSize = 13.sp)
     }
 }
 
@@ -457,9 +430,7 @@ private fun ProductBottomBar(
                         containerColor = BrandYellow,
                         contentColor = DarkGrayText
                     )
-                ) {
-                    Text("채팅하기")
-                }
+                ) { Text("채팅하기") }
             }
         }
     }

@@ -1,8 +1,10 @@
 package com.example.raon.features.item.ui.add
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.raon.core.network.ApiResult
 import com.example.raon.features.item.data.repository.ItemRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,26 +15,68 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddItemViewModel @Inject constructor(
-    private val itemRepository: ItemRepository
+    private val itemRepository: ItemRepository,
+    savedStateHandle: SavedStateHandle // itemId를 받기 위해 주입
 ) : ViewModel() {
-
 
     private val _uiState = MutableStateFlow(AddItemUiState())
     val uiState = _uiState.asStateFlow()
 
+    // 수정할 아이템의 ID를 저장 (없으면 null -> 등록 모드)
+    val itemId: Int? = savedStateHandle["itemId"]
+
+    init {
+        // 수정 모드인지 확인하고, 맞으면 기존 데이터를 불러옵니다.
+        if (itemId != null && itemId != -1) { // -1은 NavArgument의 기본값이므로 제외
+            loadItemForEditing(itemId)
+        }
+    }
+
+    /**
+     * [수정 모드]일 때 기존 상품 정보를 불러오는 함수
+     */
+    private fun loadItemForEditing(id: Int) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                // Repository에서 상세 정보를 가져옵니다.
+                val item = itemRepository.getItemDetail(id)
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        title = item.title,
+                        price = item.price.toString(),
+                        description = item.description,
+                        selectedCategoryName = item.category,
+                        // TODO: 상세 모델에 categoryId가 포함되어야 정확한 ID를 설정할 수 있습니다.
+                        // 👇 주석을 풀고 item 모델에서 categoryId를 가져오도록 수정합니다.
+                        selectedCategoryId = item.categoryId,
+                        productCondition = when (item.condition) {
+                            "새 상품" -> ProductCondition.NEW
+                            else -> ProductCondition.USED
+                        },
+                        // 기존 이미지 URL을 UI State에 저장
+                        existingImageUrls = item.imageUrls,
+                        // 수정 모드에서는 불러온 데이터가 유효하다고 간주
+                        isPriceValid = true,
+                        isCategoryValid = true
+                    )
+                }
+            } catch (e: Exception) {
+                // TODO: 에러 처리 (예: Toast 메시지 이벤트 발생)
+                _uiState.update { it.copy(isLoading = false, errorMessage = "상품 정보를 불러오지 못했습니다.") }
+            }
+        }
+    }
+
     fun onEvent(event: AddItemEvent) {
         when (event) {
-            is AddItemEvent.TitleChanged -> {   // 제목이 바뀌었을 때 새 객체 만들어서 업데이트
+            is AddItemEvent.TitleChanged -> {
                 _uiState.update { it.copy(title = event.title) }
             }
 
-
-            is AddItemEvent.CategorySelected -> {   // 카테고리 변경 이벤
-                Log.d(
-                    "AddItemViewModel1",
-                    "CategorySelected event received! ID: ${event.id}, Name: ${event.name}"
-                )
-
+            is AddItemEvent.CategorySelected -> {
                 _uiState.update {
                     it.copy(
                         isCategoryValid = true,
@@ -43,84 +87,111 @@ class AddItemViewModel @Inject constructor(
             }
 
             is AddItemEvent.ProductConditionChanged -> {
-
                 _uiState.update { it.copy(productCondition = event.condition) }
-
             }
 
-            is AddItemEvent.DescriptionChanged -> { // description이 바뀌었을 때 새 객체 만들어서 업데이트
+            is AddItemEvent.DescriptionChanged -> {
                 _uiState.update { it.copy(description = event.description) }
             }
 
-            is AddItemEvent.PriceChanged -> {   // 가격이 바뀌었을 때 새 객체 만들어서 업데이트
-
-                val newPrice = event.price.filter { it.isDigit() } // 숫자만 입력되도록 필터링
-                // 유효성 검사: 숫자로 변환 가능하고, 0보다 큰 값인지 확인 (비즈니스 로직에 따라 변경 가능)
-                val isValid = newPrice.toIntOrNull()?.let { it > 0 } ?: false
-
-
-                // 숫자만 입력되도록 필터링하는 로직 등을 추가할 수 있음
+            is AddItemEvent.PriceChanged -> {
+                val newPrice = event.price.filter { it.isDigit() }
+                val isValid = newPrice.toLongOrNull()?.let { it >= 0 } ?: false
                 _uiState.update {
                     it.copy(
-                        price = event.price,
-                        isPriceValid = isValid  // 가격 유효성 검사 통과하면 true
+                        price = newPrice,
+                        isPriceValid = isValid
                     )
                 }
             }
 
-            is AddItemEvent.AddImages -> {  // 이미지가 추가됬을 때
+            // 👇 기존 이미지 삭제 이벤트 처리 로직 추가
+            is AddItemEvent.RemoveExistingImage -> {
                 _uiState.update {
-                    val currentImages = it.seletedImages.toMutableList()
-                    currentImages.addAll(event.uris)
-                    it.copy(seletedImages = currentImages.take(5)) // 최대 5개 보장
+                    it.copy(
+                        // 기존 이미지 목록에서 해당 URL 제거
+                        existingImageUrls = it.existingImageUrls.filterNot { url -> url == event.url },
+                        // 삭제된 이미지 목록에 추가
+                        deletedImageUrls = it.deletedImageUrls + event.url
+                    )
                 }
             }
 
-            is AddItemEvent.RemoveImage -> {    // 이미지가 삭제 됬을 때
+            is AddItemEvent.AddImages -> {
+                _uiState.update {
+                    val currentImages = it.seletedImages.toMutableList()
+                    currentImages.addAll(event.uris)
+                    val totalCount = it.existingImageUrls.size + currentImages.size
+                    it.copy(seletedImages = if (totalCount > 5) currentImages.take(5 - it.existingImageUrls.size) else currentImages)
+                }
+            }
+
+            is AddItemEvent.RemoveImage -> {
                 _uiState.update {
                     val currentImages = it.seletedImages.toMutableList()
                     currentImages.remove(event.uri)
                     it.copy(seletedImages = currentImages)
                 }
             }
-
-            is AddItemEvent.Submit -> postItem()    // item 등록 완료 버튼 이벤트
+            // TODO: 기존 이미지 삭제 이벤트 처리
+            // is AddItemEvent.RemoveExistingImage -> { ... }
+            is AddItemEvent.Submit -> submitItem()
         }
     }
 
-
-    private fun postItem() {
+    /**
+     * '등록 완료' 또는 '수정 완료' 버튼 클릭 시 호출되는 함수
+     */
+    private fun submitItem() {
         viewModelScope.launch {
-
-            Log.d("addItem", "postItem 함수")
-
             _uiState.update { it.copy(isLoading = true) }
+            val currentState = _uiState.value
             try {
-                val currentState = _uiState.value
-                val response = itemRepository.postNewItem(  // 서버 통신 코드
-                    title = currentState.title,
-                    description = currentState.description,
-                    price = currentState.price.toInt(),
-                    imageUris = currentState.seletedImages,
-                    categoryId = uiState.value.selectedCategoryId,
-                    condition = uiState.value.productCondition.toString()
-                )
+                // itemId 유무에 따라 등록/수정 API를 분기하여 호출
+                if (itemId != null && itemId != -1) {
+                    // --- 수정 로직 ---
+                    val result = itemRepository.updateItem(
+                        itemId = itemId,
+                        title = currentState.title,
+//                        locationId = currentState.locationId,
+                        description = currentState.description,
+                        price = currentState.price.toInt(),
+                        categoryId = currentState.selectedCategoryId,
+                        condition = currentState.productCondition.name, // "NEW" or "USED"
 
-                Log.d("addItem", "local imageUris: {${currentState.seletedImages}}")
-                Log.d("addItem", "response: {${response.code}}")
-                Log.d("addItem", "response: {${response.message}}")
+                        // 👇 Repository에 이미지 관련 정보를 모두 넘겨줍니다.
+                        newImageUris = currentState.seletedImages,
+                        existingImageUrls = currentState.existingImageUrls
 
-
-                // 서버 통신에 따른 처리
-                if (response.code == "OK") {
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
-                    // TODO: 성공 시 화면 이동 (예: NavController.navigate)
+                    )
+                    if (result is ApiResult.Success) {
+                        _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    } else {
+                        // TODO: 에러 처리
+                        Log.e("AddItemViewModel", "상품 수정 실패: $result")
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
                 } else {
-                    // TODO: 서버가 보낸 에러 메시지 처리
-                    _uiState.update { it.copy(isLoading = false) }
+                    // --- 등록 로직 ---
+                    val response = itemRepository.postNewItem(
+                        title = currentState.title,
+                        description = currentState.description,
+                        price = currentState.price.toInt(),
+                        imageUris = currentState.seletedImages,
+                        categoryId = currentState.selectedCategoryId,
+                        condition = currentState.productCondition.name
+                    )
+                    if (response.code == "OK") {
+                        _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    } else {
+                        // TODO: 에러 처리
+                        Log.e("AddItemViewModel", "상품 등록 실패: ${response.message}")
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
                 }
             } catch (e: Exception) {
                 // TODO: 네트워크 에러 등 예외 처리
+                Log.e("AddItemViewModel", "작업 실패 (Exception)", e)
                 _uiState.update { it.copy(isLoading = false) }
             }
         }

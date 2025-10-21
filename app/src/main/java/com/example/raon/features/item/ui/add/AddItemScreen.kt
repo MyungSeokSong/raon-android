@@ -1,7 +1,7 @@
 package com.example.raon.features.item.ui.add
 
 import android.net.Uri
-import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults // 👈 추가된 import
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -50,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -63,17 +65,27 @@ import com.example.raon.R
 fun AddItemScreen(
     modifier: Modifier = Modifier,
     onUploadSuccess: () -> Unit,
-    onNavigationToCategory: () -> Unit, // 카테고리 선택 Screen으로 이동
+    onNavigationToCategory: () -> Unit,
     onClose: () -> Unit = {},
     viewModel: AddItemViewModel = hiltViewModel(),
-    onClearCategoryResult: () -> Unit // ✨ 나중에 카테고리를 초기화할 UI
-
+    onClearCategoryResult: () -> Unit
 ) {
-    // ✨ 이제 uiState는 여기서 직접 구독합니다.
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isEditing = viewModel.itemId != null && viewModel.itemId != -1
+    val context = LocalContext.current
 
-    if (uiState.isSuccess) {
-        onUploadSuccess()
+    // 등록/수정 성공 시 화면을 닫는 로직
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onUploadSuccess()
+        }
+    }
+
+    // 에러 발생 시 로그를 남기거나 토스트를 띄우는 로직 (옵션)
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        }
     }
 
     val pickMediaLauncher = rememberLauncherForActivityResult(
@@ -85,7 +97,12 @@ fun AddItemScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("내 물건 팔기", style = MaterialTheme.typography.titleLarge) },
+                title = {
+                    Text(
+                        if (isEditing) "게시글 수정" else "내 물건 팔기",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = "닫기")
@@ -101,18 +118,20 @@ fun AddItemScreen(
             Button(
                 onClick = { viewModel.onEvent(AddItemEvent.Submit) },
                 enabled = uiState.title.isNotBlank() &&
-                        uiState.isPriceValid &&           // 가격 유효성 검사
-                        uiState.seletedImages.isNotEmpty() &&
+                        uiState.isPriceValid &&
+                        (if (isEditing) (uiState.existingImageUrls.isNotEmpty() || uiState.seletedImages.isNotEmpty()) else uiState.seletedImages.isNotEmpty()) &&
                         uiState.isCategoryValid &&
                         uiState.description.isNotEmpty(),
-//                        uiState.selectedCategory != null,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
                     .height(52.dp)
             ) {
-                Text("등록 완료", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    if (isEditing) "수정 완료" else "등록 완료",
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
     ) { innerPadding ->
@@ -125,6 +144,7 @@ fun AddItemScreen(
         ) {
             item {
                 ImageUploadSection(
+                    existingImageUrls = uiState.existingImageUrls,
                     selectedImages = uiState.seletedImages,
                     maxImageCount = 5,
                     onAddImage = {
@@ -134,13 +154,15 @@ fun AddItemScreen(
                     },
                     onRemoveImage = { uri ->
                         viewModel.onEvent(AddItemEvent.RemoveImage(uri))
+                    },
+                    // 👇 TODO 주석을 풀고 ViewModel 이벤트를 호출하도록 수정
+                    onRemoveExistingImage = { url ->
+                        viewModel.onEvent(AddItemEvent.RemoveExistingImage(url))
                     }
                 )
             }
 
-            item {
-                SectionHeader(title = "상품 정보")
-            }
+            item { SectionHeader(title = "상품 정보") }
 
             item {
                 OutlinedTextField(
@@ -159,25 +181,11 @@ fun AddItemScreen(
 
             item {
                 CategorySelectionField(
-//                    selectedCategoryName = uiState.selectedCategoryName,
                     selectedCategoryName = uiState.selectedCategoryName,
-
-                    onClick = {
-                        Log.d("CategorySelectionField", "카테고리 선택 클릭")
-                        /* TODO: 카테고리 선택 화면 이동 */
-                        onNavigationToCategory()
-                    }
+                    onClick = onNavigationToCategory
                 )
             }
 
-//            // 👇👇👇 [디자인 확인용] 상품 상태 선택 UI 추가된 부분 👇👇👇
-//            item {
-//                SectionHeader(title = "상품 상태")
-//                ProductConditionSelector()
-//            }
-//            // 👆👆👆 여기까지 추가된 부분 👆👆👆
-
-            // 👇👇👇 [핵심] 상품 상태 UI를 ViewModel과 연결하여 추가 👇👇👇
             item {
                 SectionHeader(title = "상품 상태")
                 ProductConditionSelector(
@@ -187,7 +195,6 @@ fun AddItemScreen(
                     }
                 )
             }
-            // 👆👆👆 여기까지 👆👆👆
 
             item {
                 SectionHeader(title = "가격")
@@ -215,12 +222,7 @@ fun AddItemScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 150.dp),
-                    placeholder = {
-                        Text(
-                            text = "브랜드, 모델명, 구매 시기, 하자 유무 등 상품 설명을 최대한 자세히 적어주세요.\n" +
-                                    "개인정보(전화번호, SNS 계정 등)는 입력할 수 없어요."
-                        )
-                    },
+                    placeholder = { Text("브랜드, 모델명, 구매 시기, 하자 유무 등 상품 설명을 최대한 자세히 적어주세요.\n" + "개인정보(전화번호, SNS 계정 등)는 입력할 수 없어요.") },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -243,133 +245,18 @@ fun AddItemScreen(
     }
 }
 
-// ... (기존 CategorySelectionField, SectionHeader, ImageUploadSection 코드는 그대로 유지) ...
-
-// [핵심 수정] 터치 상태에 따라 테두리 '두께'와 '색상'을 모두 변경하여 다른 필드와 완전히 동일하게 만듦
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun CategorySelectionField(
-    selectedCategoryName: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // [변경] Material3에서 포커스된 OutlinedTextField의 기본 테두리 두께는 2.dp, 포커스 안되면 1.dp
-    val borderThickness = if (isPressed) 2.dp else 1.dp
-    // [변경] 터치(Pressed) 상태일 때는 다른 필드가 포커스된 색상과 동일하게, 아닐 때는 기본 색상으로 설정
-    val borderColor = if (isPressed) {
-        MaterialTheme.colorScheme.onSurfaceVariant   // 포커스 시 색상
-    } else {
-        MaterialTheme.colorScheme.outlineVariant     // 비포커스 시 색상
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(OutlinedTextFieldDefaults.MinHeight)
-            .border(
-                width = borderThickness, // 두께를 동적으로 적용
-                color = borderColor,     // 색상을 동적으로 적용
-                shape = RoundedCornerShape(12.dp)
-            )
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = selectedCategoryName ?: "카테고리 선택",
-
-//                text = selectedCategoryName ?: "카테고리 선택", // -> 수정 전
-                color = if (selectedCategoryName != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge
-            )
-//            Icon(
-//                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-//                contentDescription = "카테고리 선택",
-//                tint = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
-        }
-    }
-}
-
-
-// 👇👇👇 [디자인 확인용] 상품 상태 선택 UI Composable 추가 👇👇👇
-//@Composable
-//private fun ProductConditionSelector(modifier: Modifier = Modifier) {
-//    Row(
-//        modifier = modifier.fillMaxWidth(),
-//        horizontalArrangement = Arrangement.spacedBy(8.dp)
-//    ) {
-//        // '새 상품' 버튼 (선택된 상태로 미리보기)
-//        Button(
-//            onClick = { /* 로직 연결 전이라 비워둠 */ },
-//            modifier = Modifier.weight(1f),
-//            shape = RoundedCornerShape(12.dp),
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = MaterialTheme.colorScheme.primary,
-//                contentColor = MaterialTheme.colorScheme.onPrimary
-//            ),
-//            contentPadding = PaddingValues(vertical = 16.dp)
-//        ) {
-//            Text(text = "중고 상품")
-//        }
-//
-//        // '중고 상품' 버튼 (선택 안 된 상태로 미리보기)
-//        Button(
-//            onClick = { /* 로직 연결 전이라 비워둠 */ },
-//            modifier = Modifier.weight(1f),
-//            shape = RoundedCornerShape(12.dp),
-//            colors = ButtonDefaults.buttonColors(
-//                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-//                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-//            ),
-//            contentPadding = PaddingValues(vertical = 16.dp)
-//        ) {
-//            Text(text = "새 상품")
-//        }
-//    }
-//}
-
-
-// 아래 Helper Composable들은 변경사항 없습니다.
-
-@Composable
-private fun SectionHeader(
-    title: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
 @Composable
 private fun ImageUploadSection(
+    existingImageUrls: List<String>,
     selectedImages: List<Uri>,
     maxImageCount: Int,
     onAddImage: () -> Unit,
     onRemoveImage: (Uri) -> Unit,
+    onRemoveExistingImage: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val totalImageCount = existingImageUrls.size + selectedImages.size
+
     LazyRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -380,7 +267,7 @@ private fun ImageUploadSection(
                     .size(88.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
-                    .clickable(onClick = onAddImage, enabled = selectedImages.size < maxImageCount),
+                    .clickable(onClick = onAddImage, enabled = totalImageCount < maxImageCount),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -391,9 +278,37 @@ private fun ImageUploadSection(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "${selectedImages.size}/$maxImageCount",
+                        "$totalImageCount/$maxImageCount",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+
+        items(existingImageUrls) { imageUrl ->
+            Box(modifier = Modifier.size(88.dp)) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = "기존 이미지",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                IconButton(
+                    onClick = { onRemoveExistingImage(imageUrl) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .size(22.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "이미지 제거",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
@@ -429,8 +344,55 @@ private fun ImageUploadSection(
     }
 }
 
+@Composable
+private fun SectionHeader(title: String) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
 
-// 👇👇👇 새로 추가된 Composable (상태를 받아 UI를 그림) 👇👇👇
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CategorySelectionField(
+    selectedCategoryName: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val borderThickness = if (isPressed) 2.dp else 1.dp
+    val borderColor =
+        if (isPressed) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outlineVariant
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(OutlinedTextFieldDefaults.MinHeight)
+            .border(width = borderThickness, color = borderColor, shape = RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(interactionSource = interactionSource, indication = null, onClick = onClick),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = selectedCategoryName ?: "카테고리 선택",
+                color = if (selectedCategoryName != null && selectedCategoryName != "카테고리 선택") MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
 @Composable
 private fun ProductConditionSelector(
     selectedCondition: ProductCondition,

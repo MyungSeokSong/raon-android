@@ -5,10 +5,16 @@ import android.net.Uri
 //import com.example.raon.features.item.domain.model.Category // Category 모델 임포트 필요
 
 data class AddItemUiState(
+    val locationId: Int = 1,
     val title: String = "",
     val description: String = "",
     val price: String = "", // ◀◀ Int에서 String으로 변경
-    val seletedImages: List<Uri> = emptyList(),
+    val seletedImages: List<Uri> = emptyList(), // 새로 추가하는 로컬 이미지 (Uri)
+
+    // 수정 시 보여줄 기존 이미지 (URL)
+    val existingImageUrls: List<String> = emptyList(),
+    // 삭제된 기존 이미지 URL을 추적하기 위한 리스트 추가
+    val deletedImageUrls: List<String> = emptyList(),
 
     // 선택한 카테고리 데이터를 담는 변수
     val selectedCategoryId: Int? = -1,     // 선택된 카테고리의 고유 ID
@@ -26,6 +32,9 @@ data class AddItemUiState(
 
     val isCategoryValid: Boolean = false, // 👈 가격 유효성 상태 추가 (기본값 false)
     val isPriceValid: Boolean = false, // 👈 가격 유효성 상태 추가 (기본값 false)
+
+    // 👇 이 줄을 추가해주세요.
+    val errorMessage: String? = null
 
 
 )
