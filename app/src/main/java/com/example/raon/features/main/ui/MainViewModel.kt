@@ -77,6 +77,8 @@ class MainViewModel @Inject constructor(
 
                 // 3. 꺼내온 실제 데이터를 로그로 출력합니다.
                 Log.d("MainViewModel", "✅ DataStore 저장 데이터 확인: $savedUser")
+
+
             } else {
                 Log.e("MainViewModel", "❌ 사용자 프로필 가져오기/저장 실패")
             }
@@ -92,6 +94,11 @@ class MainViewModel @Inject constructor(
                         unreadChatCount = unreadCount
                     )
                 }
+
+
+                Log.d("MainViewModel", "✅ 서버에서 받아온 User 데이터 확인: $userProfileJob")
+
+                Log.d("MainViewModel", "✅ 서버에서 받아온 Chat 데이터 확인: $chatList")
             } else {
                 _uiState.update { it.copy(isLoading = false) }
             }

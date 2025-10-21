@@ -160,7 +160,6 @@ fun MainView(
                     )
                 }
             }
-
         }
 
     ) { innerPadding ->
@@ -188,10 +187,13 @@ fun MainView(
 
                         Log.d("채팅프로세스", "메인뷰 chatRoomId 전달 : ${chatRoomId}")
                     },
+                    myUserId = userProfile?.userId
+                        ?: -1,   // 없으면 user -1로 하기 -> 아마 서버에서 에러날거임 -1 이면
                     chatRooms = mainUiState.chatRooms // ◀◀ 이 부분이 핵심입니다.
                 )
             }
             composable("profile") {
+
                 ProfileScreen(
                     onNavigateToSalesHistoryScreen = {
                         navController.navigate("salesHistory")
@@ -199,7 +201,7 @@ fun MainView(
                     onNavigateToFavoritesScreen = {
                         navController.navigate("favorites")
                     },
-                    navController
+                    navController = navController
                 )
             }
         }

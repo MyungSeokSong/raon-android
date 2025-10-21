@@ -1,6 +1,7 @@
 package com.example.raon.features.chat.data.repository
 
 // import com.example.raon.features.chat.data.remote.api.ChatApiService // 실제 ApiService
+import android.util.Log
 import com.example.raon.core.network.ApiResult
 import com.example.raon.core.network.dto.ApiResponse
 import com.example.raon.core.network.handleApi
@@ -10,6 +11,8 @@ import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
 import com.example.raon.features.chat.data.remote.dto.MessageListDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageRequestDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
+import com.example.raon.features.chat.data.remote.dto.ai.FraudData
+import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
 import com.example.raon.features.chat.domain.model.ChatMessage
 import com.example.raon.features.chat.domain.repository.ChatRepository
 import kotlinx.coroutines.delay
@@ -103,4 +106,33 @@ class ChatRepositoryImpl @Inject constructor(
         // StompService에 작업을 위임합니다.
         stompService.disconnect()
     }
+
+
+    /**
+     * 사기 탐지 API 호출의 실제 구현
+     */
+    override suspend fun detectFraud(
+        userId: Long,
+        request: FraudDetectionRequestDto // 👇 파라미터를 DTO로 변경
+    ): ApiResult<ApiResponse<FraudData>> {
+
+        // [로그 1] 함수가 호출되었는지, 어떤 chatRoomId를 서버로 보낼지 확인
+        Log.d("ChatRepo_Fraud", "🚀 detectFraud called with userId: $userId")
+
+        Log.d("ChatRepo_Fraud", "🚀 detectFraud called with request: $request")
+
+
+        // API 서비스를 호출하고 결과를 변수에 저장합니다.
+        val result = handleApi {
+            chatApiService.detectFraud(userId, request)
+            // 만약 DTO를 보낸다면: chatApiService.detectFraud(request)
+        }
+
+        // [로그 2] 서버로부터 받은 최종 결과가 Success인지 Error인지, 데이터는 무엇인지 확인
+        Log.d("ChatRepo_Fraud", "✅ Response received: $result")
+
+        // 최종 결과를 ViewModel로 반환합니다.
+        return result
+    }
+
 }

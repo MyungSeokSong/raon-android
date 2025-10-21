@@ -6,6 +6,8 @@ import com.example.raon.core.network.dto.ApiResponse
 import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
 import com.example.raon.features.chat.data.remote.dto.MessageListDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
+import com.example.raon.features.chat.data.remote.dto.ai.FraudData
+import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
 import com.example.raon.features.chat.domain.model.ChatMessage
 import kotlinx.coroutines.flow.Flow
 
@@ -44,11 +46,8 @@ interface ChatRepository {
 
     /**
      * 구독 중인 STOMP 메시지 흐름(Flow)을 제공합니다.
-     * @return ChatMessageDto 객체를 방출하는 Flow
      */
     fun observeMessages(chatId: Long): Flow<String>
-
-//    fun observeMessages(): Flow<com.example.raon.features.chat.data.remote.ChatMessageDto>    // dto일때
 
 
     /**
@@ -58,24 +57,18 @@ interface ChatRepository {
      */
 //    suspend fun sendStompMessage(chatRoomId: Long, message: String)
 
-    /**
-     * STOMP 세션 연결을 해제합니다.
-     */
+
+    // [ Stomp 세션 연결 해제 ]
     suspend fun disconnectStomp()
 
-    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ 보류 코드 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
-
-
-    // 특정 채팅방의 상세 정보(참여자, 상품 등)를 가져오기(for ChatRoomScreen)
-//    suspend fun getChatRoomInfo(chatId: Long): ApiResult<ApiResponse<ChatRoomInfoData>>
-
-
     /**
-     * 특정 채팅방의 새 메시지를 실시간(WebSocket)으로 구독합니다. (for ChatRoomScreen)
-     * 역할 구분을 위해 이름을 observeMessages로 변경하는 것을 추천합니다.
+     *
+     * 사기 탐지 API를 호출합니다.
      */
-//    fun observeMessages(chatId: Long): Flow<ChatMessage>
+    // [ 사기 탐지 API ]
+    suspend fun detectFraud(
+        userId: Long,
+        request: FraudDetectionRequestDto
+    ): ApiResult<ApiResponse<FraudData>> // <--- ✅ 'ApiResult'로 감싸주세요.
 
-
-    // TODO: 소켓 연결, 해제 등 필요한 다른 함수들을 정의할 수 있습니다.
 }

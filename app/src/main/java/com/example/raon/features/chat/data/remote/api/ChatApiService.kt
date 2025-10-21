@@ -5,6 +5,8 @@ import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
 import com.example.raon.features.chat.data.remote.dto.MessageListDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageRequestDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
+import com.example.raon.features.chat.data.remote.dto.ai.FraudData
+import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -36,5 +38,16 @@ interface ChatApiService {
         @Path("chatRoomId") chatId: Long,
         @Query("page") page: Int
     ): Response<ApiResponse<MessageListDto>>
+
+
+    // Postman 이미지의 POST 요청을 정의합니다.
+    // {{base_url}}/api/v1/chats/1/fraud-detection
+    // 여기서 '1'은 채팅방 ID로 보이므로, @Path를 사용해 동적으로 변경할 수 있게 합니다.
+    @POST("api/v1/chats/{userId}/fraud-detection")
+    suspend fun detectFraud(
+        @Path("userId") userId: Long,
+
+        @Body request: FraudDetectionRequestDto // Body에 보내줄 ChatMessage
+    ): Response<ApiResponse<FraudData>> // 1단계에서 만든 데이터 클래스로 응답을 받음
 
 }

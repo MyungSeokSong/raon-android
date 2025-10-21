@@ -59,6 +59,7 @@ fun ChatListTopAppBar(navController: NavController) {
 @Composable
 fun ChatListScreen(
     onChatRoomClick: (chatRoomId: Long, sellerId: Int) -> Unit,
+    myUserId: Int, // 👈 파라미터로 myUserId를 추가합니다.
     chatRooms: List<ChatRoomInfo>
 ) {
     LazyColumn(
@@ -70,6 +71,7 @@ fun ChatListScreen(
         ) { chatRoom ->
             ChatListItem(
                 chatRoom = chatRoom,
+                myUserId = myUserId,
                 onClick = {
 
                     // 채티방 터치 이벤트 발생시 실행하는 함수 -> chatroomId, sellerId 전달
@@ -89,8 +91,18 @@ fun ChatListScreen(
 @Composable
 private fun ChatListItem(
     chatRoom: ChatRoomInfo,
+    myUserId: Int,
     onClick: () -> Unit
 ) {
+    // '나'와 비교해서 opponent(=상대방) 데이터를 담아줌
+    val opponent = if (myUserId == chatRoom.seller.userId) {
+        chatRoom.buyer
+    } else {
+        chatRoom.seller
+    }
+
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -117,7 +129,7 @@ private fun ChatListItem(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = chatRoom.seller.nickname,
+                    text = opponent.nickname,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     modifier = Modifier.weight(1f, fill = false)

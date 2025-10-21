@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,8 +38,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,30 +51,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.raon.R
 import com.example.raon.features.chat.domain.model.ChatMessage
 
-val BrandYellow = Color(0xFFFDCC31)
-val DarkGrayText = Color(0xFF3C3C3C)
+// ❗️❗️❗️ 요청하신 대로 BrandYellow2와 DarkGrayText2 변수명만 사용하도록 수정합니다. ❗️❗️❗️
+val BrandYellow2 = Color(0xFFFDCC31)
+val DarkGrayText2 = Color(0xFF3C3C3C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatRoomScreen(
-    onBackClick: () -> Unit,
-    viewModel: ChatRoomViewModel = hiltViewModel()
+fun ChatRoomScreen2(
+    // onBackClick: () -> Unit,
+    // viewModel: ChatRoomViewModel = hiltViewModel()
 ) {
-    // 👇 ViewModel의 단일 상태(uiState)만 구독합니다.
-    val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
-    // ❗️ `showWarningBanner`와 `warningMessage`를 따로 구독할 필요가 없어졌습니다.
-
-    LaunchedEffect(uiState.messages) {
-        if (uiState.messages.isNotEmpty()) {
-            listState.animateScrollToItem(0)
-        }
-    }
+    var showWarningBanner by remember { mutableStateOf(true) }
+    val sampleWarningMessage = "[상대]가 택배비를 요구하며 즉시 입금을 요청하고 있습니다. 앱 외부 거래는 사기 위험이 높으니 주의하세요."
+    var text by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -85,17 +76,17 @@ fun ChatRoomScreen(
                 CenterAlignedTopAppBar(
                     title = { Text("쫀딕", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
-                        IconButton(onClick = onBackClick) {
+                        IconButton(onClick = { /* 뒤로가기 동작 */ }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.White,
-                        titleContentColor = DarkGrayText,
-                        navigationIconContentColor = DarkGrayText
+                        titleContentColor = DarkGrayText2,
+                        navigationIconContentColor = DarkGrayText2
                     )
                 )
-                ProductInfoBar(
+                ProductInfoBar2(
                     productImageUrl = "https://via.placeholder.com/150",
                     productStatus = "판매중",
                     productName = "미닉스 건조기",
@@ -105,7 +96,13 @@ fun ChatRoomScreen(
             }
         },
         bottomBar = {
-            MessageInput(onSendClick = { text -> viewModel.sendMessage(text) })
+            MessageInput(
+                text = text,
+                onTextChange = { newText -> text = newText },
+                onSendClick = {
+                    text = ""
+                }
+            )
         }
     ) { paddingValues ->
         Column(
@@ -114,15 +111,6 @@ fun ChatRoomScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF2F2F7))
         ) {
-            Button(
-                onClick = { viewModel.detectFraud() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text("⚠️ 사기 탐지 API 테스트 버튼")
-            }
-
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
@@ -130,160 +118,62 @@ fun ChatRoomScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                items(uiState.messages.reversed()) { message ->
-                    MessageBubble(message = message)
+                val sampleMessages = listOf(
+                    ChatMessage(
+                        messageId = 4,
+                        chatRoomId = 1,
+                        senderId = 1001,
+                        senderNickname = "나",
+                        senderProfileUrl = null,
+                        content = "아... 네 알겠습니다.",
+                        imageUrl = null,
+                        timestamp = "10:04 AM",
+                        isFromMe = true
+                    ),
+                    ChatMessage(
+                        messageId = 3,
+                        chatRoomId = 1,
+                        senderId = 2002,
+                        senderNickname = "쫀딕",
+                        senderProfileUrl = null,
+                        content = "네 그럼요. 근데 카톡으로 연락주실 수 있나요? 아이디는 safe-trade 입니다.",
+                        imageUrl = null,
+                        timestamp = "10:03 AM",
+                        isFromMe = false
+                    ),
+                    ChatMessage(
+                        messageId = 2,
+                        chatRoomId = 1,
+                        senderId = 1001,
+                        senderNickname = "나",
+                        senderProfileUrl = null,
+                        content = "네 안녕하세요! 혹시 이 제품 아직 판매하시나요?",
+                        imageUrl = null,
+                        timestamp = "10:02 AM",
+                        isFromMe = true
+                    ),
+                    ChatMessage(
+                        messageId = 1,
+                        chatRoomId = 1,
+                        senderId = 2002,
+                        senderNickname = "쫀딕",
+                        senderProfileUrl = null,
+                        content = "안녕하세요!",
+                        imageUrl = null,
+                        timestamp = "10:01 AM",
+                        isFromMe = false
+                    )
+                )
+                items(sampleMessages) { message ->
+                    MessageBubble2(message = message)
                 }
             }
 
-            // 👇 경고 배너 표시 여부와 메시지를 모두 uiState에서 가져옵니다.
-            AnimatedVisibility(visible = uiState.fraudWarningMessage != null) {
+            AnimatedVisibility(visible = showWarningBanner) {
                 FraudWarningBanner(
-                    message = uiState.fraudWarningMessage.orEmpty(),
-                    onClose = { viewModel.closeWarningBanner() }
+                    message = sampleWarningMessage,
+                    onClose = { showWarningBanner = false }
                 )
-            }
-        }
-    }
-}
-
-// (ProductInfoBar, MessageBubble, MessageInput, FraudWarningBanner 함수는 변경사항 없음)
-@Composable
-fun ProductInfoBar(
-    productImageUrl: String,
-    productStatus: String,
-    productName: String,
-    productPrice: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
-            contentDescription = "Product Image",
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "$productStatus $productName",
-                color = DarkGrayText,
-                fontSize = 14.sp,
-                maxLines = 1
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = productPrice,
-                color = DarkGrayText,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-
-@Composable
-fun MessageBubble(message: ChatMessage) {
-    val horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = horizontalArrangement,
-        verticalAlignment = Alignment.Bottom
-    ) {
-        if (!message.isFromMe) {
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        val bubbleColor = if (message.isFromMe) Color(0xFFF9A825) else Color.White
-        val textColor = if (message.isFromMe) Color.White else DarkGrayText
-
-        Surface(
-            shape = RoundedCornerShape(18.dp),
-            color = bubbleColor,
-            tonalElevation = 1.dp,
-            modifier = Modifier.widthIn(max = 280.dp)
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                Text(
-                    text = message.content,
-                    color = textColor,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = message.timestamp,
-                    fontSize = 10.sp,
-                    color = textColor.copy(alpha = 0.7f),
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun MessageInput(onSendClick: (String) -> Unit) {
-    var text by remember { mutableStateOf("") }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shadowElevation = 0.dp,
-        color = Color.White
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { /* 첨부파일 기능 */ }) {
-                Icon(Icons.Default.Add, contentDescription = "Attach File", tint = Color.Gray)
-            }
-
-            TextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("메시지 보내기", color = Color.Gray) },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                ),
-                maxLines = 4
-            )
-
-            if (text.isBlank()) {
-                IconButton(onClick = { /* 이모티콘 창 열기 */ }) {
-                    Icon(
-                        Icons.Default.SentimentSatisfied,
-                        contentDescription = "Emoji",
-                        tint = Color.Gray
-                    )
-                }
-            } else {
-                IconButton(
-                    onClick = {
-                        onSendClick(text)
-                        text = ""
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = "Send Message",
-                        tint = BrandYellow
-                    )
-                }
             }
         }
     }
@@ -324,6 +214,144 @@ private fun FraudWarningBanner(
                 contentDescription = "경고 닫기",
                 tint = Color.Gray
             )
+        }
+    }
+}
+
+@Composable
+fun ProductInfoBar2(
+    productImageUrl: String,
+    productStatus: String,
+    productName: String,
+    productPrice: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher_background),
+            contentDescription = "Product Image",
+            modifier = Modifier
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "$productStatus $productName",
+                color = DarkGrayText2,
+                fontSize = 14.sp,
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = productPrice,
+                color = DarkGrayText2,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun MessageBubble2(message: ChatMessage) {
+    val horizontalArrangement = if (message.isFromMe) Arrangement.End else Arrangement.Start
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = horizontalArrangement,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        if (!message.isFromMe) {
+            Spacer(modifier = Modifier.width(8.dp))
+        }
+
+        val bubbleColor = if (message.isFromMe) Color(0xFFF9A825) else Color.White
+        val textColor = if (message.isFromMe) Color.White else DarkGrayText2
+
+        Surface(
+            shape = RoundedCornerShape(18.dp),
+            color = bubbleColor,
+            tonalElevation = 1.dp,
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
+                Text(
+                    text = message.content,
+                    color = textColor,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = message.timestamp,
+                    fontSize = 10.sp,
+                    color = textColor.copy(alpha = 0.7f),
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MessageInput(
+    text: String,
+    onTextChange: (String) -> Unit,
+    onSendClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 0.dp,
+        color = Color.White
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { /* 첨부파일 기능 */ }) {
+                Icon(Icons.Default.Add, contentDescription = "Attach File", tint = Color.Gray)
+            }
+
+            TextField(
+                value = text,
+                onValueChange = onTextChange,
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("메시지 보내기", color = Color.Gray) },
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                ),
+                maxLines = 4
+            )
+
+            if (text.isBlank()) {
+                IconButton(onClick = { /* 이모티콘 창 열기 */ }) {
+                    Icon(
+                        Icons.Default.SentimentSatisfied,
+                        contentDescription = "Emoji",
+                        tint = Color.Gray
+                    )
+                }
+            } else {
+                IconButton(onClick = onSendClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = "Send Message",
+                        tint = BrandYellow2
+                    )
+                }
+            }
         }
     }
 }

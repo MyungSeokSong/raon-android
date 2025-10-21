@@ -152,9 +152,21 @@ fun AppNavigation(
                     navController.navigate("addItem?itemId=$editItemId")
                 }
             )
+
+
         }
 
-        composable("chatRoom/{chatRoomId}") { ChatRoomScreen() }
+        composable("chatRoom/{chatRoomId}") {
+            ChatRoomScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+
+//            ChatRoomScreen2()
+
+
+        }
 
         composable("searchInput") {
             SearchInputScreen(

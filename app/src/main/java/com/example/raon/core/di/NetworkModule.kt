@@ -24,6 +24,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.CookieManager
 import java.net.CookiePolicy
+import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -125,6 +126,12 @@ object NetworkModule {
         tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient {
         return OkHttpClient.Builder()
+
+            // 👈 [수정] 2. 타임아웃 3줄이 추가되었습니다.
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             })
@@ -228,7 +235,7 @@ object NetworkModule {
         return retrofit.create(SearchApiService::class.java)
     }
 
-    // 👇 2. 이 부분을 다른 ApiService 제공 함수들 사이에 추가하세요.
+    // 2. 이 부분을 다른 ApiService 제공 함수들 사이에 추가하세요.
     @Provides
     @Singleton
     fun provideProfileApiService(@Named("RaonRetrofit") retrofit: Retrofit): ProfileApiService {
