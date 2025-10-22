@@ -37,7 +37,7 @@ class ChatRoomViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val chatRoomId: Long = savedStateHandle.get<String>("chatRoomId")?.toLongOrNull() ?: -1L
+    val chatRoomId: Long = savedStateHandle.get<String>("chatRoomId")?.toLongOrNull() ?: -1L
     private val gson = Gson()
     private val _myUserId = MutableStateFlow<Int?>(null)
     val myUserId = _myUserId.asStateFlow()
@@ -45,6 +45,10 @@ class ChatRoomViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
+
+        // 👇 [로그 추가] ViewModel이 생성될 때 chatRoomId를 제대로 받았는지 확인
+        Log.d("ChatReadDebug", "0. ChatRoomViewModel initialized with chatId: $chatRoomId")
+        
         viewModelScope.launch {
             _myUserId.value = userRepository.getUserProfile().first()?.userId
             if (chatRoomId != -1L) {
@@ -58,6 +62,10 @@ class ChatRoomViewModel @Inject constructor(
     private fun loadInitialDataAndConnect() {
         viewModelScope.launch {
             try {
+                // 채팅방 진입 시 메시지 읽음 처리 API 호출
+                markMessagesAsRead()
+
+
                 chatRepository.connectStomp(chatRoomId = chatRoomId)
                 loadInitialMessages()
                 chatRepository.observeMessages(chatRoomId).collect { jsonString ->
@@ -77,7 +85,7 @@ class ChatRoomViewModel @Inject constructor(
         }
     }
 
-    // 👇 [핵심 수정] DTO 리스트를 UI 모델 리스트로 변환하는 .map 코드를 추가합니다.
+    // [핵심 수정] DTO 리스트를 UI 모델 리스트로 변환하는 .map 코드를 추가합니다.
     private suspend fun loadInitialMessages() {
         _uiState.update { it.copy(isLoading = true) }
         when (val result = chatRepository.getMessageList(chatRoomId, page = 0)) {
@@ -157,6 +165,30 @@ class ChatRoomViewModel @Inject constructor(
 
     fun closeWarningBanner() {
         _uiState.update { it.copy(fraudWarningMessage = null) }
+    }
+
+
+    // [ 메시지 읽음 처리 함수 ]
+    private fun markMessagesAsRead() {
+        if (chatRoomId == -1L) return
+        viewModelScope.launch {
+            when (val result = chatRepository.markMessagesAsRead(chatRoomId)) {
+                is ApiResult.Success -> {
+                    Log.d("ChatViewModel", "✅ Messages marked as read successfully.")
+                }
+
+                is ApiResult.Error -> {
+                    Log.e(
+                        "ChatViewModel",
+                        "❌ Failed to mark messages as read: ${result.errorBody?.message}"
+                    )
+                }
+
+                is ApiResult.Exception -> {
+                    Log.e("ChatViewModel", "❌ Exception on marking messages as read", result.e)
+                }
+            }
+        }
     }
 
     override fun onCleared() {

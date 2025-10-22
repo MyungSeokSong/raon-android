@@ -1,5 +1,6 @@
 package com.example.raon.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +24,7 @@ import com.example.raon.features.profile.ui.FavoritesScreen
 import com.example.raon.features.profile.ui.SalesHistoryScreen
 import com.example.raon.features.search.ui.SearchInputScreen
 import com.example.raon.features.search.ui.SearchResultScreen
+import com.example.raon.features.user.ui.ProfileEditScreen
 
 @Composable
 fun AppNavigation(
@@ -148,7 +150,7 @@ fun AppNavigation(
                     navController.navigate("chatRoom/$chatRoomId")
                 },
                 onNavigateToEdit = { editItemId ->
-                    // 👇 수정 버튼 클릭 시, 바뀐 경로 형식에 맞게 호출합니다.
+                    // 수정 버튼 클릭 시, 바뀐 경로 형식에 맞게 호출합니다.
                     navController.navigate("addItem?itemId=$editItemId")
                 }
             )
@@ -158,14 +160,24 @@ fun AppNavigation(
 
         composable("chatRoom/{chatRoomId}") {
             ChatRoomScreen(
-                onBackClick = {
+                onBackClick = { chatId ->
+                    // 👇 [가장 중요] getBackStackEntry("main_graph")를 사용하는지 확인!
+                    try {
+                        Log.d(
+                            "ChatReadDebug",
+                            "2. AppNavigation trying to set result for 'main_graph'. chatId: $chatId"
+                        )
+                        navController.getBackStackEntry("main_graph")
+                            .savedStateHandle
+                            .set("read_chat_room_id", chatId)
+                        Log.d("ChatReadDebug", "3. Successfully set the result.")
+                    } catch (e: Exception) {
+                        Log.e("ChatReadDebug", "Failed to get back stack entry 'main_graph'", e)
+                    }
                     navController.popBackStack()
                 }
             )
-
 //            ChatRoomScreen2()
-
-
         }
 
         composable("searchInput") {
@@ -213,6 +225,14 @@ fun AppNavigation(
                 navController = navController,
                 onItemClick = { itemId -> navController.navigate("itemDetail/$itemId") },
                 onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // 👇 [신규] 프로필 수정 화면 경로 (람다 방식으로 수정)
+        composable("profileEdit") {
+            ProfileEditScreen(
+                // navController = navController // <-- ⛔️ 삭제
+                onClose = { navController.popBackStack() } // 👈 [추가]
             )
         }
     }

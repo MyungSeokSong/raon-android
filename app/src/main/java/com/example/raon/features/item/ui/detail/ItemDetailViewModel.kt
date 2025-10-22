@@ -1,9 +1,12 @@
 package com.example.raon.features.item.ui.detail
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.raon.core.common.AppConstants
 import com.example.raon.core.network.ApiResult
+import com.example.raon.core.network.repository.ImageStorageRepository
 import com.example.raon.features.item.data.repository.ItemRepository
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +25,10 @@ import javax.inject.Inject
 data class ItemDetailUiState(
     val item: ItemDetailModel? = null,
     val isLoading: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+
+    // [ 판매자 프로필 Presigned URL 저장 변수 추가 ]
+    val viewableSellerProfileImageUrl: String? = null
 )
 
 // ------------------- UI Event -------------------
@@ -37,6 +43,7 @@ sealed class ItemDetailEvent {
 @HiltViewModel
 class ItemDetailViewModel @Inject constructor(
     private val itemRepository: ItemRepository,
+    private val imageStorageRepository: ImageStorageRepository, // [ ImageStorageRepository 주입 추가 ]
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -71,6 +78,25 @@ class ItemDetailViewModel @Inject constructor(
                 val itemDetails = detailDeferred.await()
                 val isFavorite = favoriteStatusDeferred.await()
 
+                // [6. 판매자 프로필 Presigned URL 요청 로직 추가]
+                var sellerPresignedUrl: String? = null
+                val sellerS3Key =
+                    itemDetails.sellerProfileUrl?.removePrefix(AppConstants.S3_BASE_URL)
+
+                if (sellerS3Key != null && itemDetails.sellerProfileUrl != AppConstants.DEFAULT_PROFILE_URL) {
+                    try {
+                        sellerPresignedUrl =
+                            imageStorageRepository.getPresignedImageUrl(sellerS3Key).getOrNull()
+                        Log.d(
+                            "ItemDetailViewModel",
+                            "✅ Seller Presigned URL loaded: $sellerPresignedUrl"
+                        )
+                    } catch (e: Exception) {
+                        Log.e("ItemDetailViewModel", "❌ Failed to load seller Presigned URL", e)
+                    }
+                }
+                //  [6. 완료]
+
                 // 3. 두 결과를 합쳐서 최종 UI 모델을 만듭니다.
                 val finalItemDetails = itemDetails.copy(
                     isFavorite = isFavorite, // 찜 상태 API 결과를 모델에 반영
@@ -79,7 +105,11 @@ class ItemDetailViewModel @Inject constructor(
 
                 // 4. 합쳐진 데이터로 UI 상태를 업데이트합니다.
                 _uiState.update {
-                    it.copy(isLoading = false, item = finalItemDetails)
+                    it.copy(
+                        isLoading = false,
+                        item = finalItemDetails,
+                        viewableSellerProfileImageUrl = sellerPresignedUrl  // 👈 Presigned URL 저장)
+                    )
                 }
 
             } catch (e: Exception) {

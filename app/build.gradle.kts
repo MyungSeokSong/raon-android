@@ -10,6 +10,8 @@ plugins {
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 
+    id("kotlin-kapt") // 👈 [1] 이 줄 추가
+
 }
 
 // local.properties에서 값 읽기
@@ -167,6 +169,11 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.2.0")
     // await() 함수를 사용하기 위한 라이브러리 -> android gps는 await()를 사용해야함
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+
+
+    // 👇 [2] Moshi 라이브러리 추가
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+//     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.1")
 
 
 }

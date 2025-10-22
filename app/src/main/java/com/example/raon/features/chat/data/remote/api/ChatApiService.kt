@@ -11,6 +11,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -49,5 +50,12 @@ interface ChatApiService {
 
         @Body request: FraudDetectionRequestDto // Body에 보내줄 ChatMessage
     ): Response<ApiResponse<FraudData>> // 1단계에서 만든 데이터 클래스로 응답을 받음
+
+
+    // [ 메시지 읽음 처리 API ]
+    @PUT("/api/v1/chats/{chatId}/messages/read")
+    suspend fun markMessagesAsRead(
+        @Path("chatId") chatId: Long
+    ): Response<ApiResponse<Unit>> // 응답 본문에 특별한 데이터가 없으므로 Unit 사용
 
 }

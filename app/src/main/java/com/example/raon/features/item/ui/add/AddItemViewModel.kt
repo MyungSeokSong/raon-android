@@ -50,7 +50,7 @@ class AddItemViewModel @Inject constructor(
                         description = item.description,
                         selectedCategoryName = item.category,
                         // TODO: 상세 모델에 categoryId가 포함되어야 정확한 ID를 설정할 수 있습니다.
-                        // 👇 주석을 풀고 item 모델에서 categoryId를 가져오도록 수정합니다.
+                        // 주석을 풀고 item 모델에서 categoryId를 가져오도록 수정합니다.
                         selectedCategoryId = item.categoryId,
                         productCondition = when (item.condition) {
                             "새 상품" -> ProductCondition.NEW
@@ -105,7 +105,7 @@ class AddItemViewModel @Inject constructor(
                 }
             }
 
-            // 👇 기존 이미지 삭제 이벤트 처리 로직 추가
+            // 기존 이미지 삭제 이벤트 처리 로직 추가
             is AddItemEvent.RemoveExistingImage -> {
                 _uiState.update {
                     it.copy(
@@ -159,7 +159,7 @@ class AddItemViewModel @Inject constructor(
                         categoryId = currentState.selectedCategoryId,
                         condition = currentState.productCondition.name, // "NEW" or "USED"
 
-                        // 👇 Repository에 이미지 관련 정보를 모두 넘겨줍니다.
+                        // Repository에 이미지 관련 정보를 모두 넘겨줍니다.
                         newImageUris = currentState.seletedImages,
                         existingImageUrls = currentState.existingImageUrls
 

@@ -23,7 +23,6 @@ class ImageStorageRepository @Inject constructor(
 
 
     // S3 이미지 업로드 PresignedUrl
-
     suspend fun getPresignedUrl(uploadType: String, fileName: String): Result<String> {
         return try {
             val request = PresignedUrlRequest(uploadType, fileName)
@@ -33,7 +32,6 @@ class ImageStorageRepository @Inject constructor(
 
 
             Log.d("imageUpload", "error : ${e.message}")
-
 
             Result.failure(e)
 

@@ -61,14 +61,15 @@ interface ChatRepository {
     // [ Stomp 세션 연결 해제 ]
     suspend fun disconnectStomp()
 
-    /**
-     *
-     * 사기 탐지 API를 호출합니다.
-     */
-    // [ 사기 탐지 API ]
+
+    // [ 사기 탐지 함수 ]
     suspend fun detectFraud(
         userId: Long,
         request: FraudDetectionRequestDto
     ): ApiResult<ApiResponse<FraudData>> // <--- ✅ 'ApiResult'로 감싸주세요.
+
+
+    // [ 메시지 읽음 처리 함수]
+    suspend fun markMessagesAsRead(chatId: Long): ApiResult<ApiResponse<Unit>>
 
 }

@@ -1,5 +1,6 @@
 package com.example.raon.features.user.ui
 
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -47,7 +48,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-//import coil.compose.AsyncImage
+import com.example.raon.R
+import com.example.raon.core.common.AppConstants
 import com.example.raon.features.user.domain.model.User
 
 //import com.example.raon.features.user.ui.profile.ProfileViewModel
@@ -61,12 +63,15 @@ private val DarkGrayText = Color(0xFF3C3C3C)
  */
 @Composable
 fun ProfileScreen(
+    onNavigateToProfileEditScreen: () -> Unit,
     onNavigateToSalesHistoryScreen: () -> Unit,
     onNavigateToFavoritesScreen: () -> Unit,
     navController: NavController,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Scaffold를 제거하고 Column으로 바로 시작합니다.
     Column(
@@ -87,7 +92,11 @@ fun ProfileScreen(
             }
         } else {
             // 데이터가 있을 때 실제 프로필 정보를 보여줍니다.
-            ProfileHeader(user = userProfile!!)
+            ProfileHeader(
+                user = userProfile!!,
+                uiState = uiState,
+                onNavigateToProfileEditScreen = onNavigateToProfileEditScreen
+            )
         }
 
         Divider(thickness = 8.dp, color = MaterialTheme.colorScheme.surfaceVariant)
@@ -122,15 +131,42 @@ fun ProfileTopAppBar(navController: NavController) {
  * 프로필 상단 헤더 UI
  */
 @Composable
-fun ProfileHeader(user: User) {
+fun ProfileHeader(
+    user: User,
+    uiState: ProfileUiState,
+    onNavigateToProfileEditScreen: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        val imageModel: Any = uiState.viewableProfileImageUrl // Presigned URL 우선 사용
+            ?: R.drawable.user_icon // Presigned URL이 null이면 기본 아이콘 사용
+
+        // ▼▼▼ 핵심 로직 ▼▼▼
+        // AsyncImage에 전달할 모델을 여기서 결정합니다.
+        val imageModel2 =
+            if (user.profileImage == AppConstants.DEFAULT_PROFILE_URL || user.profileImage.isNullOrEmpty()) {
+                // 서버에서 받은 값이 약속된 URL이거나, null 또는 비어있다면
+                // 앱에 내장된 기본 이미지를 보여줍니다.
+                R.drawable.user_icon // (ic_default_profile은 이전에 추가한 벡터 이미지 이름입니다)
+            } else {
+                // 그 외의 모든 경우는 실제 이미지 URL로 간주합니다.
+
+
+                user.profileImage
+            }
+
+
         AsyncImage(
-            model = user.profileImage ?: "https://i.pravatar.cc/300",
+//            model = user.profileImage ?: "https://i.pravatar.cc/300",
+            model = imageModel,
+//            model = "https://image-notepet.akamaized.net/card_news/201907/8ee7feb500e154ba61bc0f8fad06b07f.jpg",
+
+
             contentDescription = "프로필 사진",
             modifier = Modifier
                 .size(100.dp)
@@ -151,7 +187,10 @@ fun ProfileHeader(user: User) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
-            onClick = { /* TODO: 프로필 수정 화면으로 이동 */ },
+            onClick = {
+                /* TODO: 프로필 수정 화면으로 이동 */
+                onNavigateToProfileEditScreen()
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

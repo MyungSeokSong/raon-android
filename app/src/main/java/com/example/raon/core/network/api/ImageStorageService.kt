@@ -13,7 +13,6 @@ import retrofit2.http.Url
 
 // 이미지 CRUD Api
 interface ImageStorageService {
-
     // S3 이미지의 Presigned URL 요청 -> 조회용
     @GET("/prod/images") // API Gateway에 새로 설정한 GET 경로
     suspend fun getPresignedImageUrl(

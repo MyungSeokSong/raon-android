@@ -1,5 +1,6 @@
 package com.example.raon.features.chat.ui
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -64,7 +65,7 @@ val DarkGrayText = Color(0xFF3C3C3C)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatRoomScreen(
-    onBackClick: () -> Unit,
+    onBackClick: (chatId: Long) -> Unit,
     viewModel: ChatRoomViewModel = hiltViewModel()
 ) {
     // 👇 ViewModel의 단일 상태(uiState)만 구독합니다.
@@ -85,7 +86,15 @@ fun ChatRoomScreen(
                 CenterAlignedTopAppBar(
                     title = { Text("쫀딕", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
-                        IconButton(onClick = onBackClick) {
+                        IconButton(onClick = {
+                            val idToSend = viewModel.chatRoomId
+                            // 👇 [로그 추가] 뒤로가기 버튼 누르는 순간의 ID 확인
+                            Log.d(
+                                "ChatReadDebug",
+                                "1. Back button clicked in ChatRoomScreen. Sending chatId: $idToSend"
+                            )
+                            onBackClick(idToSend)
+                        }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     },

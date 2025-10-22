@@ -10,4 +10,11 @@ interface UserRepository {
 
     // 서버에서 프로필을 가져와 DataStore에 업데이트
     suspend fun fetchAndSaveUserProfile(): ApiResult<Unit>
+
+
+    // [추가] 닉네임 업데이트
+    suspend fun updateNickname(nickname: String): ApiResult<Unit>
+
+    // [추가] 프로필 이미지 URL 업데이트 (파일이 아닌 URL을 받음)
+    suspend fun updateProfileImage(imageUrl: String): ApiResult<Unit>
 }

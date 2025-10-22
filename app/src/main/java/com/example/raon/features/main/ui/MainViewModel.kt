@@ -1,9 +1,12 @@
 package com.example.raon.features.main.ui
 
 import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.raon.core.common.AppConstants
 import com.example.raon.core.network.ApiResult
+import com.example.raon.core.network.repository.ImageStorageRepository
 import com.example.raon.features.chat.data.remote.dto.ChatRoomInfo
 import com.example.raon.features.chat.domain.repository.ChatRepository
 import com.example.raon.features.user.domain.model.User
@@ -14,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first // 👈 Flow에서 첫 번째 값을 꺼내기 위해 import
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -24,13 +27,17 @@ import javax.inject.Inject
 data class MainUiState(
     val chatRooms: List<ChatRoomInfo> = emptyList(),
     val unreadChatCount: Int = 0,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    // [1. Presigned URL을 저장할 변수 추가]
+    val viewableProfileImageUrl: String? = null
 )
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val chatRepository: ChatRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val savedStateHandle: SavedStateHandle,
+    private val imageStorageRepository: ImageStorageRepository// S3에 업로드 하는 Repository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -39,14 +46,12 @@ class MainViewModel @Inject constructor(
     val userProfile: StateFlow<User?> = userRepository.getUserProfile()
         .onEach { user -> // <-- 이 부분을 추가하세요!
             Log.d("YourViewModel", "DataStore에서 ?1")
-
             if (user != null) {
                 Log.d("YourViewModel", "DataStore에서 사용자 데이터 로드 성공: $user")
             } else {
                 Log.d("YourViewModel", "DataStore에 사용자 데이터가 없거나 초기값입니다.")
             }
             Log.d("YourViewModel", "DataStore에서 ?2")
-
         }
         .stateIn(
             scope = viewModelScope,
@@ -56,6 +61,29 @@ class MainViewModel @Inject constructor(
 
     init {
         loadInitialData()
+
+
+        //  [핵심 수정] ViewModel이 직접 결과를 감시하도록 로직을 옮깁니다.
+        viewModelScope.launch {
+            savedStateHandle.getStateFlow<Long?>("read_chat_room_id", null)
+                .collect { readChatId ->
+
+                    //  [로그 추가] SavedStateHandle로부터 값을 받았는지 확인합니다.
+                    Log.d("ChatReadDebug", "4. MainViewModel collected chatId: $readChatId")
+
+                    if (readChatId != null && readChatId != -1L) {
+                        Log.d("MainViewModel", "✅ Chat room read result received: $readChatId")
+                        markChatRoomAsRead(readChatId)
+                        // 처리가 끝난 결과는 반드시 제거합니다.
+                        savedStateHandle.remove<Long>("read_chat_room_id")
+
+                        Log.d(
+                            "ChatReadDebug",
+                            "5. Processed and removed chatId from SavedStateHandle."
+                        )
+                    }
+                }
+        }
     }
 
     private fun loadInitialData() {
@@ -79,6 +107,32 @@ class MainViewModel @Inject constructor(
                 Log.d("MainViewModel", "✅ DataStore 저장 데이터 확인: $savedUser")
 
 
+                // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ [수정 2] 완료 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+                // [수정 2] 'init' 블록에서 이동된 Presigned URL 요청 로직
+                // 1. 저장된 사용자 정보에서 이미지 URL을 파싱합니다.
+                val s3ImageUrl = savedUser?.profileImage?.removePrefix(AppConstants.S3_BASE_URL)
+
+                // 2. null이 아닌지 확인하고 'suspend' 함수를 호출합니다.
+                if (s3ImageUrl != null) {
+                    try {
+                        val presignedUrl =
+                            imageStorageRepository.getPresignedImageUrl(s3ImageUrl).getOrNull()
+                        Log.d("MainViewModel", "✅ Presigned URL 획득: $presignedUrl")
+
+                        // 👇👇👇 [2. 획득한 URL을 UI 상태에 업데이트] 👇👇👇
+                        _uiState.update { it.copy(viewableProfileImageUrl = presignedUrl) }
+
+                        // TODO: 획득한 URL을 _uiState에 저장하여 UI에 반영해야 합니다.
+                        // 예: _uiState.update { it.copy(viewableProfileUrl = presignedUrl) }
+
+//                        userProfile.value.profileImage
+
+                    } catch (e: Exception) {
+                        Log.e("MainViewModel", "❌ Presigned URL 획득 실패", e)
+                    }
+                }
+                // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ [수정 2] 완료 ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
             } else {
                 Log.e("MainViewModel", "❌ 사용자 프로필 가져오기/저장 실패")
             }
@@ -94,14 +148,36 @@ class MainViewModel @Inject constructor(
                         unreadChatCount = unreadCount
                     )
                 }
-
-
                 Log.d("MainViewModel", "✅ 서버에서 받아온 User 데이터 확인: $userProfileJob")
-
                 Log.d("MainViewModel", "✅ 서버에서 받아온 Chat 데이터 확인: $chatList")
             } else {
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
+
+
+    // [ 채팅방 읽음 처리 함수 ]
+    fun markChatRoomAsRead(chatId: Long) {
+
+        //  [로그 추가] 이 함수가 실제로 호출되는지 확인합니다.
+        Log.d("ChatReadDebug", "6. markChatRoomAsRead called with chatId: $chatId")
+
+        _uiState.update { currentState ->
+            // 현재 채팅방 목록에서 ID가 일치하는 채팅방을 찾습니다.
+            val updatedChatRooms = currentState.chatRooms.map { chatRoom ->
+                if (chatRoom.chatId == chatId) {
+                    // ID가 일치하면 unreadCount를 0으로 바꾼 새 객체를 만듭니다.
+                    chatRoom.copy(unreadCount = 0)
+                } else {
+                    // ID가 다르면 기존 객체를 그대로 사용합니다.
+                    chatRoom
+                }
+            }
+            // 업데이트된 새 리스트로 UI 상태를 교체합니다.
+            currentState.copy(chatRooms = updatedChatRooms)
+        }
+    }
+
+
 }

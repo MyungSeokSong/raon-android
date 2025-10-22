@@ -65,6 +65,23 @@ fun MainView(
     // **핵심 변경 1: MainView 내부의 바텀 내비게이션 탭 관리를 위한 NavController 생성**
     val bottomNavController = rememberNavController()
 
+
+    // 채팅방에서 돌아오면 안읽은 채팅 아이콘 사라짐
+    // [ 채팅방에서 돌아온 결과를 처리하기 위한 LaunchedEffect ]
+    // MainView가 살아있는 동안 계속 결과를 감시합니다.
+//    val navBackStackEntry by navController.currentBackStackEntryAsState()
+//    LaunchedEffect(navBackStackEntry) {
+//        // "read_chat_room_id" 라는 키로 결과가 왔는지 확인합니다.
+//        val readChatId = navBackStackEntry?.savedStateHandle?.get<Long>("read_chat_room_id")
+//        if (readChatId != null && readChatId != -1L) {
+//            // 결과가 있다면 ViewModel의 함수를 호출하여 UI 상태를 업데이트합니다.
+//            mainViewModel.markChatRoomAsRead(readChatId)
+//            // 처리가 끝난 결과는 반드시 제거하여, 화면이 다시 그려질 때 또 실행되지 않도록 합니다.
+//            navBackStackEntry?.savedStateHandle?.remove<Long>("read_chat_room_id")
+//        }
+//    }
+
+
     // 불변 List 자료구조 사용 - 굳이 수정될 이유가 없기 때문
     val navItemList = listOf(
         NavItem("홈", Icons.Default.Home, "home"),
@@ -195,6 +212,9 @@ fun MainView(
             composable("profile") {
 
                 ProfileScreen(
+                    onNavigateToProfileEditScreen = {
+                        navController.navigate("profileEdit")
+                    },
                     onNavigateToSalesHistoryScreen = {
                         navController.navigate("salesHistory")
                     },

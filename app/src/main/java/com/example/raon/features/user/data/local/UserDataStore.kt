@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.raon.core.common.AppConstants
 import com.example.raon.features.user.domain.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +46,8 @@ class UserDataStore @Inject constructor(@ApplicationContext private val context:
             preferences[KEY_USER_ID] = user.userId
             preferences[KEY_NICKNAME] = user.nickname
             preferences[KEY_EMAIL] = user.email
-            preferences[KEY_PROFILE_IMAGE] = user.profileImage ?: "" // null이면 빈 문자열 저장
+            preferences[KEY_PROFILE_IMAGE] =
+                user.profileImage ?: AppConstants.DEFAULT_PROFILE_URL // null이면 빈 문자열 저장
             preferences[KEY_ADDRESS] = user.address
             preferences[KEY_LOCATION_ID] = user.locationId // ◀◀◀ 이 줄을 추가하세요
 

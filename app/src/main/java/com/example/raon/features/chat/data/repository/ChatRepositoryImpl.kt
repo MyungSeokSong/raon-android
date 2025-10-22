@@ -135,4 +135,12 @@ class ChatRepositoryImpl @Inject constructor(
         return result
     }
 
+    // [ 메시지 읽음 처리 함수 ]
+    override suspend fun markMessagesAsRead(chatId: Long): ApiResult<ApiResponse<Unit>> {
+        Log.d("ChatRepository", "🚀 Mark messages as read for chatId: $chatId")
+        val result = handleApi { chatApiService.markMessagesAsRead(chatId) }
+        Log.d("ChatRepository", "✅ Mark messages as read result: $result")
+        return result
+    }
+
 }

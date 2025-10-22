@@ -36,11 +36,11 @@ import javax.inject.Singleton
 @Singleton
 class ItemRepositoryImpl @Inject constructor(
     private val itemApiService: ItemApiService,
-    private val storageRepository: ImageStorageRepository,
+    private val imageStorageRepository: ImageStorageRepository, // S3에 업로드 하는 Repository
     private val userRepository: UserRepository,
     @ApplicationContext private val context: Context
 ) : ItemRepository {
-    private val S3_BASE_URL = "https://raon-market-images-prod.s3.ap-northeast-2.amazonaws.com/"
+    private val S3_BASE_URL0 = "https://raon-market-images-prod.s3.ap-northeast-2.amazonaws.com/"
 
     // itemList 가져오기
     override suspend fun getItems(page: Int): List<ItemDto> {
@@ -64,10 +64,10 @@ class ItemRepositoryImpl @Inject constructor(
                     item.thumbnail?.let { key ->
 
                         // S3_BASE_URL을 지우고 순수 이미지 이름만 파싱
-                        val objectKey = key.removePrefix(S3_BASE_URL)
+                        val objectKey = key.removePrefix(S3_BASE_URL0)
 
                         // 파싱한 이미지 이름으로 presigned URL 요청
-                        storageRepository.getPresignedImageUrl(objectKey).getOrNull()
+                        imageStorageRepository.getPresignedImageUrl(objectKey).getOrNull()
                     }
                 }
             }
@@ -97,7 +97,6 @@ class ItemRepositoryImpl @Inject constructor(
             // 2. 데이터가 null일 수 있으므로 안전하게 처리합니다.
             //    사용자 정보가 있으면 그 사용자의 locationId를, 없으면 기본값(예: 435)을 사용합니다.
             val userLocationId = currentUser?.locationId ?: 1 // 예시: User 모델에 locationId가 있다고 가정
-
 
             Log.d("imageUpload", "imageUris : ${imageUris.size}")
 
@@ -220,7 +219,7 @@ class ItemRepositoryImpl @Inject constructor(
                         Log.d("imageUpload", "fileName : ${fileName}")
 
                         val presignedUrl =  // 이미지 저장 위치, 이름을 넣어서 PresignedUrl 값 가져오기
-                            storageRepository.getPresignedUrl("item", fileName).getOrNull()
+                            imageStorageRepository.getPresignedUrl("item", fileName).getOrNull()
 
                         Log.d("imageUpload", "presignedUrl : ${presignedUrl}")
 
@@ -235,7 +234,7 @@ class ItemRepositoryImpl @Inject constructor(
                             Log.d("imageUpload", "presignedUrl : ${presignedUrl}")
 
                             // 이미지 업로드
-                            val uploadResult = storageRepository.uploadFile(it, requestBody)
+                            val uploadResult = imageStorageRepository.uploadFile(it, requestBody)
 
                             Log.d("imageUpload", "이미지 업로드 결과 : ${uploadResult}")
 
@@ -331,7 +330,7 @@ class ItemRepositoryImpl @Inject constructor(
                     // S3 전체 URL에서 순수 객체 키만 파싱 (기존 로직과 동일)
                     val objectKey =
                         key.removePrefix("https://raon-market-images-prod.s3.ap-northeast-2.amazonaws.com/")
-                    storageRepository.getPresignedImageUrl(objectKey).getOrNull()
+                    imageStorageRepository.getPresignedImageUrl(objectKey).getOrNull()
                 }
             }
             // 모든 Presigned URL 요청이 끝날 때까지 기다린 후, null이 아닌 것만 필터링

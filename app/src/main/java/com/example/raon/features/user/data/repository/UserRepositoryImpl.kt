@@ -4,6 +4,8 @@ package com.example.raon.features.user.data.repository
 import android.util.Log
 import com.example.raon.core.network.ApiResult
 import com.example.raon.core.network.handleApi
+import com.example.raon.features.user.data.dto.UpdateNicknameRequest
+import com.example.raon.features.user.data.dto.UpdateProfileImageRequest
 import com.example.raon.features.user.data.local.UserDataStore
 import com.example.raon.features.user.data.remote.UserApiService
 import com.example.raon.features.user.domain.model.User
@@ -55,4 +57,30 @@ class UserRepositoryImpl @Inject constructor(
             }
         }.map { } // 결과를 Unit으로 변환
     }
+
+
+    // [추가] 닉네임 업데이트 구현
+    override suspend fun updateNickname(nickname: String): ApiResult<Unit> {
+        val request = UpdateNicknameRequest(nickname = nickname)
+        // API 호출 후 결과를 ApiResult<Unit>으로 변환
+        return handleApi { userApiService.updateNickname(request) }.map { }
+    }
+
+    // [추가] 프로필 이미지 URL 업데이트 구현
+    override suspend fun updateProfileImage(imageUrl: String): ApiResult<Unit> {
+
+
+        val request = UpdateProfileImageRequest(profileImage = imageUrl)
+
+        Log.d("ProfileEditViewModel", "Requesting: $request")
+
+
+//        val request = UpdateProfileImageRequest(profileImage = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSvyEPjOGflKIsX8Z4NVdyCEFT3BDLYkpKMuA&s")
+
+
+        // API 호출 후 결과를 ApiResult<Unit>으로 변환
+        return handleApi { userApiService.updateProfileImage(request) }.map { }
+    }
+
+
 }
