@@ -46,9 +46,9 @@ class ChatRoomViewModel @Inject constructor(
 
     init {
 
-        // 👇 [로그 추가] ViewModel이 생성될 때 chatRoomId를 제대로 받았는지 확인
+        // [로그 추가] ViewModel이 생성될 때 chatRoomId를 제대로 받았는지 확인
         Log.d("ChatReadDebug", "0. ChatRoomViewModel initialized with chatId: $chatRoomId")
-        
+
         viewModelScope.launch {
             _myUserId.value = userRepository.getUserProfile().first()?.userId
             if (chatRoomId != -1L) {

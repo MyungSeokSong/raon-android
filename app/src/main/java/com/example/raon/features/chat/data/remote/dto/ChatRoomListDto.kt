@@ -12,14 +12,17 @@ data class ChatRoomListDto(
 
 // "chats" 리스트의 각 아이템 구조 (lastMessage 추가)
 data class ChatRoomInfo(
-    @SerializedName("unreadCount") val unreadCount: Int,
     @SerializedName("chatId") val chatId: Long,
-    @SerializedName("product") val product: ProductInChatList,
     @SerializedName("buyer") val buyer: UserInChatList,
     @SerializedName("seller") val seller: UserInChatList,
+    @SerializedName("product") val product: ProductInChatList,
     @SerializedName("lastMessage") val lastMessage: LastMessageInfo?, // 마지막 메시지는 없을 수도 있음(Nullable)
-    @SerializedName("createdAt") val createdAt: String
-)
+    @SerializedName("unreadCount") val unreadCount: Int,
+    val viewableThumbnailUrl: String?, // 상품 썸네일 Presigned URL
+    @SerializedName("createdAt") val createdAt: String,
+
+
+    )
 
 // ▼▼▼ "lastMessage" 객체를 위한 새로운 data class 추가 ▼▼▼
 data class LastMessageInfo(

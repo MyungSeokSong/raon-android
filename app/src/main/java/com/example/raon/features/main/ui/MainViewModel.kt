@@ -13,6 +13,7 @@ import com.example.raon.features.user.domain.model.User
 import com.example.raon.features.user.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -24,12 +25,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 data class MainUiState(
     val chatRooms: List<ChatRoomInfo> = emptyList(),
     val unreadChatCount: Int = 0,
     val isLoading: Boolean = true,
     // [1. Presigned URL을 저장할 변수 추가]
-    val viewableProfileImageUrl: String? = null
+    val viewableProfileImageUrl: String? = null,
 )
 
 @HiltViewModel
@@ -90,11 +92,14 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
+            // 프로필 가져오기 & 채팅 목록 가져오기 동시 실행
             val chatRoomsJob = async { chatRepository.getChatRoomList(page = 0) }
             val userProfileJob = async { userRepository.fetchAndSaveUserProfile() }
 
+            // 두 작업이 끝날 때까지 대기
             val chatResult = chatRoomsJob.await()
             val profileResult = userProfileJob.await()
+
 
             // ▼▼▼ 이 부분이 핵심입니다 ▼▼▼
             // 1. 프로필 저장 작업이 성공했는지 확인합니다.
@@ -112,14 +117,17 @@ class MainViewModel @Inject constructor(
                 // 1. 저장된 사용자 정보에서 이미지 URL을 파싱합니다.
                 val s3ImageUrl = savedUser?.profileImage?.removePrefix(AppConstants.S3_BASE_URL)
 
+                Log.d("MainViewModel", "✅ s3ImageUrl URL 획득: $s3ImageUrl")
+
+
                 // 2. null이 아닌지 확인하고 'suspend' 함수를 호출합니다.
                 if (s3ImageUrl != null) {
                     try {
                         val presignedUrl =
                             imageStorageRepository.getPresignedImageUrl(s3ImageUrl).getOrNull()
-                        Log.d("MainViewModel", "✅ Presigned URL 획득: $presignedUrl")
+                        Log.d("MainViewModel", "✅ *Presigned URL 획득: $presignedUrl")
 
-                        // 👇👇👇 [2. 획득한 URL을 UI 상태에 업데이트] 👇👇👇
+                        //  [2. 획득한 URL을 UI 상태에 업데이트]
                         _uiState.update { it.copy(viewableProfileImageUrl = presignedUrl) }
 
                         // TODO: 획득한 URL을 _uiState에 저장하여 UI에 반영해야 합니다.
@@ -139,17 +147,76 @@ class MainViewModel @Inject constructor(
 
             // 채팅 목록 상태 업데이트 (기존과 동일)
             if (chatResult is ApiResult.Success) {
+                var thumbnailUrl: String? = null    // items 썸네일 url
+
+
+                // 서버에서 받은 채팅 목록 DTO (List<ChatRoomInfo>)
                 val chatList = chatResult.data.data?.chats ?: emptyList()
+                Log.d("MainViewModel", "✅ Chat list DTO loaded: ${chatList.size} rooms")
+
+
+                //  [주석 5] 채팅 DTO 리스트를 UI 모델 리스트로 변환 (각 썸네일 Presigned URL 포함)
+                val chatListWithUrls: List<ChatRoomInfo> =
+                    chatList.map { chatRoomInfo -> // 반환 타입 명시                    // 각 채팅방 썸네일에 대해 Presigned URL 요청을 비동기로 시작
+                        async {
+                            // 썸네일 S3 키 파싱 (예: "items/image.jpg")
+                            val thumbnailKey =
+                                chatRoomInfo.product.thumbnail?.removePrefix(AppConstants.S3_BASE_URL)
+
+                            Log.d("MainViewMode2l", "✅ thumbnailKey : ${thumbnailKey}")
+
+                            // S3 키가 있으면 Presigned URL 요청
+                            if (thumbnailKey != null) {
+                                try {
+                                    thumbnailUrl =
+                                        imageStorageRepository.getPresignedImageUrl(thumbnailKey)
+                                            .getOrNull()
+                                    Log.d("MainViewMode2l", "✅ thumbnailUrl : ${thumbnailUrl}")
+
+                                } catch (e: Exception) {
+
+                                    Log.d("MainViewMode2l", "✅ 실패 : 실패")
+
+                                    Log.e(
+                                        "MainViewModel",
+                                        "❌ Failed to load Thumbnail Presigned URL (chatId: ${chatRoomInfo.chatId})",
+                                        e
+                                    )
+                                }
+                            }
+                            // DTO 정보와 받아온 thumbnailUrl을 합쳐 ChatRoomUiModel 생성
+//                        ChatRoomUiModel(
+//                            chatId = chatRoomInfo.chatId,
+//                            buyer = chatRoomInfo.buyer,
+//                            seller = chatRoomInfo.seller,
+//                            product = chatRoomInfo.product,
+//                            lastMessage = chatRoomInfo.lastMessage,
+//                            unreadCount = chatRoomInfo.unreadCount,
+//                            viewableThumbnailUrl = thumbnailUrl // Presigned URL 저장
+//                        )
+                            chatRoomInfo.copy(viewableThumbnailUrl = thumbnailUrl)
+                        }
+                    }.awaitAll() // 모든 썸네일 URL 요청이 완료될 때까지 기다림
+                // 👆 [주석 5] 완료 👆
+
+
+                // 안 읽은 채팅수 계산
                 val unreadCount = chatList.sumOf { it.unreadCount }
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        chatRooms = chatList,
-                        unreadChatCount = unreadCount
+//                        chatRooms = chatList,
+                        chatRooms = chatListWithUrls,
+
+                        unreadChatCount = unreadCount,
+//                        viewableProfileImageUrl = thumbnailUrl
                     )
                 }
                 Log.d("MainViewModel", "✅ 서버에서 받아온 User 데이터 확인: $userProfileJob")
                 Log.d("MainViewModel", "✅ 서버에서 받아온 Chat 데이터 확인: $chatList")
+                Log.d("MainViewMode2l", "✅ s3 서버에서 받아온 url 데이터 확인: $thumbnailUrl")
+
             } else {
                 _uiState.update { it.copy(isLoading = false) }
             }

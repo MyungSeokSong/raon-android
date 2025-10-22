@@ -111,8 +111,13 @@ private fun ChatListItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 상대방 프로필 이미지 (또는 상품 썸네일)
+
+        Log.d("chatroomList", "url확인 : ${chatRoom.viewableThumbnailUrl}")
+
         AsyncImage(
-            model = chatRoom.buyer.profileImage ?: chatRoom.product.thumbnail,
+//            model = chatRoom.buyer.profileImage ?: chatRoom.product.thumbnail,
+            model = chatRoom.viewableThumbnailUrl ?: chatRoom.product.thumbnail,
+
             contentDescription = "채팅 상대 프로필 이미지",
             modifier = Modifier
                 .size(60.dp)

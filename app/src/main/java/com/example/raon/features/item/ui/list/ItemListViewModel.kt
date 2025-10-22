@@ -18,7 +18,8 @@ data class ItemListUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val currentPage: Int = 0,
-    val isRefreshing: Boolean = false // 새로고침 상
+    val isRefreshing: Boolean = false, // 새로고침 상
+    val itemsImageUrl: String = ""
 )
 
 @HiltViewModel
@@ -29,7 +30,6 @@ class ItemListViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(ItemListUiState())
     val uiState = _uiState.asStateFlow()
-
 
     init {
         loadItems() // ViewModel 시작하자마자 첫 화면 데이터 가져오기
@@ -86,7 +86,7 @@ class ItemListViewModel @Inject constructor(
                     itemRepository.getItemsWithViewableUrls(page = _uiState.value.currentPage)
 
 
-                // 👇 3. Repository로부터 데이터를 '성공적으로 받아왔는지' 확인하는 가장 중요한 로그
+                //  3. Repository로부터 데이터를 '성공적으로 받아왔는지' 확인하는 가장 중요한 로그
                 //    이 로그를 통해 실제로 어떤 데이터가 들어왔는지 확인할 수 있습니다.
                 Log.d(
                     "ItemListViewModel",
@@ -97,7 +97,8 @@ class ItemListViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         items = it.items + newItemsUiModel,
-                        currentPage = it.currentPage + 1
+                        currentPage = it.currentPage + 1,
+                        itemsImageUrl = it.itemsImageUrl
                     )
                 }
             } catch (e: Exception) {
