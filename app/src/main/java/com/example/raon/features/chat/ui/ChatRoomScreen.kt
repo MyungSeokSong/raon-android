@@ -1,9 +1,10 @@
 package com.example.raon.features.chat.ui
 
+// import androidx.compose.material.icons.filled.ImageSearch // [삭제]
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,10 +25,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,12 +52,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.raon.R
+import coil3.compose.AsyncImage
 import com.example.raon.features.chat.domain.model.ChatMessage
 
 val BrandYellow = Color(0xFFFDCC31)
@@ -68,11 +68,10 @@ fun ChatRoomScreen(
     onBackClick: (chatId: Long) -> Unit,
     viewModel: ChatRoomViewModel = hiltViewModel()
 ) {
-    // 👇 ViewModel의 단일 상태(uiState)만 구독합니다.
+    // ViewModel의 단일 상태(uiState)만 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
 
-    // ❗️ `showWarningBanner`와 `warningMessage`를 따로 구독할 필요가 없어졌습니다.
 
     LaunchedEffect(uiState.messages) {
         if (uiState.messages.isNotEmpty()) {
@@ -84,11 +83,16 @@ fun ChatRoomScreen(
         topBar = {
             Column(modifier = Modifier.background(Color.White)) {
                 CenterAlignedTopAppBar(
-                    title = { Text("쫀딕", fontWeight = FontWeight.Bold) },
+                    title = {
+                        Text(
+                            uiState.opponentNickname ?: "",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = {
                             val idToSend = viewModel.chatRoomId
-                            // 👇 [로그 추가] 뒤로가기 버튼 누르는 순간의 ID 확인
+                            // [로그 추가] 뒤로가기 버튼 누르는 순간의 ID 확인
                             Log.d(
                                 "ChatReadDebug",
                                 "1. Back button clicked in ChatRoomScreen. Sending chatId: $idToSend"
@@ -104,17 +108,32 @@ fun ChatRoomScreen(
                         navigationIconContentColor = DarkGrayText
                     )
                 )
+                // [수정] ProductInfoBar에 isBuyer 플래그와 onAIImageAnalyzeClick 람다 전달
                 ProductInfoBar(
-                    productImageUrl = "https://via.placeholder.com/150",
-                    productStatus = "판매중",
-                    productName = "미닉스 건조기",
-                    productPrice = "135,000원"
+                    productImageUrl = uiState.productInfo?.viewableThumbnailUrl
+                        ?: "", // Presigned URL
+                    productStatus = uiState.productInfo?.status ?: "",
+                    productName = uiState.productInfo?.productName ?: "",
+                    productPrice = uiState.productInfo?.price?.let { "%,d원".format(it) }
+                        ?: "",
+                    isBuyer = uiState.isCurrentUserBuyer, // ViewModel의 상태 전달
+                    onAIImageAnalyzeClick = {
+                        viewModel.analyzeImage() // ViewModel의 새 함수 호출
+                    }
                 )
+
+
+
                 Divider(color = Color.LightGray.copy(alpha = 0.3f), thickness = 1.dp)
             }
         },
         bottomBar = {
-            MessageInput(onSendClick = { text -> viewModel.sendMessage(text) })
+            // [수정] MessageInput에도 isBuyer 상태를 전달합니다.
+            MessageInput(
+                onSendClick = { text -> viewModel.sendMessage(text) },
+                onAIDetectFraud = { viewModel.detectFraud() },
+                isBuyer = uiState.isCurrentUserBuyer // [추가]
+            )
         }
     ) { paddingValues ->
         Column(
@@ -123,14 +142,14 @@ fun ChatRoomScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFF2F2F7))
         ) {
-            Button(
-                onClick = { viewModel.detectFraud() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text("⚠️ 사기 탐지 API 테스트 버튼")
-            }
+//            Button(
+//                onClick = { viewModel.detectFraud() },
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(horizontal = 16.dp, vertical = 8.dp)
+//            ) {
+//                Text("⚠️ 사기 탐지 API 테스트 버튼")
+//            }
 
             LazyColumn(
                 state = listState,
@@ -144,7 +163,7 @@ fun ChatRoomScreen(
                 }
             }
 
-            // 👇 경고 배너 표시 여부와 메시지를 모두 uiState에서 가져옵니다.
+            // 경고 배너 표시 여부와 메시지를 모두 uiState에서 가져옵니다.
             AnimatedVisibility(visible = uiState.fraudWarningMessage != null) {
                 FraudWarningBanner(
                     message = uiState.fraudWarningMessage.orEmpty(),
@@ -155,35 +174,39 @@ fun ChatRoomScreen(
     }
 }
 
-// (ProductInfoBar, MessageBubble, MessageInput, FraudWarningBanner 함수는 변경사항 없음)
+// [수정] ProductInfoBar (텍스트 버튼 디자인으로 변경 및 우측 정렬, UI/크기 개선)
 @Composable
 fun ProductInfoBar(
     productImageUrl: String,
     productStatus: String,
     productName: String,
-    productPrice: String
+    productPrice: String,
+    isBuyer: Boolean, // 구매자인지 여부
+    onAIImageAnalyzeClick: () -> Unit // 버튼 클릭 람다
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically // 수직 중앙 정렬 유지
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
+        AsyncImage(
+            model = productImageUrl, // 전달받은 Presigned URL 사용
             contentDescription = "Product Image",
             modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
+                .size(48.dp) // 이미지 크기
+                .clip(RoundedCornerShape(8.dp)) // 모서리 둥글게
+                .background(Color.LightGray), // Placeholder 배경색
+            contentScale = ContentScale.Crop // 비율 유지하며 채우기
         )
         Spacer(modifier = Modifier.width(12.dp))
+
         Column(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f), // 텍스트 영역이 남은 공간을 모두 차지 (버튼을 밀어냄)
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "$productStatus $productName",
+                text = "$productStatus  $productName",
                 color = DarkGrayText,
                 fontSize = 14.sp,
                 maxLines = 1
@@ -196,9 +219,39 @@ fun ProductInfoBar(
                 fontWeight = FontWeight.Bold
             )
         }
+
+        // [수정] AI 사진 분석하기 버튼 UI 및 크기 개선
+        if (isBuyer) {
+            Spacer(modifier = Modifier.width(12.dp)) // 텍스트와 버튼 사이 간격
+            Row(
+                modifier = Modifier
+                    .background(
+                        color = Color(0xFFE0E0E0), // 살짝 더 진한 회색 배경
+                        shape = RoundedCornerShape(20.dp) // 모서리를 더 둥글게 (알약 형태)
+                    )
+                    .clip(RoundedCornerShape(20.dp)) // clickable 영역을 background와 일치
+                    .clickable { onAIImageAnalyzeClick() }
+                    .padding(horizontal = 12.dp, vertical = 8.dp), // [수정] 내부 패딩 증가
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome, // AI 아이콘 유지
+                    contentDescription = "AI 분석",
+                    tint = DarkGrayText, // 아이콘 색상을 DarkGrayText로
+                    modifier = Modifier.size(18.dp) // [수정] 아이콘 크기 증가
+                )
+                Spacer(modifier = Modifier.width(5.dp)) // [수정] 아이콘과 텍스트 사이 간격
+                Text(
+                    text = "AI 사진 분석하기",
+                    fontSize = 13.sp, // [수정] 폰트 크기 증가
+                    fontWeight = FontWeight.Medium,
+                    color = DarkGrayText // 텍스트 색상
+                )
+            }
+        }
     }
 }
-
 
 @Composable
 fun MessageBubble(message: ChatMessage) {
@@ -241,8 +294,14 @@ fun MessageBubble(message: ChatMessage) {
     }
 }
 
+
+// [수정] MessageInput 함수 시그니처에 isBuyer 파라미터 추가
 @Composable
-fun MessageInput(onSendClick: (String) -> Unit) {
+fun MessageInput(
+    onSendClick: (String) -> Unit,
+    onAIDetectFraud: () -> Unit,
+    isBuyer: Boolean // [추가]
+) {
     var text by remember { mutableStateOf("") }
 
     Surface(
@@ -271,6 +330,19 @@ fun MessageInput(onSendClick: (String) -> Unit) {
                 ),
                 maxLines = 4
             )
+
+            // [수정] 구매자인 경우(isBuyer == true)에만 AI (텍스트) 분석 버튼 표시
+            if (isBuyer) {
+                IconButton(onClick = {
+                    onAIDetectFraud()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome, // AI 아이콘
+                        contentDescription = "AI 분석",
+                        tint = Color.Gray // 다른 아이콘과 톤을 맞춤
+                    )
+                }
+            }
 
             if (text.isBlank()) {
                 IconButton(onClick = { /* 이모티콘 창 열기 */ }) {

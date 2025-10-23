@@ -3,11 +3,13 @@ package com.example.raon.features.chat.domain.repository
 //import com.example.raon.features.chat.data.remote.dto.ChatRoomListDTO
 import com.example.raon.core.network.ApiResult
 import com.example.raon.core.network.dto.ApiResponse
+import com.example.raon.features.chat.data.remote.dto.ChatRoomDetailResponse
 import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
 import com.example.raon.features.chat.data.remote.dto.MessageListDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
 import com.example.raon.features.chat.data.remote.dto.ai.FraudData
 import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
+import com.example.raon.features.chat.data.remote.dto.ai.ImageAnalysisResponseDto
 import com.example.raon.features.chat.domain.model.ChatMessage
 import kotlinx.coroutines.flow.Flow
 
@@ -25,6 +27,9 @@ interface ChatRepository {
 
     // 서버에서 채팅방 리스트를 가여오는 함수
     suspend fun getChatRoomList(page: Int): ApiResult<ApiResponse<ChatRoomListDto>>
+
+
+    suspend fun getChatRoomDetails(chatId: Long): ApiResult<ChatRoomDetailResponse>
 
 
     // HTTP로 과거 채팅 메시지를 가져오는 함수
@@ -62,11 +67,15 @@ interface ChatRepository {
     suspend fun disconnectStomp()
 
 
-    // [ 사기 탐지 함수 ]
+    // [ ai 채팅 사기 탐지 함수 ]
     suspend fun detectFraud(
         userId: Long,
         request: FraudDetectionRequestDto
     ): ApiResult<ApiResponse<FraudData>> // <--- ✅ 'ApiResult'로 감싸주세요.
+
+
+    // [ AI 이미지 분석 함수 ]
+    suspend fun analyzeImages(chatRoomId: Long): ApiResult<ApiResponse<ImageAnalysisResponseDto>>
 
 
     // [ 메시지 읽음 처리 함수]

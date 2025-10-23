@@ -199,10 +199,13 @@ fun MainView(
             }
             composable("chatRoomList") {
                 ChatListScreen(
-                    onChatRoomClick = { chatRoomId, sellerId ->
-                        navController.navigate("chatRoom/$chatRoomId")
-
-                        Log.d("채팅프로세스", "메인뷰 chatRoomId 전달 : ${chatRoomId}")
+                    onChatRoomClick = { chatRoomId, opponentId, itemId ->
+                        // 문자열로 데이터 넘겨줌
+                        navController.navigate("chatRoom/$chatRoomId") // 전체 NavController 사용
+                        Log.d(
+                            "ChatClick",
+                            "MainView -> Navigating to chatRoom: ID=$chatRoomId"
+                        )
                     },
                     myUserId = userProfile?.userId
                         ?: -1,   // 없으면 user -1로 하기 -> 아마 서버에서 에러날거임 -1 이면

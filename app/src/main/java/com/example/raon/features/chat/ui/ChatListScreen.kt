@@ -58,10 +58,12 @@ fun ChatListTopAppBar(navController: NavController) {
 
 @Composable
 fun ChatListScreen(
-    onChatRoomClick: (chatRoomId: Long, sellerId: Int) -> Unit,
+    onChatRoomClick: (chatRoomId: Long, opponentId: Int, itemId: Long) -> Unit,
     myUserId: Int, // 👈 파라미터로 myUserId를 추가합니다.
     chatRooms: List<ChatRoomInfo>
 ) {
+
+
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -74,8 +76,19 @@ fun ChatListScreen(
                 myUserId = myUserId,
                 onClick = {
 
+                    // 상대방 id 판별해서 담기
+                    val opponentId = if (myUserId == chatRoom.seller.userId) {
+                        chatRoom.buyer.userId // 내가 판매자면 상대방은 구매자 ID
+                    } else {
+                        chatRoom.seller.userId // 내가 구매자면 상대방은 판매자 ID
+                    }
+
                     // 채티방 터치 이벤트 발생시 실행하는 함수 -> chatroomId, sellerId 전달
-                    onChatRoomClick(chatRoom.chatId, chatRoom.seller.userId)
+                    onChatRoomClick(
+                        chatRoom.chatId,    // 채팅방 Id
+                        opponentId,         // 상대방 Id
+                        chatRoom.product.productId  // 채팅방 Item Id
+                    )
 
                     // 아이템 클릭 시 해당 chatId를 가지고 채팅방 화면으로 이동
 //                    navController.navigate("chatRoom/${chatRoom.chatId}")

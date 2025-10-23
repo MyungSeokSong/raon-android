@@ -154,14 +154,22 @@ fun AppNavigation(
                     navController.navigate("addItem?itemId=$editItemId")
                 }
             )
-
-
         }
 
-        composable("chatRoom/{chatRoomId}") {
+        composable(
+            route = "chatRoom/{chatRoomId}",
+
+            // arguments 리스트에 itemId와 opponentId 정의 추가
+            arguments = listOf(
+                navArgument("chatRoomId") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->   // backStackEntry에서 인자를 꺼낼 수 있음 (ViewModel이 SavedStateHandle로 처리하므로 여기선 불필요)
+
             ChatRoomScreen(
                 onBackClick = { chatId ->
-                    // 👇 [가장 중요] getBackStackEntry("main_graph")를 사용하는지 확인!
+                    // [가장 중요] getBackStackEntry("main_graph")를 사용하는지 확인!
                     try {
                         Log.d(
                             "ChatReadDebug",
@@ -177,7 +185,6 @@ fun AppNavigation(
                     navController.popBackStack()
                 }
             )
-//            ChatRoomScreen2()
         }
 
         composable("searchInput") {
@@ -228,7 +235,7 @@ fun AppNavigation(
             )
         }
 
-        // 👇 [신규] 프로필 수정 화면 경로 (람다 방식으로 수정)
+        //  프로필 수정 화면 경로 (람다 방식으로 수정)
         composable("profileEdit") {
             ProfileEditScreen(
                 // navController = navController // <-- ⛔️ 삭제

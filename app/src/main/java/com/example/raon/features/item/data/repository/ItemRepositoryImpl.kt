@@ -61,10 +61,17 @@ class ItemRepositoryImpl @Inject constructor(
         val itemsWithPresignedUrl = coroutineScope {
             val urlJobs = itemsDto.map { item ->
                 async {
+
+                    Log.d("itemRepository_url", "이미지 URL 확인 : ${item.thumbnail}")
+
+
                     item.thumbnail?.let { key ->
 
                         // S3_BASE_URL을 지우고 순수 이미지 이름만 파싱
                         val objectKey = key.removePrefix(S3_BASE_URL0)
+
+                        Log.d("itemRepository_url", "이미지 URL 파싱 확인 : ${objectKey}")
+
 
                         // 파싱한 이미지 이름으로 presigned URL 요청
                         imageStorageRepository.getPresignedImageUrl(objectKey).getOrNull()
@@ -72,6 +79,9 @@ class ItemRepositoryImpl @Inject constructor(
                 }
             }
             val presignedUrls = urlJobs.awaitAll()
+
+            Log.d("itemRepository_url", "이미지 presignedUrls 확인 : ${presignedUrls}")
+
             itemsDto.zip(presignedUrls) // (ItemDto, PresignedUrl) 쌍으로 묶기
         }
         // 3. 최종 UI 모델로 변환하여 반환
@@ -91,8 +101,9 @@ class ItemRepositoryImpl @Inject constructor(
     ): ItemResponse {
         try {
             // 1. userRepository에서 Flow를 가져온 뒤 .first()를 호출해 최신 User 데이터를 꺼냅니다.
-            //    이 작업은 비동기이므로 suspend 함수 내에서만 가능합니다.
-            val currentUser = userRepository.getUserProfile().first()
+            val currentUser = userRepository.getUserProfile()
+                .first()               //    이 작업은 비동기이므로 suspend 함수 내에서만 가능합니다.
+
 
             // 2. 데이터가 null일 수 있으므로 안전하게 처리합니다.
             //    사용자 정보가 있으면 그 사용자의 locationId를, 없으면 기본값(예: 435)을 사용합니다.
@@ -127,6 +138,8 @@ class ItemRepositoryImpl @Inject constructor(
             )
             Log.d("imageUpload", "서버 저장 이미지 url : ${imageUrls}")
 
+
+            // 아이템 올리기
             return itemApiService.postItem(itemRequest)
 
         } catch (e: HttpException) {
@@ -208,7 +221,6 @@ class ItemRepositoryImpl @Inject constructor(
     private suspend fun uploadImagesAndGetS3Urls(imageUris: List<Uri>): List<String> =
         coroutineScope {
             if (imageUris.isEmpty()) return@coroutineScope emptyList()  // 이미지 비었을 때
-
 
             val uploadJobs = imageUris.map { uri ->
                 async {

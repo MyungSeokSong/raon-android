@@ -205,7 +205,7 @@ fun ItemListItem(
                 }
             }
 
-            // [수정] 조회수, 댓글, 좋아요 표시
+            // 조회수, 댓글, 좋아요 표시
             if (item.viewCount > 0 || item.comments > 0 || item.likes > 0) {
                 Row(
                     modifier = Modifier.align(Alignment.BottomEnd),

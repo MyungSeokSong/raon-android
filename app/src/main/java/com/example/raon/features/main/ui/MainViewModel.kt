@@ -197,7 +197,7 @@ class MainViewModel @Inject constructor(
                             chatRoomInfo.copy(viewableThumbnailUrl = thumbnailUrl)
                         }
                     }.awaitAll() // 모든 썸네일 URL 요청이 완료될 때까지 기다림
-                // 👆 [주석 5] 완료 👆
+                //  [주석 5] 완료
 
 
                 // 안 읽은 채팅수 계산

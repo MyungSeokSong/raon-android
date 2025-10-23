@@ -7,12 +7,14 @@ import com.example.raon.core.network.dto.ApiResponse
 import com.example.raon.core.network.handleApi
 import com.example.raon.features.chat.data.remote.StompService
 import com.example.raon.features.chat.data.remote.api.ChatApiService
+import com.example.raon.features.chat.data.remote.dto.ChatRoomDetailResponse
 import com.example.raon.features.chat.data.remote.dto.ChatRoomListDto
 import com.example.raon.features.chat.data.remote.dto.MessageListDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageRequestDto
 import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
 import com.example.raon.features.chat.data.remote.dto.ai.FraudData
 import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
+import com.example.raon.features.chat.data.remote.dto.ai.ImageAnalysisResponseDto
 import com.example.raon.features.chat.domain.model.ChatMessage
 import com.example.raon.features.chat.domain.repository.ChatRepository
 import kotlinx.coroutines.delay
@@ -45,8 +47,8 @@ class ChatRepositoryImpl @Inject constructor(
         // 실제로는 WebSocket이나 API를 통해 메시지를 수신하는 로직이 들어갑니다.
         // 여기서는 1초마다 더미 데이터를 방출하는 예시를 보여줍니다.
         val dummyHistory = listOf(
-            ChatMessage(1L, chatRoomId, 2, "상대방", null, "안녕하세요", null, "오후 2:30", true),
-            ChatMessage(2L, chatRoomId, 1, "나", null, "네 안녕하세요!", null, "오후 2:31", false)
+            ChatMessage(1L, chatRoomId, 2, "상대방", null, "안녕하세요", null, "오후 2:30", true, "11"),
+            ChatMessage(2L, chatRoomId, 1, "나", null, "네 안녕하세요!", null, "오후 2:31", false, "11")
         )
         emit(dummyHistory) // 초기 메시지 전송
         delay(1000)
@@ -60,9 +62,20 @@ class ChatRepositoryImpl @Inject constructor(
                 "혹시 네고 가능한가요?",
                 null,
                 "오후 2:31",
-                true
+                true,
+                "11"
             )
         )
+    }
+
+
+    // 서버에 get chat 요청을 보냄 -> 채팅방 관련 상세 데이터를 줌
+    override suspend fun getChatRoomDetails(chatId: Long): ApiResult<ChatRoomDetailResponse> {
+        Log.d("ChatRepository_getChat", "🚀 Fetching chat room details for chatId: $chatId")
+        // handleApi를 사용하여 API 호출 및 결과 처리
+        val result = handleApi { chatApiService.getChatRoomDetails(chatId) }
+        Log.d("ChatRepository_getChat", "✅ Chat room details result: $result")
+        return result
     }
 
 
@@ -97,10 +110,6 @@ class ChatRepositoryImpl @Inject constructor(
         return stompService.messages
     }
 
-//    override suspend fun sendStompMessage(chatRoomId: Long, message: String) {
-//        // StompService에 작업을 위임합니다.
-//        stompService.sendMessage(chatRoomId, message)
-//    }
 
     override suspend fun disconnectStomp() {
         // StompService에 작업을 위임합니다.
@@ -134,6 +143,17 @@ class ChatRepositoryImpl @Inject constructor(
         // 최종 결과를 ViewModel로 반환합니다.
         return result
     }
+
+
+    // [추가] AI 이미지 분석 구현
+    override suspend fun analyzeImages(chatRoomId: Long): ApiResult<ApiResponse<ImageAnalysisResponseDto>> {
+        Log.d("ChatRepo_Image", "🚀 Requesting image analysis for chat: $chatRoomId")
+        // handleApi를 사용하여 API 호출 및 결과 처리
+        val result = handleApi { chatApiService.analyzeImages(chatRoomId) }
+        Log.d("ChatRepo_Image", "✅ Image analysis response: $result")
+        return result
+    }
+
 
     // [ 메시지 읽음 처리 함수 ]
     override suspend fun markMessagesAsRead(chatId: Long): ApiResult<ApiResponse<Unit>> {

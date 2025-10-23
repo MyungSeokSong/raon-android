@@ -14,7 +14,12 @@ class ImageStorageRepository @Inject constructor(
     // S3 이미지 조회 PresignedUrl
     suspend fun getPresignedImageUrl(imageKey: String): Result<String> {
         return try {
+            Log.d("imageUpload", "imageKey : ${imageKey}")
+
             val response = imageStorageService.getPresignedImageUrl(imageKey)
+
+            Log.d("imageUpload", "response : ${response.url}")
+
             Result.success(response.url)
         } catch (e: Exception) {
             Result.failure(e)
@@ -27,7 +32,14 @@ class ImageStorageRepository @Inject constructor(
         return try {
             val request = PresignedUrlRequest(uploadType, fileName)
             val response = imageStorageService.getPresignedUrl(request)
+
+
+            // 2. 서버가 보낸 전체 응답 객체를 로그로 출력
+            Log.d("ImageStorageRepo", "서버 응답: ${response.toString()}")
+
+
             Result.success(response.url)
+
         } catch (e: Exception) {
 
 

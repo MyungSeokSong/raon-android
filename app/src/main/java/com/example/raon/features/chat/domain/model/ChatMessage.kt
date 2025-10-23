@@ -11,5 +11,8 @@ data class ChatMessage(
     val content: String,
     val imageUrl: String?,
     val timestamp: String,
-    val isFromMe: Boolean
+    val isFromMe: Boolean,
+    val originalTimestamp: String // 정렬 및 API 전송용 원본 시간 추가
+
+
 )
