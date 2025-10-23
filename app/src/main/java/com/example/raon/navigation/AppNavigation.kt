@@ -20,6 +20,8 @@ import com.example.raon.features.item.ui.add.AddItemEvent
 import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.add.AddItemViewModel
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
+// 👇 ItemDetailViewModel을 NavHost에서 직접 사용하기 위해 import 합니다.
+import com.example.raon.features.item.ui.detail.ItemDetailViewModel
 import com.example.raon.features.profile.ui.FavoritesScreen
 import com.example.raon.features.profile.ui.SalesHistoryScreen
 import com.example.raon.features.search.ui.SearchInputScreen
@@ -51,27 +53,12 @@ fun AppNavigation(
                 onBackClick = { navController.popBackStack() },
                 onCategoryClick = { category ->
                     if (category.isLeaf) {
-                        // 'addItem' 화면으로 결과를 전달합니다.
-//                        navController.previousBackStackEntry?.savedStateHandle?.apply {
-//                            set("selectedCategoryName", category.name)
-//                            set("selectedCategoryId", category.categoryId)
-
-                        // ❗️ [핵심 수정 1]
-                        // '이전' 화면이 아닌, 'addItem' 화면의 SavedStateHandle을 직접 찾아서 데이터를 전달합니다.
                         val addItemRoute = "addItem?itemId={itemId}"
                         navController.getBackStackEntry(addItemRoute)?.savedStateHandle?.apply {
                             set("selectedCategoryName", category.name)
                             set("selectedCategoryId", category.categoryId)
-
                         }
-
-                        // ❗️ [핵심 수정 2]
-                        // 'addItem' 화면이 나올 때까지 모든 카테고리 화면을 한 번에 닫습니다.
-                        // inclusive = false는 'addItem' 화면 자체는 닫지 않겠다는 의미입니다.
                         navController.popBackStack(addItemRoute, inclusive = false)
-
-
-//                        navController.popBackStack()
                     } else {
                         val currentPath = viewModel.pathString2
                         val newPath = if (currentPath.isNullOrEmpty()) {
@@ -88,13 +75,12 @@ fun AppNavigation(
         authGraph(navController)
         mainGraph(navController)
 
-        // ❗️ Item 등록 및 수정 뷰 (경로 수정)
+        // 👇 [핵심 수정 1] AddItemScreen의 onUploadSuccess 로직을 변경합니다.
         composable(
-            // 👇 경로를 "addItem?itemId={itemId}" 형태로 변경하여 itemId를 선택적 파라미터로 만듭니다.
             route = "addItem?itemId={itemId}",
             arguments = listOf(navArgument("itemId") {
                 type = NavType.IntType
-                defaultValue = -1 // itemId가 없으면 -1이 전달되어 '등록 모드'로 인식됩니다.
+                defaultValue = -1
             })
         ) { backStackEntry ->
             val addItemViewModel: AddItemViewModel = hiltViewModel()
@@ -122,7 +108,15 @@ fun AppNavigation(
 
             AddItemScreen(
                 modifier = modifier,
-                onUploadSuccess = { navController.popBackStack() },
+                onUploadSuccess = {
+                    // "성공했어요!" 신호를 받으면 NavHost가 직접 행동합니다.
+                    // 1. 이전 화면(ItemDetail)의 SavedStateHandle에 표식을 남깁니다.
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("item_updated", true)
+                    // 2. 현재 화면을 닫습니다.
+                    navController.popBackStack()
+                },
                 onNavigationToCategory = { navController.navigate("category") },
                 onClose = { navController.popBackStack() },
                 onClearCategoryResult = {
@@ -132,25 +126,39 @@ fun AppNavigation(
             )
         }
 
-        // ❗️ Item 상세보기 뷰 (수정 화면 호출 경로 수정)
+        // 👇 [핵심 수정 2] ItemDetailScreen에 새로고침 로직을 추가합니다.
         composable(
             route = "itemDetail/{itemId}",
             arguments = listOf(navArgument("itemId") { type = NavType.IntType })
         ) { backStackEntry ->
-            val itemId = backStackEntry.arguments?.getInt("itemId") ?: -1
 
+            // 1. ItemDetailViewModel을 hilt를 통해 가져옵니다.
+            val viewModel: ItemDetailViewModel = hiltViewModel()
+
+            // 2. 현재 화면의 SavedStateHandle에서 "item_updated" 표식을 확인합니다.
+            val shouldRefresh = backStackEntry.savedStateHandle.get<Boolean>("item_updated")
+
+            // 3. ItemDetailScreen에는 ViewModel과 함께 "새로고침 필요" 여부와
+            //    "표식 제거" 람다 함수를 전달합니다.
             ItemDetailScreen(
+                viewModel = viewModel,
+                shouldRefresh = shouldRefresh ?: false,
+                onRefreshDone = {
+                    backStackEntry.savedStateHandle.remove<Boolean>("item_updated")
+                },
                 onBackClick = { isFavorite ->
                     navController.previousBackStackEntry
                         ?.savedStateHandle
-                        ?.set("favorite_result", itemId to isFavorite)
+                        ?.set(
+                            "favorite_result",
+                            backStackEntry.arguments?.getInt("itemId") to isFavorite
+                        )
                     navController.popBackStack()
                 },
                 onNavigateToChatRoom = { chatRoomId ->
                     navController.navigate("chatRoom/$chatRoomId")
                 },
                 onNavigateToEdit = { editItemId ->
-                    // 수정 버튼 클릭 시, 바뀐 경로 형식에 맞게 호출합니다.
                     navController.navigate("addItem?itemId=$editItemId")
                 }
             )
@@ -158,18 +166,14 @@ fun AppNavigation(
 
         composable(
             route = "chatRoom/{chatRoomId}",
-
-            // arguments 리스트에 itemId와 opponentId 정의 추가
             arguments = listOf(
                 navArgument("chatRoomId") {
                     type = NavType.StringType
                 }
             )
-        ) { backStackEntry ->   // backStackEntry에서 인자를 꺼낼 수 있음 (ViewModel이 SavedStateHandle로 처리하므로 여기선 불필요)
-
+        ) {
             ChatRoomScreen(
                 onBackClick = { chatId ->
-                    // [가장 중요] getBackStackEntry("main_graph")를 사용하는지 확인!
                     try {
                         Log.d(
                             "ChatReadDebug",
@@ -189,7 +193,7 @@ fun AppNavigation(
 
         composable("searchInput") {
             SearchInputScreen(
-                onNavigateToSearchResult = { query -> // ❗️ 파라미터 이름을 onSearch로 가정 (SearchInputScreen 정의에 맞게 수정 필요)
+                onNavigateToSearchResult = { query ->
                     navController.navigate("searchResult/$query")
                 },
                 onCloses = {
@@ -235,11 +239,9 @@ fun AppNavigation(
             )
         }
 
-        //  프로필 수정 화면 경로 (람다 방식으로 수정)
         composable("profileEdit") {
             ProfileEditScreen(
-                // navController = navController // <-- ⛔️ 삭제
-                onClose = { navController.popBackStack() } // 👈 [추가]
+                onClose = { navController.popBackStack() }
             )
         }
     }

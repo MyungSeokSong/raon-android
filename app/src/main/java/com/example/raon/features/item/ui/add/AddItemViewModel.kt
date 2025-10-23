@@ -25,10 +25,16 @@ class AddItemViewModel @Inject constructor(
     // 수정할 아이템의 ID를 저장 (없으면 null -> 등록 모드)
     val itemId: Int? = savedStateHandle["itemId"]
 
+
     init {
         // 수정 모드인지 확인하고, 맞으면 기존 데이터를 불러옵니다.
         if (itemId != null && itemId != -1) { // -1은 NavArgument의 기본값이므로 제외
+            // 👇 [로그 추가 1] ViewModel이 생성될 때 어떤 모드인지 확인합니다.
+            Log.d("AddItemViewModel", "✅ ViewModel 초기화: 수정 모드입니다. Item ID: $itemId")
             loadItemForEditing(itemId)
+        } else {
+            // 👇 [로그 추가 1] 등록 모드일 때도 로그를 남깁니다.
+            Log.d("AddItemViewModel", " ViewModel 초기화: 새 상품 등록 모드입니다.")
         }
     }
 

@@ -181,26 +181,24 @@ class ItemRepositoryImpl @Inject constructor(
         newImageUris: List<Uri>,
         existingImageUrls: List<String>
     ): ApiResult<Unit> {
-        // 1. 현재 사용자의 locationId를 가져옵니다 (postNewItem과 동일한 로직). -> 수정본은 사용자의 위치를 따라야하기 때문
         val currentUser = userRepository.getUserProfile().first()
-        val userLocationId = currentUser?.locationId ?: 1 // 기본값 또는 에러 처리 필요
+        val userLocationId = currentUser?.locationId ?: 1
 
-        // TODO: 이미지 수정 로직 구현 (현재는 텍스트만 수정)
-//        val finalImageUrls = emptyList<String>() // 임시로 빈 리스트
-
-        // 1. 새로 추가된 이미지가 있다면 S3에 업로드하고 URL을 받습니다.
         val newImageUrls = if (newImageUris.isNotEmpty()) {
             uploadImagesAndGetS3Urls(newImageUris)
         } else {
             emptyList()
         }
 
-        // 2. 최종 이미지 목록 = (기존에 있던 이미지 URL) + (새로 업로드한 이미지 URL)
-        val finalImageUrls = existingImageUrls + newImageUrls
+        val cleanedExistingImageUrls = existingImageUrls.map { presignedUrl ->
+            presignedUrl.substringBefore("?")
+        }
+
+        val finalImageUrls = cleanedExistingImageUrls + newImageUrls
 
         val request = ItemUpdateRequest(
             categoryId = categoryId,
-            locationId = userLocationId, // 2. 가져온 locationId를 DTO에 포함시킵니다.
+            locationId = userLocationId,
             title = title,
             description = description,
             price = price,
@@ -211,8 +209,6 @@ class ItemRepositoryImpl @Inject constructor(
 
         Log.e("AddItemViewModel_Repository", "request : ${request}")
 
-
-        // 3. API를 호출합니다.
         return handleApi { itemApiService.updateItem(itemId, request) }
     }
 
@@ -220,17 +216,17 @@ class ItemRepositoryImpl @Inject constructor(
     // Aws Lambda 함수에 Presigned Url 요청 -> 이미지 업로드 -> 이미지 경로 가져오기
     private suspend fun uploadImagesAndGetS3Urls(imageUris: List<Uri>): List<String> =
         coroutineScope {
-            if (imageUris.isEmpty()) return@coroutineScope emptyList()  // 이미지 비었을 때
+            if (imageUris.isEmpty()) return@coroutineScope emptyList()
 
             val uploadJobs = imageUris.map { uri ->
                 async {
                     try {
-                        val fileName =  // 이미지 이름
+                        val fileName =
                             "item-image-${System.currentTimeMillis()}-${uri.lastPathSegment}"
 
                         Log.d("imageUpload", "fileName : ${fileName}")
 
-                        val presignedUrl =  // 이미지 저장 위치, 이름을 넣어서 PresignedUrl 값 가져오기
+                        val presignedUrl =
                             imageStorageRepository.getPresignedUrl("item", fileName).getOrNull()
 
                         Log.d("imageUpload", "presignedUrl : ${presignedUrl}")
@@ -245,29 +241,24 @@ class ItemRepositoryImpl @Inject constructor(
 
                             Log.d("imageUpload", "presignedUrl : ${presignedUrl}")
 
-                            // 이미지 업로드
                             val uploadResult = imageStorageRepository.uploadFile(it, requestBody)
 
                             Log.d("imageUpload", "이미지 업로드 결과 : ${uploadResult}")
 
 
                             if (uploadResult.isSuccess) {
-                                it.substringBefore("?")   // 서버 업로드 주소 url을 리스트에 담음
-//                                fileName    // 파일 이름
+                                it.substringBefore("?")
                             } else null
                         }
                     } catch (e: Exception) {
                         Log.d("imageUpload", "에러 : ${e.message}")
-
                         null
-
                     }
                 }
             }
             uploadJobs.awaitAll().filterNotNull()
         }
 
-    // --- 아래 변환 함수들이 추가 ---
     private fun ItemDto.toUiModel(presignedUrl: String?): ItemUiModel {
         return ItemUiModel(
             id = this.itemId,
@@ -279,27 +270,20 @@ class ItemRepositoryImpl @Inject constructor(
             likes = this.favoriteCount,
             comments = 0,
             viewCount = this.viewCount,
-
-            )
+        )
     }
 
-
-    /**
-     * 시간 문자열을 "N년 전"과 같은 상대 시간으로 변환하는 함수
-     */
     private fun formatTimeAgo(createdAt: String): String {
         return try {
             val createdTime = OffsetDateTime.parse(createdAt)
             val now = OffsetDateTime.now()
 
-            // 년, 월, 일, 시, 분 단위로 시간 차이를 계산합니다.
             val years = ChronoUnit.YEARS.between(createdTime, now)
             val months = ChronoUnit.MONTHS.between(createdTime, now)
             val days = ChronoUnit.DAYS.between(createdTime, now)
             val hours = ChronoUnit.HOURS.between(createdTime, now)
             val minutes = ChronoUnit.MINUTES.between(createdTime, now)
 
-            // [핵심 로직] 년 > 월 > 일 > 시간 > 분 순서로 확인합니다.
             when {
                 years > 0 -> "${years}년 전"
                 months > 0 -> "${months}달 전"
@@ -309,76 +293,52 @@ class ItemRepositoryImpl @Inject constructor(
                 else -> "방금 전"
             }
         } catch (e: Exception) {
-            // 날짜 형식이 잘못되었을 경우를 대비한 예외 처리
             "시간 정보 없음"
         }
     }
 
-
-    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ItemDtail 데이터 가져오기 부분이 추가 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-
-    /**
-     * ItemDetail을 가져올 때 Presigned URL을 함께 처리하도록 변경
-     */
     override suspend fun getItemDetail(itemId: Int): ItemDetailModel {
-        // 메인 서버에서 아이템 상세 정보(S3 Object Key 포함)를 가져옵니다.
         val responseDto = itemApiService.getItemDetail(itemId)
         val itemData = responseDto.data
 
-
-        // DataStore에서 현재 로그인한 사용자의 정보를 가져오기
-        // .first()를 호출해 Flow에서 현재 값을 꺼내기 (로그인 안 했으면 null)
         val loggedInUserId = userRepository.getUserProfile().first()?.userId
 
-        // '내 상품' 여부를 확인
-        // (로그인 상태이고 && 판매자 ID와 내 ID가 같으면 true)
         val isMine = (loggedInUserId != null) && (itemData.seller.userId == loggedInUserId)
 
-
-        // 각 이미지의 Object Key로 Presigned URL을 병렬로 요청합니다.
         val viewableImageUrls = coroutineScope {
             val urlJobs = itemData.imageUrls.map { key ->
                 async {
-                    // S3 전체 URL에서 순수 객체 키만 파싱 (기존 로직과 동일)
                     val objectKey =
                         key.removePrefix("https://raon-market-images-prod.s3.ap-northeast-2.amazonaws.com/")
                     imageStorageRepository.getPresignedImageUrl(objectKey).getOrNull()
                 }
             }
-            // 모든 Presigned URL 요청이 끝날 때까지 기다린 후, null이 아닌 것만 필터링
             urlJobs.awaitAll().filterNotNull()
         }
 
-        // 최종 UI 모델로 변환하여 반환합니다.
-        // 이때, 기존 S3 Object Key 대신 방금 받은 Presigned URL 목록을 사용합니다.
         return itemData.toItemDetailModel(presignedUrls = viewableImageUrls, isMine)
     }
 
-    /**
-     *  toItemDetailModel 함수가 Presigned URL을 받도록 변경
-     */
     private fun ItemDetailData.toItemDetailModel(
         presignedUrls: List<String>,
         isMine: Boolean
     ): ItemDetailModel {
-
-        // this.condition 값("New", "Used")을 한글로 변환
         val productStatus = when (this.condition) {
             "NEW" -> "새 상품"
             "USED" -> "중고 상품"
-            else -> "제품 상태" // "New", "Used" 외의 값이면 원본 값을 그대로 사용
+            else -> "제품 상태"
         }
 
         return ItemDetailModel(
             id = this.productId,
-            imageUrls = presignedUrls, // S3 Object Key 대신 Presigned URL 사용
+            imageUrls = presignedUrls,
             sellerNickname = this.seller.nickname,
-            sellerProfileUrl = this.seller.profileImage, // TODO: 판매자 프로필 이미지도 Presigned URL 처리가 필요하다면 추가
+            sellerProfileUrl = this.seller.profileImage,
             sellerAddress = this.location.address,
             title = this.title,
             category = this.categories.joinToString(" > ") { it.name },
             categoryId = this.categories.lastOrNull()?.categoryId,
-            createdAt = formatTimeAgo(this.createdAt),  // 날짜 받아서 과거형으로 변경
+            createdAt = formatTimeAgo(this.createdAt),
             description = this.description,
             favoriteCount = this.favoriteCount,
             viewCount = this.viewCount,
@@ -390,25 +350,14 @@ class ItemRepositoryImpl @Inject constructor(
         )
     }
 
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-
-    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 채팅 부분 ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-
-    // 채팅방 확인 함수
     override suspend fun getChatRoomForItem(itemId: Long): ApiResult<GetChatRoomResponseDto> {
         return handleApi { itemApiService.getChatRoomForItem(itemId) }
     }
 
-    // 채팅방 생성 함수
     override suspend fun createChatForItem(itemId: Long): ApiResult<CreateChatRoomResponseDto> {
         return handleApi { itemApiService.createChatForItem(itemId) }
     }
 
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-
-    // 조회수 증가 함수 구현
     override suspend fun increaseViewCount(itemId: Int) {
         try {
             val response = itemApiService.increaseViewCount(itemId)
@@ -421,47 +370,34 @@ class ItemRepositoryImpl @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-            // 네트워크 오류 등 예외 발생 시 로그 기록
             Log.e("ItemRepositoryImpl", "Error increasing view count for item $itemId", e)
         }
     }
 
-
-    // 찜(관심상품) 상태 변경 함수 구현
     override suspend fun updateFavoriteStatus(itemId: Int, isFavorite: Boolean) {
         try {
             val request = ChangeFavoriteStatusRequest(isFavorite = isFavorite)
             val response = itemApiService.updateFavoriteStatus(itemId, request)
             if (!response.isSuccessful) {
-                // 서버에서 2xx 이외의 응답을 주었을 때 로그 기록
                 Log.e(
                     "ItemRepositoryImpl",
                     "Failed to update favorite status for item $itemId. Code: ${response.code()}"
                 )
             }
         } catch (e: Exception) {
-            // 네트워크 오류 등 예외 발생 시 로그 기록
             Log.e("ItemRepositoryImpl", "Error updating favorite status for item $itemId", e)
-            throw e // 예외를 ViewModel로 다시 던져서 UI 롤백 처리
+            throw e
         }
     }
 
-
-    // [ Item 삭제 ]
     override suspend fun deleteProduct(productId: Int): ApiResult<Unit> {
         return handleApi { itemApiService.deleteProduct(productId) }
     }
 
-    // 찜 상태 조회 함수 구현
     override suspend fun getFavoriteStatus(productId: Int): Boolean {
-        // API 호출이 실패하면 Exception이 발생하여 ViewModel의 catch 블록에서 처리됩니다.
-        // 성공 시 'isFavorite' 값만 반환합니다.
         return itemApiService.getFavoriteStatus(productId).data.isFavorite
     }
-
-
 }
-
 
 // API 에러 응답 파싱용 DTO
 data class ErrorResponse(

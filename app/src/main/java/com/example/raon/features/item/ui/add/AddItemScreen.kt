@@ -67,6 +67,7 @@ import com.example.raon.ui.theme.BrandYellow
 fun AddItemScreen(
     modifier: Modifier = Modifier,
     onUploadSuccess: () -> Unit,
+//    onEditSuccess: () -> Unit,  // 수정
     onNavigationToCategory: () -> Unit,
     onClose: () -> Unit = {},
     viewModel: AddItemViewModel = hiltViewModel(),
@@ -128,7 +129,11 @@ fun AddItemScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .height(52.dp)
+                    .height(52.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandYellow,
+                    contentColor = BrandDarkText
+                )
             ) {
                 Text(
                     if (isEditing) "수정 완료" else "등록 완료",

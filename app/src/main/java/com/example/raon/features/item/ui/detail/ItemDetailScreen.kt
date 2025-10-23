@@ -1,6 +1,7 @@
 package com.example.raon.features.item.ui.detail
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -77,11 +78,24 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemDetailScreen(
+    viewModel: ItemDetailViewModel = hiltViewModel(),
+    shouldRefresh: Boolean,
+    onRefreshDone: () -> Unit,
     onBackClick: (isFavorite: Boolean) -> Unit,
     onNavigateToChatRoom: (Long) -> Unit,
-    onNavigateToEdit: (itemId: Int) -> Unit,
-    viewModel: ItemDetailViewModel = hiltViewModel()
+    onNavigateToEdit: (itemId: Int) -> Unit
 ) {
+
+
+    // 👇 3. shouldRefresh 값이 true일 때만 이 효과가 실행됩니다.
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) {
+            // ViewModel에 "새로고침 해줘!" 라고 이벤트를 보냅니다.
+            viewModel.onEvent(ItemDetailEvent.Refresh)
+            // "새로고침 명령 내렸으니 표식은 지워줘" 라고 NavHost에 알립니다.
+            onRefreshDone()
+        }
+    }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -98,6 +112,13 @@ fun ItemDetailScreen(
 
     val isMine = uiState.item?.isMine ?: false
 
+    //  BackHandler를 추가하여 시스템 뒤로가기 동작을 처리합니다.
+    BackHandler {
+        // TopAppBar의 뒤로가기 아이콘을 눌렀을 때와 동일한 로직을 실행합니다.
+        val currentFavoriteState = uiState.item?.isFavorite ?: false
+        onBackClick(currentFavoriteState)
+    }
+
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
@@ -113,6 +134,11 @@ fun ItemDetailScreen(
                     event.message,
                     Toast.LENGTH_SHORT
                 ).show()
+
+                // 👇 이 부분을 추가하여 Refresh 이벤트를 처리합니다.
+                // 이 블록에서는 Refresh 이벤트를 받을 일이 없으므로 아무것도 하지 않습니다.
+                is ItemDetailEvent.Refresh -> { /* Do nothing */
+                }
             }
         }
     }

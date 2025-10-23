@@ -26,8 +26,6 @@ data class ItemDetailUiState(
     val item: ItemDetailModel? = null,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-
-    // [ 판매자 프로필 Presigned URL 저장 변수 추가 ]
     val viewableSellerProfileImageUrl: String? = null
 )
 
@@ -37,13 +35,14 @@ sealed class ItemDetailEvent {
     data class ShowError(val message: String) : ItemDetailEvent()
     object ProductDeleted : ItemDetailEvent()
     object ShowProductNotFoundError : ItemDetailEvent()
+    object Refresh : ItemDetailEvent() // "새로고침" 이벤트 추가
 }
 
 // ------------------- ViewModel -------------------
 @HiltViewModel
 class ItemDetailViewModel @Inject constructor(
     private val itemRepository: ItemRepository,
-    private val imageStorageRepository: ImageStorageRepository, // [ ImageStorageRepository 주입 추가 ]
+    private val imageStorageRepository: ImageStorageRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -53,11 +52,12 @@ class ItemDetailViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<ItemDetailEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    // ViewModel이 생성될 때 한 번만 저장되는 멤버 변수
     private val itemId: Int? = savedStateHandle["itemId"]
 
     init {
         if (itemId != null) {
-            loadItemDetails(itemId)
+            reloadData() // ViewModel 생성 시 데이터를 로드합니다.
             increaseViewCount(itemId)
         } else {
             _uiState.update {
@@ -66,19 +66,49 @@ class ItemDetailViewModel @Inject constructor(
         }
     }
 
-    private fun loadItemDetails(itemId: Int) {
+    /**
+     * UI 레이어로부터 이벤트를 받는 유일한 public 함수입니다.
+     */
+    fun onEvent(event: ItemDetailEvent) {
+        when (event) {
+            ItemDetailEvent.Refresh -> reloadData()
+
+            // 👇 빠진 4가지 경우를 모두 추가해줍니다.
+            // 이 이벤트들은 ViewModel -> UI 방향이므로 onEvent에서는 할 일이 없습니다.
+            is ItemDetailEvent.NavigateToChatRoom -> { /* Do nothing */
+            }
+
+            is ItemDetailEvent.ProductDeleted -> { /* Do nothing */
+            }
+
+            is ItemDetailEvent.ShowError -> { /* Do nothing */
+            }
+
+            is ItemDetailEvent.ShowProductNotFoundError -> { /* Do nothing */
+            }
+        }
+    }
+
+    /**
+     * 데이터를 다시 로드하는 private 함수. ViewModel 내부에서만 호출됩니다.
+     * 파라미터가 필요 없는 이유는 클래스의 멤버 변수인 `itemId`를 사용하기 때문입니다.
+     */
+    private fun reloadData() {
+        val currentItemId = itemId ?: return // 멤버 변수 itemId를 사용합니다.
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                // 1. 상품 상세 정보와 찜 상태를 '동시에' 비동기로 요청합니다.
-                val detailDeferred = async { itemRepository.getItemDetail(itemId) }
-                val favoriteStatusDeferred = async { itemRepository.getFavoriteStatus(itemId) }
+                // 상품 상세 정보와 찜 상태를 '동시에' 비동기로 요청합니다.
+                val detailDeferred = async { itemRepository.getItemDetail(currentItemId) }
+                val favoriteStatusDeferred =
+                    async { itemRepository.getFavoriteStatus(currentItemId) }
 
-                // 2. 두 요청이 모두 끝날 때까지 기다립니다.
+                // 두 요청이 모두 끝날 때까지 기다립니다.
                 val itemDetails = detailDeferred.await()
                 val isFavorite = favoriteStatusDeferred.await()
 
-                // [6. 판매자 프로필 Presigned URL 요청 로직 추가]
+                // 판매자 프로필 Presigned URL 요청 로직
                 var sellerPresignedUrl: String? = null
                 val sellerS3Key =
                     itemDetails.sellerProfileUrl?.removePrefix(AppConstants.S3_BASE_URL)
@@ -95,20 +125,19 @@ class ItemDetailViewModel @Inject constructor(
                         Log.e("ItemDetailViewModel", "❌ Failed to load seller Presigned URL", e)
                     }
                 }
-                //  [6. 완료]
 
-                // 3. 두 결과를 합쳐서 최종 UI 모델을 만듭니다.
+                // 두 결과를 합쳐서 최종 UI 모델을 만듭니다.
                 val finalItemDetails = itemDetails.copy(
                     isFavorite = isFavorite, // 찜 상태 API 결과를 모델에 반영
                     viewCount = itemDetails.viewCount + 1 // 조회수 1 증가시켜서 보여주기
                 )
 
-                // 4. 합쳐진 데이터로 UI 상태를 업데이트합니다.
+                // 합쳐진 데이터로 UI 상태를 업데이트합니다.
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         item = finalItemDetails,
-                        viewableSellerProfileImageUrl = sellerPresignedUrl  // 👈 Presigned URL 저장)
+                        viewableSellerProfileImageUrl = sellerPresignedUrl
                     )
                 }
 
@@ -146,9 +175,7 @@ class ItemDetailViewModel @Inject constructor(
 
                 is ApiResult.Exception -> {
                     _eventFlow.emit(
-                        ItemDetailEvent.ShowError(
-                            result.e.message ?: "알 수 없는 오류가 발생했습니다."
-                        )
+                        ItemDetailEvent.ShowError(result.e.message ?: "알 수 없는 오류가 발생했습니다.")
                     )
                 }
             }
