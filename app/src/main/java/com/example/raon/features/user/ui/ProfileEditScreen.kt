@@ -53,6 +53,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.raon.R
 import com.example.raon.core.common.AppConstants
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,7 +102,11 @@ fun ProfileEditScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BrandYellow,
+                        contentColor = BrandDarkText
+                    )
                 ) {
                     Text("앨범에서 선택")
                 }
@@ -236,7 +242,8 @@ fun ProfileImagePicker(
                 model = R.drawable.user_icon,
                 contentDescription = "프로필 사진",
                 modifier = Modifier
-                    .fillMaxSize() // 120.dp 채우기
+                    .size(100.dp)
+//                    .fillMaxSize() // 120.dp 채우기
                     .clip(CircleShape) // 이미지를 원형으로 자르기
                     .border(2.dp, Color.LightGray, CircleShape), // 테두리 추가
                 contentScale = ContentScale.Crop

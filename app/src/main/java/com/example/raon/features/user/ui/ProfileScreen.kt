@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,7 +169,9 @@ fun ProfileHeader(
             modifier = Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .border(2.dp, BrandYellow, CircleShape)
+                .border(2.dp, BrandYellow, CircleShape),
+            contentScale = ContentScale.Crop
+
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
