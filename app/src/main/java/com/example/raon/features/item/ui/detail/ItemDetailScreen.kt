@@ -22,6 +22,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
@@ -61,6 +62,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -76,20 +79,22 @@ import kotlinx.coroutines.launch
 fun ItemDetailScreen(
     onBackClick: (isFavorite: Boolean) -> Unit,
     onNavigateToChatRoom: (Long) -> Unit,
-    // ❗️ onNavigateToEdit이 상품 ID를 전달하도록 파라미터 타입을 변경합니다.
     onNavigateToEdit: (itemId: Int) -> Unit,
     viewModel: ItemDetailViewModel = hiltViewModel()
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-//    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showNotFoundErrorDialog by remember { mutableStateOf(false) }
+
+    var showFullScreenImage by remember { mutableStateOf(false) }
+    var selectedImageIndex by remember { mutableStateOf<Int?>(null) }
+
 
     val isMine = uiState.item?.isMine ?: false
 
@@ -110,6 +115,14 @@ fun ItemDetailScreen(
                 ).show()
             }
         }
+    }
+
+    if (showFullScreenImage && selectedImageIndex != null && uiState.item != null) {
+        FullScreenImageViewer(
+            imageUrls = uiState.item!!.imageUrls,
+            initialPage = selectedImageIndex!!,
+            onDismiss = { showFullScreenImage = false }
+        )
     }
 
     if (showNotFoundErrorDialog) {
@@ -141,7 +154,6 @@ fun ItemDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            // ❗️ 현재 상품 ID를 가져와 onNavigateToEdit 콜백을 호출합니다.
                             uiState.item?.id?.let { itemId ->
                                 onNavigateToEdit(itemId)
                             }
@@ -254,22 +266,21 @@ fun ItemDetailScreen(
                 uiState.item != null -> {
                     val item = uiState.item!!
                     LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        item { ProductImagePager(imageUrls = item.imageUrls) }
                         item {
-//                            SellerProfile(
-//                                nickname = item.sellerNickname,
-//                                profileUrl = item.sellerProfileUrl,
-//                                address = item.sellerAddress
-//                            )
-
-                            // 👇👇👇 [2. Pass viewableSellerProfileImageUrl to SellerProfile] 👇👇👇
+                            ProductImagePager(
+                                imageUrls = item.imageUrls,
+                                onImageClick = { index ->
+                                    selectedImageIndex = index
+                                    showFullScreenImage = true
+                                }
+                            )
+                        }
+                        item {
                             SellerProfile(
                                 nickname = item.sellerNickname,
-                                // Use the presigned URL from uiState
                                 profileUrl = uiState.viewableSellerProfileImageUrl,
                                 address = item.sellerAddress
                             )
-                            // 👆👆👆 [2. 완료] 👆👆👆
                         }
                         item { Divider(color = Color.LightGray.copy(alpha = 0.5f)) }
                         item {
@@ -284,6 +295,75 @@ fun ItemDetailScreen(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FullScreenImageViewer(
+    imageUrls: List<String>,
+    initialPage: Int,
+    onDismiss: () -> Unit
+) {
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { imageUrls.size }
+    )
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { pageIndex ->
+                AsyncImage(
+                    model = imageUrls[pageIndex],
+                    contentDescription = "전체 화면 이미지 ${pageIndex + 1}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "닫기",
+                    tint = Color.White
+                )
+            }
+
+            Row(
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(pagerState.pageCount) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) Color.White else Color.Gray
+                    Box(
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .size(8.dp)
+                    )
                 }
             }
         }
@@ -318,7 +398,7 @@ private fun ProductDetailTopAppBar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ProductImagePager(imageUrls: List<String>) {
+private fun ProductImagePager(imageUrls: List<String>, onImageClick: (Int) -> Unit) {
     if (imageUrls.isEmpty()) {
         Box(
             modifier = Modifier
@@ -340,7 +420,9 @@ private fun ProductImagePager(imageUrls: List<String>) {
             AsyncImage(
                 model = imageUrls[pageIndex],
                 contentDescription = "상품 이미지 ${pageIndex + 1}",
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable { onImageClick(pageIndex) },
                 contentScale = ContentScale.Crop
             )
         }
@@ -369,17 +451,12 @@ private fun SellerProfile(nickname: String, profileUrl: String?, address: String
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        //  [수정된 부분] 모델 결정 로직 변경
         val imageModel: Any =
             if (profileUrl.isNullOrEmpty() || profileUrl == AppConstants.DEFAULT_PROFILE_URL) {
-                // profileUrl이 null이거나 비어있거나, 기본 URL 상수와 같으면
-                R.drawable.user_icon // 기본 드로어블 사용
+                R.drawable.user_icon
             } else {
-                // 그 외의 경우 (유효한 Presigned URL)
-                profileUrl // Presigned URL 사용
+                profileUrl
             }
-        //  [수정 완료]
-
 
         AsyncImage(
             model = imageModel,
