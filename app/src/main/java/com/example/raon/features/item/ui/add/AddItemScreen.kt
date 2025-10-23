@@ -59,6 +59,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.raon.R
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -411,8 +413,10 @@ private fun ProductConditionSelector(
                 shape = RoundedCornerShape(12.dp),
                 colors = if (isSelected) {
                     ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                        containerColor = BrandYellow,
+
+                        contentColor = BrandDarkText
+
                     )
                 } else {
                     ButtonDefaults.buttonColors(

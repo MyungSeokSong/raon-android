@@ -38,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.raon.R
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 import kotlinx.coroutines.delay
 
 const val KakaoChatLogo = android.R.drawable.sym_action_chat
@@ -71,7 +73,7 @@ fun AuthScreen(
                     .fillMaxWidth()
                     .weight(0.5f)
                     .clip(RoundedCornerShape(bottomStart = 50.dp, bottomEnd = 50.dp))
-                    .background(Color(0xFFFDCC31)),
+                    .background(BrandYellow),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -98,7 +100,7 @@ fun AuthScreen(
                             text = "Raon",
                             fontSize = 48.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF333333),
+                            color = BrandDarkText,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }

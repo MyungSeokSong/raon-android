@@ -37,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,14 +67,14 @@ fun SettingsScreen(
                     onClick = {
 
                         viewModel.logout()  // 로그아웃
-                        
+
                         onLogout()  // 로그아웃시 화면 이동 함수
                         showLogoutDialog = false // 로직 실행 후 팝업 닫기
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF97316), // 주황색 버튼
-                        contentColor = Color.White
+                        containerColor = BrandYellow, // 주황색 버튼
+                        contentColor = BrandDarkText
                     )
                 ) {
                     Text("로그아웃")

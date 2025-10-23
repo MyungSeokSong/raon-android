@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.example.raon.features.chat.data.remote.dto.ChatRoomInfo
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 
@@ -177,11 +179,11 @@ private fun ChatListItem(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = chatRoom.unreadCount.toString(),
-                color = Color.White,
+                color = BrandDarkText,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .background(Color.Red, CircleShape)
+                    .background(BrandYellow, CircleShape)
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             )
         }

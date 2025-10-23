@@ -58,9 +58,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.example.raon.features.chat.domain.model.ChatMessage
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
+import com.example.raon.ui.theme.ChatBackgroundColor
+import com.example.raon.ui.theme.DarkGrayText
+import com.example.raon.ui.theme.OtherBubbleColor
+import com.example.raon.ui.theme.OtherTextColor
 
-val BrandYellow = Color(0xFFFDCC31)
-val DarkGrayText = Color(0xFF3C3C3C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,16 +144,8 @@ fun ChatRoomScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF2F2F7))
+                .background(ChatBackgroundColor)
         ) {
-//            Button(
-//                onClick = { viewModel.detectFraud() },
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(horizontal = 16.dp, vertical = 8.dp)
-//            ) {
-//                Text("⚠️ 사기 탐지 API 테스트 버튼")
-//            }
 
             LazyColumn(
                 state = listState,
@@ -266,8 +262,8 @@ fun MessageBubble(message: ChatMessage) {
             Spacer(modifier = Modifier.width(8.dp))
         }
 
-        val bubbleColor = if (message.isFromMe) Color(0xFFF9A825) else Color.White
-        val textColor = if (message.isFromMe) Color.White else DarkGrayText
+        val bubbleColor = if (message.isFromMe) BrandYellow else OtherBubbleColor
+        val textColor = if (message.isFromMe) BrandDarkText else OtherTextColor
 
         Surface(
             shape = RoundedCornerShape(18.dp),

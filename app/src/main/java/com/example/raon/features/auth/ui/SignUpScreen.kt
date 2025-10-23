@@ -60,6 +60,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.raon.R
 import com.example.raon.features.auth.ui.state.SignUpResult
 import com.example.raon.features.auth.ui.viewmodel.SignUpViewModel
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -186,8 +188,8 @@ fun SignUpScreen(
                             .height(56.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFDCC31),
-                            contentColor = Color(0xFF3C3C3C)
+                            containerColor = BrandYellow,
+                            contentColor = BrandDarkText
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {

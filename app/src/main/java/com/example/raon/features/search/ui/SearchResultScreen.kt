@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +61,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.raon.features.search.ui.model.SearchItemUiModel
+import com.example.raon.ui.theme.BrandYellow
 import kotlinx.coroutines.launch
 
 
@@ -202,12 +204,12 @@ fun FilterControls(
 ) {
     var isChecked by remember { mutableStateOf(true) }
 
-    // ✨ 변경점: Row를 Column으로 변경하여 요소들을 세로로 쌓습니다.
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp) // 행 사이의 간격 추가
+        // ✅ 1. 간격 조절: 10.dp에서 16.dp로 늘려 상단 바와의 간격을 확보합니다.
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 상단 행: 필터 드롭다운 버튼들
         Row(
@@ -227,18 +229,19 @@ fun FilterControls(
             Switch(
                 checked = isChecked,
                 onCheckedChange = { isChecked = it },
-                modifier = Modifier
-                    .width(36.dp)
-                    .height(20.dp),
+                // ✅ 2. 크기 조절: width/height 고정 대신 scale을 사용해 비율에 맞게 축소합니다.
+                modifier = Modifier.scale(0.75f), // 75% 크기로 줄임
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    checkedTrackColor = BrandYellow,
                     uncheckedThumbColor = Color.LightGray,
                     uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
                 ),
                 thumbContent = null
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            // ✅ 3. (선택) scale로 스위치를 줄이면 스위치 오른쪽의 기본 여백도 줄어듭니다.
+            //    Spacer를 8.dp에서 4.dp 정도로 살짝 줄여주면 텍스트와 더 자연스럽게 붙습니다.
+            Spacer(modifier = Modifier.width(4.dp)) // 8.dp -> 4.dp
             Text("판매중만 보기", fontSize = 14.sp)
         }
     }

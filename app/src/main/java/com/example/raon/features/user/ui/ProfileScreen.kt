@@ -51,12 +51,9 @@ import coil3.compose.AsyncImage
 import com.example.raon.R
 import com.example.raon.core.common.AppConstants
 import com.example.raon.features.user.domain.model.User
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 
-//import com.example.raon.features.user.ui.profile.ProfileViewModel
-
-// 앱의 시그니처 색상을 상수로 정의
-private val BrandYellow = Color(0xFFFDCC31)
-private val DarkGrayText = Color(0xFF3C3C3C)
 
 /**
  * ProfileScreen: 화면의 콘텐츠만 책임집니다.
@@ -197,7 +194,7 @@ fun ProfileHeader(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = BrandYellow,
-                contentColor = DarkGrayText
+                contentColor = BrandDarkText
             ),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
         ) {
@@ -270,7 +267,7 @@ fun MenuRow(icon: ImageVector, title: String, onClick: () -> Unit) {
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = DarkGrayText
+            tint = BrandDarkText
         )
         Spacer(modifier = Modifier.width(16.dp))
         Text(

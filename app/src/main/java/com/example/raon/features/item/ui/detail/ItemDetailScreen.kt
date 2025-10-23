@@ -66,11 +66,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.example.raon.R
 import com.example.raon.core.common.AppConstants
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 import kotlinx.coroutines.launch
 
-// 채팅하기 버튼 색
-private val BrandYellow = Color(0xFFFDCC31)
-private val DarkGrayText = Color(0xFF3C3C3C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -208,8 +207,8 @@ fun ItemDetailScreen(
                         viewModel.deleteProduct()
                         showDeleteDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
-                ) { Text("삭제") }
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandYellow)
+                ) { Text("삭제", color = BrandDarkText) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) { Text("취소") }
@@ -454,7 +453,7 @@ private fun ProductBottomBar(
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BrandYellow,
-                        contentColor = DarkGrayText
+                        contentColor = BrandDarkText
                     )
                 ) { Text("채팅하기") }
             }

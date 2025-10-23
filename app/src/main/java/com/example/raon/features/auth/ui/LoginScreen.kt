@@ -55,6 +55,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.raon.R
 import com.example.raon.features.auth.ui.viewmodel.LoginResult
 import com.example.raon.features.auth.ui.viewmodel.LoginViewModel
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -213,8 +215,8 @@ fun LoginScreen(
                         .height(56.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFDCC31),
-                        contentColor = Color(0xFF3C3C3C)
+                        containerColor = BrandYellow,
+                        contentColor = BrandDarkText
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
@@ -269,7 +271,7 @@ private fun LoginTextField(
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
-                tint = Color(0xFFFDCC31)
+                tint = BrandYellow
             )
         },
         modifier = Modifier.fillMaxWidth(),
@@ -277,9 +279,9 @@ private fun LoginTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFFFDCC31),
+            focusedBorderColor = BrandYellow,
             unfocusedBorderColor = Color(0xFFCCCCCC),
-            focusedLabelColor = Color(0xFFFDCC31),
+            focusedLabelColor = BrandYellow,
             unfocusedLabelColor = Color(0xFF9E9E9E)
         )
     )
