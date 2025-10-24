@@ -225,6 +225,11 @@ class ChatRoomViewModel @Inject constructor(
                     }
                     .collect { jsonString -> // 메시지 수신
                         try {
+                            Log.d(
+                                "ChatViewModel",
+                                "Received STOMP message: 데이터 담기전"
+                            )
+
                             val chatMessageDto =
                                 gson.fromJson(jsonString, ChatMessageDto::class.java)
                             val chatMessage = chatMessageDto.toDomainModel(myUserId.value)
@@ -644,23 +649,3 @@ private fun formatTimestampForDisplay(dateTimeString: String): String {
         else -> "방금 전" // 1분 미만은 "방금 전"
     }
 }
-
-// 👇 ChatMessage 데이터 클래스에 originalTimestamp 필드가 추가되어야 합니다. 👇
-// (ChatMessage.kt 파일 등 별도 파일에 있을 수 있습니다)
-/*
-package com.example.raon.features.chat.domain.model
-
-data class ChatMessage(
-    val messageId: Long,
-    val chatRoomId: Long,
-    val senderId: Int,
-    val senderNickname: String,
-    val senderProfileUrl: String?, // S3 키 (Presigned URL 필요 시 별도 처리)
-    val content: String,
-    val imageUrl: String?, // 이미지 메시지 URL (Presigned URL 필요 시 별도 처리)
-    val timestamp: String, // 화면 표시용 시간 (예: "5분 전")
-    val isFromMe: Boolean,
-    val originalTimestamp: String // 정렬 및 API 전송용 원본 시간 (예: "2025-10-21 17:07:19")
-)
-*/
-// 👆 --- 👆

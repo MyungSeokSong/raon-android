@@ -1,11 +1,13 @@
 package com.example.raon.features.chat.ui
 
-// import androidx.compose.material.icons.filled.ImageSearch // [삭제]
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -26,26 +28,35 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SentimentSatisfied
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +75,15 @@ import com.example.raon.ui.theme.ChatBackgroundColor
 import com.example.raon.ui.theme.DarkGrayText
 import com.example.raon.ui.theme.OtherBubbleColor
 import com.example.raon.ui.theme.OtherTextColor
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+// [추가] ItemDetailScreen에서 가져온 데이터 클래스
+data class ImageAnalysisResult(
+    val imageUrl: String,
+    val result: String,
+    val similarImages: List<String> = emptyList()
+)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,14 +92,42 @@ fun ChatRoomScreen(
     onBackClick: (chatId: Long) -> Unit,
     viewModel: ChatRoomViewModel = hiltViewModel()
 ) {
-    // ViewModel의 단일 상태(uiState)만 구독합니다.
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope() // 코루틴 스코프 추가
+
+    // [추가] AI 이미지 분석을 위한 상태 변수들
+    var isAnalyzing by remember { mutableStateOf(false) }
+    var analysisResults by remember { mutableStateOf<List<ImageAnalysisResult>?>(null) }
+    val analysisSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
 
     LaunchedEffect(uiState.messages) {
         if (uiState.messages.isNotEmpty()) {
             listState.animateScrollToItem(0)
+        }
+    }
+
+    // [추가] AI 분석 결과 BottomSheet UI
+    if (analysisResults != null) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                scope.launch {
+                    analysisSheetState.hide()
+                    analysisResults = null // 시트가 닫히면 결과 데이터를 null로 만들어 숨김
+                }
+            },
+            sheetState = analysisSheetState
+        ) {
+            AnalysisResultBottomSheetContent(
+                results = analysisResults!!,
+                onClose = {
+                    scope.launch {
+                        analysisSheetState.hide()
+                        analysisResults = null
+                    }
+                }
+            )
         }
     }
 
@@ -96,7 +144,6 @@ fun ChatRoomScreen(
                     navigationIcon = {
                         IconButton(onClick = {
                             val idToSend = viewModel.chatRoomId
-                            // [로그 추가] 뒤로가기 버튼 누르는 순간의 ID 확인
                             Log.d(
                                 "ChatReadDebug",
                                 "1. Back button clicked in ChatRoomScreen. Sending chatId: $idToSend"
@@ -112,93 +159,222 @@ fun ChatRoomScreen(
                         navigationIconContentColor = DarkGrayText
                     )
                 )
-                // [수정] ProductInfoBar에 isBuyer 플래그와 onAIImageAnalyzeClick 람다 전달
+                // [수정] AI 분석 버튼 클릭 시, 시뮬레이션 로직 실행
                 ProductInfoBar(
-                    productImageUrl = uiState.productInfo?.viewableThumbnailUrl
-                        ?: "", // Presigned URL
+                    productImageUrl = uiState.productInfo?.viewableThumbnailUrl ?: "",
                     productStatus = uiState.productInfo?.status ?: "",
                     productName = uiState.productInfo?.productName ?: "",
-                    productPrice = uiState.productInfo?.price?.let { "%,d원".format(it) }
-                        ?: "",
-                    isBuyer = uiState.isCurrentUserBuyer, // ViewModel의 상태 전달
+                    productPrice = uiState.productInfo?.price?.let { "%,d원".format(it) } ?: "",
+                    isBuyer = uiState.isCurrentUserBuyer,
                     onAIImageAnalyzeClick = {
-                        viewModel.analyzeImage() // ViewModel의 새 함수 호출
+                        // AI 분석 시작 (시뮬레이션)
+                        scope.launch {
+                            isAnalyzing = true
+                            delay(2500) // 2.5초 동안 로딩하는 척
+                            // 가짜 분석 결과 데이터 생성
+                            analysisResults = listOf(
+                                ImageAnalysisResult(
+                                    imageUrl = uiState.productInfo?.viewableThumbnailUrl ?: "",
+                                    result = "WARNING",
+                                    similarImages = listOf(
+                                        "https://via.placeholder.com/150/FF0000/FFFFFF?Text=Similar+1",
+                                        "https://via.placeholder.com/150/0000FF/FFFFFF?Text=Similar+2",
+                                        "https://via.placeholder.com/150/00FF00/FFFFFF?Text=Similar+3"
+                                    )
+                                )
+                            )
+                            analysisSheetState.show() // BottomSheet 표시
+                            isAnalyzing = false
+                        }
                     }
                 )
-
-
-
                 Divider(color = Color.LightGray.copy(alpha = 0.3f), thickness = 1.dp)
             }
         },
         bottomBar = {
-            // [수정] MessageInput에도 isBuyer 상태를 전달합니다.
             MessageInput(
                 onSendClick = { text -> viewModel.sendMessage(text) },
                 onAIDetectFraud = { viewModel.detectFraud() },
-                isBuyer = uiState.isCurrentUserBuyer // [추가]
+                isBuyer = uiState.isCurrentUserBuyer
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(ChatBackgroundColor)
-        ) {
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f),
-                reverseLayout = true,
-                verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        Box(modifier = Modifier.fillMaxSize()) { // Box로 감싸서 로딩 오버레이를 띄울 수 있도록 함
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .background(ChatBackgroundColor)
             ) {
-                items(uiState.messages.reversed()) { message ->
-                    MessageBubble(message = message)
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.weight(1f),
+                    reverseLayout = true,
+                    verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.Bottom),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    items(uiState.messages.reversed()) { message ->
+                        MessageBubble(message = message)
+                    }
+                }
+                AnimatedVisibility(visible = uiState.fraudWarningMessage != null) {
+                    FraudWarningBanner(
+                        message = uiState.fraudWarningMessage.orEmpty(),
+                        onClose = { viewModel.closeWarningBanner() }
+                    )
                 }
             }
 
-            // 경고 배너 표시 여부와 메시지를 모두 uiState에서 가져옵니다.
-            AnimatedVisibility(visible = uiState.fraudWarningMessage != null) {
-                FraudWarningBanner(
-                    message = uiState.fraudWarningMessage.orEmpty(),
-                    onClose = { viewModel.closeWarningBanner() }
-                )
+            // [추가] AI 이미지 분석 중 로딩 오버레이
+            AnimatedVisibility(
+                visible = isAnalyzing,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.matchParentSize() // 전체 화면을 덮도록 설정
+            ) {
+                Box(
+                    modifier = Modifier.background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = Color.White)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "AI가 이미지를 분석하고 있습니다...",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
 }
 
-// [수정] ProductInfoBar (텍스트 버튼 디자인으로 변경 및 우측 정렬, UI/크기 개선)
+// [추가] ItemDetailScreen에서 가져온 분석 결과 BottomSheet UI
+@Composable
+private fun AnalysisResultBottomSheetContent(
+    results: List<ImageAnalysisResult>,
+    onClose: () -> Unit
+) {
+    Column(modifier = Modifier.padding(bottom = 32.dp)) {
+        Text(
+            "AI 이미지 분석 결과",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+        LazyColumn(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(results) { result ->
+                val resultColor = when (result.result) {
+                    "SAFE" -> Color(0xFF2E7D32)
+                    "WARNING" -> Color(0xFFEF6C00)
+                    else -> Color(0xFFC62828)
+                }
+                val resultIcon = when (result.result) {
+                    "SAFE" -> Icons.Default.CheckCircle
+                    else -> Icons.Default.Warning
+                }
+                val resultText = when (result.result) {
+                    "SAFE" -> "안전"
+                    "WARNING" -> "도용 의심"
+                    else -> "위험"
+                }
+                Row(verticalAlignment = Alignment.Top) {
+                    AsyncImage(
+                        model = result.imageUrl,
+                        contentDescription = "분석 이미지",
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = resultIcon,
+                                contentDescription = resultText,
+                                tint = resultColor
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(resultText, color = resultColor, fontWeight = FontWeight.Bold)
+                        }
+                        if (result.similarImages.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+//                            Text("인터넷에서 발견된 유사 이미지:", fontSize = 12.sp, color = Color.Gray)
+                            LazyColumn( // LazyRow 대신 LazyColumn으로 변경하여 유사 이미지가 많을 경우를 대비
+                                modifier = Modifier.height(70.dp), // 높이 제한
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                items(result.similarImages) { similarUrl ->
+                                    AsyncImage(
+                                        model = similarUrl,
+                                        contentDescription = "유사 이미지",
+                                        modifier = Modifier
+                                            .size(60.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .padding(top = 4.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(top = 16.dp))
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onClose,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.LightGray.copy(alpha = 0.5f),
+                contentColor = Color.Black
+            )
+        ) { Text("확인", fontWeight = FontWeight.Bold) }
+    }
+}
+
+
+// --- 아래는 기존 코드 (수정 없음) ---
+
 @Composable
 fun ProductInfoBar(
     productImageUrl: String,
     productStatus: String,
     productName: String,
     productPrice: String,
-    isBuyer: Boolean, // 구매자인지 여부
-    onAIImageAnalyzeClick: () -> Unit // 버튼 클릭 람다
+    isBuyer: Boolean,
+    onAIImageAnalyzeClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically // 수직 중앙 정렬 유지
+        verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = productImageUrl, // 전달받은 Presigned URL 사용
+            model = productImageUrl,
             contentDescription = "Product Image",
             modifier = Modifier
-                .size(48.dp) // 이미지 크기
-                .clip(RoundedCornerShape(8.dp)) // 모서리 둥글게
-                .background(Color.LightGray), // Placeholder 배경색
-            contentScale = ContentScale.Crop // 비율 유지하며 채우기
+                .size(48.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(Color.LightGray),
+            contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(
-            modifier = Modifier.weight(1f), // 텍스트 영역이 남은 공간을 모두 차지 (버튼을 밀어냄)
+            modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
             Text(
@@ -216,33 +392,32 @@ fun ProductInfoBar(
             )
         }
 
-        // [수정] AI 사진 분석하기 버튼 UI 및 크기 개선
         if (isBuyer) {
-            Spacer(modifier = Modifier.width(12.dp)) // 텍스트와 버튼 사이 간격
+            Spacer(modifier = Modifier.width(12.dp))
             Row(
                 modifier = Modifier
                     .background(
-                        color = Color(0xFFE0E0E0), // 살짝 더 진한 회색 배경
-                        shape = RoundedCornerShape(20.dp) // 모서리를 더 둥글게 (알약 형태)
+                        color = Color(0xFFE0E0E0),
+                        shape = RoundedCornerShape(20.dp)
                     )
-                    .clip(RoundedCornerShape(20.dp)) // clickable 영역을 background와 일치
+                    .clip(RoundedCornerShape(20.dp))
                     .clickable { onAIImageAnalyzeClick() }
-                    .padding(horizontal = 12.dp, vertical = 8.dp), // [수정] 내부 패딩 증가
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.AutoAwesome, // AI 아이콘 유지
+                    imageVector = Icons.Default.AutoAwesome,
                     contentDescription = "AI 분석",
-                    tint = DarkGrayText, // 아이콘 색상을 DarkGrayText로
-                    modifier = Modifier.size(18.dp) // [수정] 아이콘 크기 증가
+                    tint = DarkGrayText,
+                    modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(5.dp)) // [수정] 아이콘과 텍스트 사이 간격
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = "AI 사진 분석하기",
-                    fontSize = 13.sp, // [수정] 폰트 크기 증가
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = DarkGrayText // 텍스트 색상
+                    color = DarkGrayText
                 )
             }
         }
@@ -290,13 +465,11 @@ fun MessageBubble(message: ChatMessage) {
     }
 }
 
-
-// [수정] MessageInput 함수 시그니처에 isBuyer 파라미터 추가
 @Composable
 fun MessageInput(
     onSendClick: (String) -> Unit,
     onAIDetectFraud: () -> Unit,
-    isBuyer: Boolean // [추가]
+    isBuyer: Boolean
 ) {
     var text by remember { mutableStateOf("") }
 
@@ -327,15 +500,14 @@ fun MessageInput(
                 maxLines = 4
             )
 
-            // [수정] 구매자인 경우(isBuyer == true)에만 AI (텍스트) 분석 버튼 표시
             if (isBuyer) {
                 IconButton(onClick = {
                     onAIDetectFraud()
                 }) {
                     Icon(
-                        imageVector = Icons.Default.AutoAwesome, // AI 아이콘
+                        imageVector = Icons.Default.AutoAwesome,
                         contentDescription = "AI 분석",
-                        tint = Color.Gray // 다른 아이콘과 톤을 맞춤
+                        tint = Color.Gray
                     )
                 }
             }

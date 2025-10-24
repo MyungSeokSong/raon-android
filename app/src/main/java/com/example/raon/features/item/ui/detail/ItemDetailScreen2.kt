@@ -110,7 +110,6 @@
 //    var showDeleteDialog by remember { mutableStateOf(false) }
 //    var showNotFoundErrorDialog by remember { mutableStateOf(false) }
 //
-//    // <<< 추가됨: 전체 화면으로 볼 이미지 URL 상태
 //    var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
 //
 //    val isMine = uiState.item?.isMine ?: false
@@ -130,11 +129,14 @@
 //                    event.message,
 //                    Toast.LENGTH_SHORT
 //                ).show()
+//                // 👇 [에러 수정] 빠진 Refresh 경우를 추가합니다.
+//                // 이 블록에서는 Refresh 이벤트를 받을 일이 없으므로 아무것도 하지 않습니다.
+//                is ItemDetailEvent.Refresh -> { /* Do nothing */
+//                }
 //            }
 //        }
 //    }
 //
-//    // <<< 추가됨: 전체 화면 이미지 뷰
 //    if (fullScreenImageUrl != null) {
 //        FullScreenImageView(
 //            imageUrl = fullScreenImageUrl!!,
@@ -325,7 +327,6 @@
 //                                        isAnalyzing = false
 //                                    }
 //                                },
-//                                // <<< 추가됨: 이미지 클릭 콜백 전달
 //                                onImageClick = { imageUrl ->
 //                                    fullScreenImageUrl = imageUrl
 //                                }
@@ -357,25 +358,24 @@
 //    }
 //}
 //
-//// <<< 추가됨: 전체 화면 이미지 뷰 Composable
 //@Composable
 //fun FullScreenImageView(imageUrl: String, onDismiss: () -> Unit) {
 //    Dialog(
 //        onDismissRequest = onDismiss,
-//        properties = DialogProperties(usePlatformDefaultWidth = false) // 전체 화면으로 설정
+//        properties = DialogProperties(usePlatformDefaultWidth = false)
 //    ) {
 //        Box(
 //            modifier = Modifier
 //                .fillMaxSize()
 //                .background(Color.Black.copy(alpha = 0.8f))
-//                .clickable { onDismiss() }, // 배경 클릭 시 닫기
+//                .clickable { onDismiss() },
 //            contentAlignment = Alignment.Center
 //        ) {
 //            AsyncImage(
 //                model = imageUrl,
 //                contentDescription = "전체 화면 이미지",
 //                modifier = Modifier.fillMaxWidth(),
-//                contentScale = ContentScale.Fit // 이미지가 잘리지 않고 화면에 맞게 보임
+//                contentScale = ContentScale.Fit
 //            )
 //        }
 //    }
@@ -477,7 +477,7 @@
 //    imageUrls: List<String>,
 //    isAnalyzing: Boolean,
 //    onAnalyzeClick: () -> Unit,
-//    onImageClick: (String) -> Unit // <<< 추가됨: 이미지 클릭 콜백
+//    onImageClick: (String) -> Unit
 //) {
 //    if (imageUrls.isEmpty()) {
 //        Box(
@@ -512,7 +512,6 @@
 //                    contentDescription = "상품 이미지 ${pageIndex + 1}",
 //                    modifier = Modifier
 //                        .fillMaxSize()
-//                        // <<< 추가됨: 클릭 시 콜백 호출
 //                        .clickable { onImageClick(imageUrls[pageIndex]) },
 //                    contentScale = ContentScale.Crop
 //                )

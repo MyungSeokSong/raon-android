@@ -162,6 +162,18 @@ fun AppNavigation(
                     navController.navigate("addItem?itemId=$editItemId")
                 }
             )
+
+            // ItemDetailScreen2 테스트
+//            ItemDetailScreen(
+//                onBackClick = { isFavorite ->
+//                },
+//                onNavigateToChatRoom = { chatRoomId ->
+//                    navController.navigate("chatRoom/$chatRoomId")
+//                },
+//                onNavigateToEdit = { editItemId ->
+//                    navController.navigate("addItem?itemId=$editItemId")
+//                }
+//            )
         }
 
         composable(

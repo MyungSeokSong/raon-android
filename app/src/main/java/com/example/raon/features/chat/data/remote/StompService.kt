@@ -15,10 +15,12 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
+import org.hildan.krossbow.stomp.config.HeartBeat
 import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 data class ChatMessageDto(
     val senderId: Long,
@@ -31,12 +33,14 @@ class StompService @Inject constructor(
     private val tokenManager: TokenManager // 채팅에서 인증할 토큰을 가져올 TokenManeger
 ) {
 
-    private val stompClient = StompClient(OkHttpWebSocketClient())
-    private var session: StompSession? = null
+    private val stompClient = StompClient(OkHttpWebSocketClient()) {
 
-    // 서버에서 Stomp 실시간 데이터를 Json 형식으로 받아서 dto로 저장해서 다룰 때 코드
-//    private val _messages = MutableSharedFlow<ChatMessageDto>()
-//    val messages: Flow<ChatMessageDto> get() = _messages.asSharedFlow()
+
+        //    10초마다 "나 살아있어!" 신호를 보내고,
+        //    서버로부터도 10초 안에 신호가 와야 한다고 설정합니다.
+        heartBeat = HeartBeat(10.seconds, 10.seconds)
+    }
+    private var session: StompSession? = null
 
 
     // ▼▼▼ 1. Flow가 String을 방출하도록 타입을 변경합니다. ▼▼▼
@@ -116,29 +120,6 @@ class StompService @Inject constructor(
             Log.e("StompService", "STOMP connection failed", e)
         }
     }
-
-//    suspend fun sendMessage(chatRoomId: Long, message: String) {
-//        session?.let { currentSession ->
-//            try {
-//                val destinationPath = "/chat/${chatRoomId}" // send destination
-//
-//                Log.e("StompService", "destinationPath: ${destinationPath}")
-//
-//
-//                val payload = ChatMessageDto(
-//                    senderId = 1, // 로그인 유저 정보를 실제로 대입
-//                    content = message,
-//                    timestamp = ""   // 필요시 설정
-//                )
-//                val jsonString = gson.toJson(payload)
-//                // 함수 시그니처대로 destination, body 순서로 전달!
-//                currentSession.sendText(destinationPath, jsonString)
-//
-//            } catch (e: Exception) {
-//                Log.e("StompService", "Failed to send message", e)
-//            }
-//        }
-//    }
 
     suspend fun disconnect() {
         try {
