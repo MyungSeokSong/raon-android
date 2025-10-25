@@ -35,7 +35,7 @@ sealed class ItemDetailEvent {
     data class ShowError(val message: String) : ItemDetailEvent()
     object ProductDeleted : ItemDetailEvent()
     object ShowProductNotFoundError : ItemDetailEvent()
-    object Refresh : ItemDetailEvent() // "새로고침" 이벤트 추가
+    object Refresh : ItemDetailEvent()
 }
 
 // ------------------- ViewModel -------------------
@@ -52,12 +52,15 @@ class ItemDetailViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<ItemDetailEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    // ViewModel이 생성될 때 한 번만 저장되는 멤버 변수
     private val itemId: Int? = savedStateHandle["itemId"]
+
+    // ▼▼▼ [핵심 추가] 채팅방 화면에서 전달받은 채팅방 ID ▼▼▼
+    // 이 ID가 -1L이 아니면, 이미 존재하는 채팅방에서 왔다는 의미입니다.
+    private val sourceChatRoomId: Long = savedStateHandle.get<Long>("chatRoomId") ?: -1L
 
     init {
         if (itemId != null) {
-            reloadData() // ViewModel 생성 시 데이터를 로드합니다.
+            reloadData()
             increaseViewCount(itemId)
         } else {
             _uiState.update {
@@ -66,15 +69,9 @@ class ItemDetailViewModel @Inject constructor(
         }
     }
 
-    /**
-     * UI 레이어로부터 이벤트를 받는 유일한 public 함수입니다.
-     */
     fun onEvent(event: ItemDetailEvent) {
         when (event) {
             ItemDetailEvent.Refresh -> reloadData()
-
-            // 👇 빠진 4가지 경우를 모두 추가해줍니다.
-            // 이 이벤트들은 ViewModel -> UI 방향이므로 onEvent에서는 할 일이 없습니다.
             is ItemDetailEvent.NavigateToChatRoom -> { /* Do nothing */
             }
 
@@ -89,26 +86,19 @@ class ItemDetailViewModel @Inject constructor(
         }
     }
 
-    /**
-     * 데이터를 다시 로드하는 private 함수. ViewModel 내부에서만 호출됩니다.
-     * 파라미터가 필요 없는 이유는 클래스의 멤버 변수인 `itemId`를 사용하기 때문입니다.
-     */
     private fun reloadData() {
-        val currentItemId = itemId ?: return // 멤버 변수 itemId를 사용합니다.
+        val currentItemId = itemId ?: return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                // 상품 상세 정보와 찜 상태를 '동시에' 비동기로 요청합니다.
                 val detailDeferred = async { itemRepository.getItemDetail(currentItemId) }
                 val favoriteStatusDeferred =
                     async { itemRepository.getFavoriteStatus(currentItemId) }
 
-                // 두 요청이 모두 끝날 때까지 기다립니다.
                 val itemDetails = detailDeferred.await()
                 val isFavorite = favoriteStatusDeferred.await()
 
-                // 판매자 프로필 Presigned URL 요청 로직
                 var sellerPresignedUrl: String? = null
                 val sellerS3Key =
                     itemDetails.sellerProfileUrl?.removePrefix(AppConstants.S3_BASE_URL)
@@ -126,13 +116,11 @@ class ItemDetailViewModel @Inject constructor(
                     }
                 }
 
-                // 두 결과를 합쳐서 최종 UI 모델을 만듭니다.
                 val finalItemDetails = itemDetails.copy(
-                    isFavorite = isFavorite, // 찜 상태 API 결과를 모델에 반영
-                    viewCount = itemDetails.viewCount + 1 // 조회수 1 증가시켜서 보여주기
+                    isFavorite = isFavorite,
+                    viewCount = itemDetails.viewCount + 1
                 )
 
-                // 합쳐진 데이터로 UI 상태를 업데이트합니다.
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -182,7 +170,20 @@ class ItemDetailViewModel @Inject constructor(
         }
     }
 
+    // ▼▼▼ [핵심 수정] 채팅하기 버튼 클릭 시의 로직 변경 ▼▼▼
     fun onChatButtonClicked() {
+        // 1. 채팅방에서 넘어왔는지 먼저 확인합니다.
+        if (sourceChatRoomId != -1L) {
+            // 채팅방에서 온 경우, 새 채팅방을 만들 필요 없이
+            // "이 채팅방으로 돌아가줘" 라는 신호만 보냅니다.
+            // AppNavigation에서 이 신호를 받고 popBackStack()을 실행할 것입니다.
+            viewModelScope.launch {
+                _eventFlow.emit(ItemDetailEvent.NavigateToChatRoom(sourceChatRoomId))
+            }
+            return // 여기서 함수 실행을 종료합니다.
+        }
+
+        // 2. 채팅방에서 온 것이 아니라면, 기존 로직을 그대로 실행합니다.
         if (itemId == null) {
             viewModelScope.launch { _eventFlow.emit(ItemDetailEvent.ShowError("상품 ID가 없어 채팅을 시작할 수 없습니다.")) }
             return

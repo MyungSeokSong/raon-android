@@ -122,11 +122,18 @@ fun AppNavigation(
         }
 
         composable(
-            route = "itemDetail/{itemId}",
-            arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+            route = "itemDetail/{itemId}?chatRoomId={chatRoomId}",
+            arguments = listOf(
+                navArgument("itemId") { type = NavType.IntType },
+                navArgument("chatRoomId") {
+                    type = NavType.LongType
+                    defaultValue = -1L
+                }
+            )
         ) { backStackEntry ->
             val viewModel: ItemDetailViewModel = hiltViewModel()
             val shouldRefresh = backStackEntry.savedStateHandle.get<Boolean>("item_updated")
+            val sourceChatRoomId = backStackEntry.arguments?.getLong("chatRoomId") ?: -1L
 
             ItemDetailScreen(
                 viewModel = viewModel,
@@ -144,13 +151,16 @@ fun AppNavigation(
                     navController.popBackStack()
                 },
                 onNavigateToChatRoom = { chatRoomId ->
-                    navController.navigate("chatRoom/$chatRoomId")
+                    if (sourceChatRoomId != -1L) {
+                        navController.popBackStack()
+                    } else {
+                        navController.navigate("chatRoom/$chatRoomId")
+                    }
                 },
                 onNavigateToEdit = { editItemId ->
                     navController.navigate("addItem?itemId=$editItemId")
                 }
             )
-
         }
 
         composable(
@@ -177,9 +187,8 @@ fun AppNavigation(
                     }
                     navController.popBackStack()
                 },
-                // ▼▼▼ [수정된 부분] 상세 페이지로 이동하는 람다 추가 ▼▼▼
-                onNavigateToItemDetail = { itemId ->
-                    navController.navigate("itemDetail/$itemId")
+                onNavigateToItemDetail = { itemId, chatRoomId ->
+                    navController.navigate("itemDetail/$itemId?chatRoomId=$chatRoomId")
                 }
             )
         }

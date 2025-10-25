@@ -89,8 +89,7 @@ data class ImageAnalysisResult(
 @Composable
 fun ChatRoomScreen(
     onBackClick: (chatId: Long) -> Unit,
-    // ▼▼▼ [수정된 부분] 내비게이션 콜백 파라미터 추가 ▼▼▼
-    onNavigateToItemDetail: (itemId: Int) -> Unit,
+    onNavigateToItemDetail: (itemId: Int, chatRoomId: Long) -> Unit,
     viewModel: ChatRoomViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -159,10 +158,9 @@ fun ChatRoomScreen(
                     productPrice = uiState.productInfo?.price?.let { "%,d원".format(it) } ?: "",
                     isBuyer = uiState.isCurrentUserBuyer,
                     onAIImageAnalyzeClick = { viewModel.startImageAnalysis() },
-                    // ▼▼▼ [수정된 부분] 상품 정보 클릭 시 내비게이션 콜백 호출 ▼▼▼
                     onProductInfoClick = {
                         uiState.productInfo?.itemId?.let { id ->
-                            onNavigateToItemDetail(id)
+                            onNavigateToItemDetail(id, viewModel.chatRoomId)
                         }
                     }
                 )
@@ -351,13 +349,11 @@ fun ProductInfoBar(
     productPrice: String,
     isBuyer: Boolean,
     onAIImageAnalyzeClick: () -> Unit,
-    // ▼▼▼ [수정된 부분] 전체 클릭 이벤트 파라미터 추가 ▼▼▼
     onProductInfoClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            // ▼▼▼ [수정된 부분] Row 전체에 클릭 Modifier 적용 ▼▼▼
             .clickable { onProductInfoClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -401,7 +397,6 @@ fun ProductInfoBar(
                         shape = RoundedCornerShape(20.dp)
                     )
                     .clip(RoundedCornerShape(20.dp))
-                    // AI 분석 버튼은 자체 클릭 이벤트를 유지함 (이벤트 버블링)
                     .clickable { onAIImageAnalyzeClick() }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
