@@ -1,9 +1,9 @@
 package com.example.raon.features.chat.data.remote
 
-
 import android.util.Log
 import com.example.raon.features.auth.data.local.TokenManager
 import com.google.gson.Gson
+import kotlinx.coroutines.CancellationException // 👈 CancellationException import
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -15,35 +15,30 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import org.hildan.krossbow.stomp.StompClient
 import org.hildan.krossbow.stomp.StompSession
-import org.hildan.krossbow.stomp.config.HeartBeat
+import org.hildan.krossbow.stomp.config.HeartBeat // 👈 HeartBeat import
 import org.hildan.krossbow.stomp.subscribeText
 import org.hildan.krossbow.websocket.okhttp.OkHttpWebSocketClient
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.seconds // 👈 seconds import
 
-data class ChatMessageDto(
-    val senderId: Long,
-    val content: String,
-    val timestamp: String
-)
+// data class ChatMessageDto 는 StompService 파일 외부 또는 다른 DTO 파일에 정의되어야 함
 
 @Singleton
 class StompService @Inject constructor(
-    private val tokenManager: TokenManager // 채팅에서 인증할 토큰을 가져올 TokenManeger
+    private val tokenManager: TokenManager
 ) {
 
     private val stompClient = StompClient(OkHttpWebSocketClient()) {
-
-
-        //    10초마다 "나 살아있어!" 신호를 보내고,
-        //    서버로부터도 10초 안에 신호가 와야 한다고 설정합니다.
-        heartBeat = HeartBeat(10.seconds, 10.seconds)
+        // ▼▼▼ 하트비트 설정 ▼▼▼
+        heartBeat = HeartBeat(
+            10.seconds, // 보내는 간격
+            10.seconds  // 받는 간격
+        )
+        // ▲▲▲ 여기까지 ▲▲▲
     }
     private var session: StompSession? = null
 
-
-    // ▼▼▼ 1. Flow가 String을 방출하도록 타입을 변경합니다. ▼▼▼
     private val _messages = MutableSharedFlow<String>()
     val messages: Flow<String> get() = _messages.asSharedFlow()
 
@@ -52,84 +47,91 @@ class StompService @Inject constructor(
 
     suspend fun connectAndSubscribe(chatRoomId: Long) {
         try {
-            if (session != null) return
+            // ▼▼▼ 기존 로직 유지: 이미 세션이 있으면 함수 종료 ▼▼▼
+            if (session != null) {
+                Log.d("StompService", "Session already exists. Skipping connection.")
+                return
+            }
+            // ▲▲▲ 여기까지 ▲▲▲
 
-            val authToken = tokenManager.getAccessToken() // 토큰을 내부에서 직접 가져옴
-            val connectHeaders = mapOf("Authorization" to "Bearer $authToken")
+            val authToken = tokenManager.getAccessToken()
 
-            // 토큰이 있는지 반드시 확인합니다.
             if (authToken.isNullOrBlank()) {
                 Log.e("StompService", "Auth token is null or blank. Connection aborted.")
                 return
             }
 
-            Log.d("StompService", "토큰 형식: $connectHeaders") // ⬅️ 여기서 원본 JSON 확인!
+            Log.d("StompService", "Attempting STOMP connection...") // 토큰 값 로그 제거
 
+            val webSocketUrl = "ws://158.179.164.210/ws"
 
-//            val webSocketUrl = "ws://10.0.2.2:4000/ws" // -> 애뮬레이터 용
-//            val webSocketUrl = "ws://192.168.111.183:4000/ws" // -> 기기 연결 용
-
-            val webSocketUrl = "ws://158.179.164.210/ws" // 실제 서버 엔드포인트로 교체
-
-//            private const val RAON_SERVER_URL = "https://158.179.164.210/" // 실제 앱 용
-
-
-            // 헤더에 AccessToken 넣어서 만들기
+            // ▼▼▼ passcode 방식 유지 ▼▼▼
             session = stompClient.connect(
                 url = webSocketUrl,
-                passcode = authToken
+                passcode = authToken // 👈 요청하신대로 passcode 사용
             )
+            // ▲▲▲ 여기까지 ▲▲▲
 
             Log.d("StompService", "✅ STOMP connection successful! Session created.")
 
+            val destination = "/user/chat"
+            Log.d("StompService", "Subscribing to destination: $destination")
 
-            // stomp subscribe destination
-//            val destination = "/chat/${chatRoomId}"   // 수정전
-            val destination = "/user/chat"     // 수정후
-
-
-
-            Log.d("StompService", "destination : ${destination}")
-
-
+            // --- 메시지 구독 로직 (수정된 에러 처리 포함) ---
             scope.launch {
-                session!!.subscribeText(destination)
-                    .mapNotNull { chatmessage ->
-                        try {
-
-                            // ▼▼▼ 바로 이 로그입니다! ▼▼▼
-                            // 서버가 STOMP로 보낸 순수한 JSON 문자열이 그대로 출력됩니다.
-                            Log.d("StompService", "수신 데이터: $chatmessage") // ⬅️ 여기서 원본 JSON 확인!
-
-                            // 데이터 내보내기
-                            _messages.emit(chatmessage)
-
-//                            gson.fromJson(jsonString, ChatMessageDto::class.java)
-                        } catch (e: Exception) {
-                            Log.e("StompService", "JSON parsing failed", e)
-                            null
+                try {
+                    session?.subscribeText(destination)
+                        ?.mapNotNull { chatmessage ->
+                            try {
+                                Log.d("StompService", "수신 데이터: $chatmessage")
+                                _messages.emit(chatmessage)
+                                chatmessage
+                            } catch (e: Exception) {
+                                Log.e("StompService", "Message emit or processing failed", e)
+                                null
+                            }
                         }
-                    }
-                    .catch { e -> Log.e("StompService", "Error receiving messages", e) }
-                    .collect { messageDto ->
-                        Log.d("StompService", "실시간 메시지 파싱: $messageDto") // ⬅️ 파싱 완료 DTO 로그!
-//                        _messages.emit(messageDto)
-                    }
-            }
+                        ?.catch { e ->
+                            Log.e("StompService", "!!! Error in message receiving flow", e)
+                            disconnect() // 👈 에러 시 세션 정리 (null로 만듦)
+                        }
+                        ?.collect {
+                            // No action needed here
+                        }
+                } catch (e: CancellationException) {
+                    Log.d("StompService", "Subscription scope cancelled. Disconnecting session.")
+                    disconnect() // 👈 코루틴 취소 시 세션 정리
+                } catch (e: Exception) {
+                    Log.e(
+                        "StompService",
+                        "!!! Unhandled exception in subscription setup or flow",
+                        e
+                    )
+                    disconnect() // 👈 예상 못한 에러 시 세션 정리
+                } finally {
+                    Log.d("StompService", "Subscription flow ended.")
+                    // Flow 종료 시 disconnect 호출은 주석 처리
+                    // disconnect()
+                }
+            } // scope.launch 끝
         } catch (e: Exception) {
-            Log.e("StompService", "STOMP connection failed", e)
+            // stompClient.connect 자체가 실패한 경우
+            Log.e("StompService", "!!! STOMP connection failed", e)
+            disconnect() // 👈 연결 실패 시에도 세션 정리 (null로 만듦)
         }
     }
 
     suspend fun disconnect() {
         try {
-            session?.disconnect()
-            Log.d("StompService", "Stomp 연결종료 : Disconnecting STOMP...")
-
+            session?.disconnect() // null-safe 호출
+            Log.d("StompService", "Stomp 연결종료 : Attempted to disconnect STOMP session.")
         } catch (e: Exception) {
-            Log.e("StompService", "Failed to disconnect STOMP", e)
+            Log.e("StompService", "Failed to gracefully disconnect STOMP", e)
         } finally {
-            session = null
+            if (session != null) {
+                Log.d("StompService", "Setting session variable to null.")
+            }
+            session = null // 👈 항상 null로 설정하여 정리
         }
     }
 }

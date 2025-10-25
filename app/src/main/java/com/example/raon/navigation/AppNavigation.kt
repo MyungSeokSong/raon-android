@@ -20,7 +20,6 @@ import com.example.raon.features.item.ui.add.AddItemEvent
 import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.add.AddItemViewModel
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
-// 👇 ItemDetailViewModel을 NavHost에서 직접 사용하기 위해 import 합니다.
 import com.example.raon.features.item.ui.detail.ItemDetailViewModel
 import com.example.raon.features.profile.ui.FavoritesScreen
 import com.example.raon.features.profile.ui.SalesHistoryScreen
@@ -75,7 +74,6 @@ fun AppNavigation(
         authGraph(navController)
         mainGraph(navController)
 
-        // 👇 [핵심 수정 1] AddItemScreen의 onUploadSuccess 로직을 변경합니다.
         composable(
             route = "addItem?itemId={itemId}",
             arguments = listOf(navArgument("itemId") {
@@ -109,12 +107,9 @@ fun AppNavigation(
             AddItemScreen(
                 modifier = modifier,
                 onUploadSuccess = {
-                    // "성공했어요!" 신호를 받으면 NavHost가 직접 행동합니다.
-                    // 1. 이전 화면(ItemDetail)의 SavedStateHandle에 표식을 남깁니다.
                     navController.previousBackStackEntry
                         ?.savedStateHandle
                         ?.set("item_updated", true)
-                    // 2. 현재 화면을 닫습니다.
                     navController.popBackStack()
                 },
                 onNavigationToCategory = { navController.navigate("category") },
@@ -126,20 +121,13 @@ fun AppNavigation(
             )
         }
 
-        // 👇 [핵심 수정 2] ItemDetailScreen에 새로고침 로직을 추가합니다.
         composable(
             route = "itemDetail/{itemId}",
             arguments = listOf(navArgument("itemId") { type = NavType.IntType })
         ) { backStackEntry ->
-
-            // 1. ItemDetailViewModel을 hilt를 통해 가져옵니다.
             val viewModel: ItemDetailViewModel = hiltViewModel()
-
-            // 2. 현재 화면의 SavedStateHandle에서 "item_updated" 표식을 확인합니다.
             val shouldRefresh = backStackEntry.savedStateHandle.get<Boolean>("item_updated")
 
-            // 3. ItemDetailScreen에는 ViewModel과 함께 "새로고침 필요" 여부와
-            //    "표식 제거" 람다 함수를 전달합니다.
             ItemDetailScreen(
                 viewModel = viewModel,
                 shouldRefresh = shouldRefresh ?: false,
@@ -163,17 +151,6 @@ fun AppNavigation(
                 }
             )
 
-            // ItemDetailScreen2 테스트
-//            ItemDetailScreen(
-//                onBackClick = { isFavorite ->
-//                },
-//                onNavigateToChatRoom = { chatRoomId ->
-//                    navController.navigate("chatRoom/$chatRoomId")
-//                },
-//                onNavigateToEdit = { editItemId ->
-//                    navController.navigate("addItem?itemId=$editItemId")
-//                }
-//            )
         }
 
         composable(
@@ -199,6 +176,10 @@ fun AppNavigation(
                         Log.e("ChatReadDebug", "Failed to get back stack entry 'main_graph'", e)
                     }
                     navController.popBackStack()
+                },
+                // ▼▼▼ [수정된 부분] 상세 페이지로 이동하는 람다 추가 ▼▼▼
+                onNavigateToItemDetail = { itemId ->
+                    navController.navigate("itemDetail/$itemId")
                 }
             )
         }

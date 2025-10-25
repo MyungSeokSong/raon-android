@@ -10,7 +10,6 @@ import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
 import com.example.raon.features.chat.data.remote.dto.ai.FraudData
 import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
 import com.example.raon.features.chat.data.remote.dto.ai.ImageAnalysisResponseDto
-import com.example.raon.features.chat.domain.model.ChatMessage
 import kotlinx.coroutines.flow.Flow
 
 
@@ -34,11 +33,6 @@ interface ChatRepository {
 
     // HTTP로 과거 채팅 메시지를 가져오는 함수
     suspend fun getMessageList(chatId: Long, page: Int): ApiResult<ApiResponse<MessageListDto>>
-
-
-    // 채팅방의 과거 메시지 목록 가져오기 (for ChatRoomScreen)
-    // @return ChatMessage 리스트를 방출하는 Flow
-    fun getMessages(chatRoomId: Long): Flow<List<ChatMessage>>
 
 
     // --- STOMP 실시간 채팅을 위한 함수들 추가 ---

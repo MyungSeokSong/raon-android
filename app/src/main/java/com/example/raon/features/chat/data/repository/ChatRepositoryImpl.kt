@@ -15,11 +15,8 @@ import com.example.raon.features.chat.data.remote.dto.SendMessageResponseDto
 import com.example.raon.features.chat.data.remote.dto.ai.FraudData
 import com.example.raon.features.chat.data.remote.dto.ai.FraudDetectionRequestDto
 import com.example.raon.features.chat.data.remote.dto.ai.ImageAnalysisResponseDto
-import com.example.raon.features.chat.domain.model.ChatMessage
 import com.example.raon.features.chat.domain.repository.ChatRepository
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 /**
@@ -39,33 +36,6 @@ class ChatRepositoryImpl @Inject constructor(
         page: Int
     ): ApiResult<ApiResponse<MessageListDto>> {
         return handleApi { chatApiService.getMessages(chatId, page) }
-    }
-
-
-    // 임시 더미 데이터를 사용한 예시
-    override fun getMessages(chatRoomId: Long): Flow<List<ChatMessage>> = flow {
-        // 실제로는 WebSocket이나 API를 통해 메시지를 수신하는 로직이 들어갑니다.
-        // 여기서는 1초마다 더미 데이터를 방출하는 예시를 보여줍니다.
-        val dummyHistory = listOf(
-            ChatMessage(1L, chatRoomId, 2, "상대방", null, "안녕하세요", null, "오후 2:30", true, "11"),
-            ChatMessage(2L, chatRoomId, 1, "나", null, "네 안녕하세요!", null, "오후 2:31", false, "11")
-        )
-        emit(dummyHistory) // 초기 메시지 전송
-        delay(1000)
-        emit(
-            dummyHistory + ChatMessage(
-                3L,
-                chatRoomId,
-                2,
-                "상대방",
-                null,
-                "혹시 네고 가능한가요?",
-                null,
-                "오후 2:31",
-                true,
-                "11"
-            )
-        )
     }
 
 
@@ -106,8 +76,14 @@ class ChatRepositoryImpl @Inject constructor(
     }
 
     override fun observeMessages(chatId: Long): Flow<String> {
+
+        Log.d("ChatRepository", "🚀 Observing messages for : ${stompService.messages}")
+
+
         // StompService가 제공하는 메시지 Flow를 그대로 반환합니다.
         return stompService.messages
+
+
     }
 
 
