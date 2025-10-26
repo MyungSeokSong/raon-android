@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -44,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.example.raon.R
+import com.example.raon.ui.theme.BrandDarkText
+import com.example.raon.ui.theme.BrandYellow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +74,11 @@ fun BuyerSelectionScreen(
                 Button(
                     onClick = { selectedBuyerId?.let(onBuyerSelected) },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = selectedBuyerId != null
+                    enabled = selectedBuyerId != null,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = BrandYellow,
+                        contentColor = BrandDarkText
+                    )
                 ) {
                     Text("구매자 선택")
                 }
