@@ -19,22 +19,20 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
-// 👇👇👇 [6. UI State 데이터 클래스 정의] 👇👇👇
+//  [6. UI State 데이터 클래스 정의]
 data class ProfileUiState(
     val viewableProfileImageUrl: String? = null // Presigned URL 저장용
 )
-// 👆👆👆 [6. 완료] 👆👆👆
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val imageStorageRepository: ImageStorageRepository // 👈 [7. ImageStorageRepository 주입 추가]
+    private val imageStorageRepository: ImageStorageRepository //  [7. ImageStorageRepository 주입 추가]
 ) : ViewModel() {
 
-    // 👇👇👇 [8. UI State Flow 정의] 👇👇👇
+    //  [8. UI State Flow 정의]
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState = _uiState.asStateFlow()
-    // 👆👆👆 [8. 완료] 👆👆👆
 
     // DataStore의 userProfileFlow를 관찰하여 UI에 제공할 StateFlow로 변환
     val userProfile: StateFlow<User?> = userRepository.getUserProfile()
@@ -44,14 +42,13 @@ class ProfileViewModel @Inject constructor(
             initialValue = null
         )
 
-    // 👇👇👇 [9. init 블록 추가 (Flow 감시 시작)] 👇👇👇
+    //  [9. init 블록 추가 (Flow 감시 시작)]
     init {
         observeUserProfileAndLoadPresignedUrl()
     }
-    // 👆👆👆 [9. 완료] 👆👆👆
 
 
-    // 👇👇👇 [10. userProfile 변경 감지 및 Presigned URL 요청 로직 함수] 👇👇👇
+    //  [10. userProfile 변경 감지 및 Presigned URL 요청 로직 함수]
     private fun observeUserProfileAndLoadPresignedUrl() {
         userProfile
             .filterNotNull() // null이 아닌 User 객체가 올 때만 처리
@@ -78,5 +75,4 @@ class ProfileViewModel @Inject constructor(
             }
             .launchIn(viewModelScope) // viewModelScope 내에서 Flow 감시 시작
     }
-    // 👆👆👆 [10. 완료] 👆👆👆
 }

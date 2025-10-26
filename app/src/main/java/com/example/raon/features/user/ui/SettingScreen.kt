@@ -1,6 +1,5 @@
 package com.example.raon.features.user.ui
 
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,7 +35,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.example.raon.ui.theme.BrandDarkText
 import com.example.raon.ui.theme.BrandYellow
 
@@ -44,36 +42,28 @@ import com.example.raon.ui.theme.BrandYellow
 @Composable
 fun SettingsScreen(
     onLogout: () -> Unit,
-    navController: NavController,
+    onBackClick: () -> Unit,
+    onNavigateToWithdrawal: () -> Unit, // 회원탈퇴 화면으로 이동 콜백
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    // 알림 설정 On/Off 상태를 관리하기 위한 변수
     var isNotificationOn by remember { mutableStateOf(true) }
-    // 로그아웃 팝업의 표시 여부를 관리하는 상태 변수
     var showLogoutDialog by remember { mutableStateOf(false) }
 
-    // showLogoutDialog가 true일 때 AlertDialog를 표시
     if (showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false }, // 팝업 바깥이나 뒤로가기 클릭 시
-            title = {
-                Text(text = "로그아웃", fontWeight = FontWeight.Bold)
-            },
-            text = {
-                Text(text = "정말 로그아웃하시겠어요?")
-            },
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text(text = "로그아웃", fontWeight = FontWeight.Bold) },
+            text = { Text(text = "정말 로그아웃하시겠어요?") },
             confirmButton = {
                 Button(
                     onClick = {
-
-                        viewModel.logout()  // 로그아웃
-
-                        onLogout()  // 로그아웃시 화면 이동 함수
-                        showLogoutDialog = false // 로직 실행 후 팝업 닫기
+                        viewModel.logout()
+                        onLogout()
+                        showLogoutDialog = false
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandYellow, // 주황색 버튼
+                        containerColor = BrandYellow,
                         contentColor = BrandDarkText
                     )
                 ) {
@@ -81,9 +71,7 @@ fun SettingsScreen(
                 }
             },
             dismissButton = {
-                TextButton(
-                    onClick = { showLogoutDialog = false } // '닫기' 누르면 팝업 닫기
-                ) {
+                TextButton(onClick = { showLogoutDialog = false }) {
                     Text("닫기")
                 }
             }
@@ -95,56 +83,34 @@ fun SettingsScreen(
             TopAppBar(
                 title = { Text("설정") },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
                     }
                 }
             )
         }
     ) { paddingValues ->
-        // 설정 항목이 많아질 수 있으므로 LazyColumn을 사용
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            // 계정 카테고리
             item { SettingsCategoryHeader("계정") }
-            item {
-                SettingsMenuItem(title = "프로필 수정", onClick = { /* TODO: 프로필 수정 화면으로 이동 */ })
-            }
-            item {
-                SettingsMenuItem(title = "계정 및 로그인 정보", onClick = { /* TODO: 계정 정보 화면으로 이동 */ })
-            }
-
-            // 알림 카테고리
+            item { SettingsMenuItem(title = "프로필 수정", onClick = { /* TODO */ }) }
+            item { SettingsMenuItem(title = "계정 및 로그인 정보", onClick = { /* TODO */ }) }
             item { SettingsCategoryHeader("알림") }
             item {
-                // 스위치를 포함한 메뉴 아이템
                 SettingsToggleItem(
                     title = "채팅 및 활동 알림",
                     checked = isNotificationOn,
                     onCheckedChange = { isNotificationOn = it }
                 )
             }
-
-            // 정보 카테고리
             item { SettingsCategoryHeader("정보") }
-            item {
-                SettingsMenuItem(title = "공지사항", onClick = { /* TODO: 공지사항 화면으로 이동 */ })
-            }
-            item {
-                SettingsMenuItem(title = "서비스 이용약관", onClick = { /* TODO: 웹뷰 또는 화면 이동 */ })
-            }
-            item {
-                SettingsMenuItem(title = "개인정보 처리방침", onClick = { /* TODO: 웹뷰 또는 화면 이동 */ })
-            }
-            item {
-                // 버전 정보처럼 클릭이 필요 없는 메뉴 아이템
-                SettingsInfoItem(title = "앱 버전", value = "1.0.0")
-            }
-
-            // 로그아웃 및 회원탈퇴
+            item { SettingsMenuItem(title = "공지사항", onClick = { /* TODO */ }) }
+            item { SettingsMenuItem(title = "서비스 이용약관", onClick = { /* TODO */ }) }
+            item { SettingsMenuItem(title = "개인정보 처리방침", onClick = { /* TODO */ }) }
+            item { SettingsInfoItem(title = "앱 버전", value = "1.0.0") }
             item {
                 Column(modifier = Modifier.padding(top = 24.dp)) {
                     HorizontalDivider()
@@ -152,27 +118,24 @@ fun SettingsScreen(
                         text = "로그아웃",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { showLogoutDialog = true } // 클릭 시 팝업 상태를 true로 변경
+                            .clickable { showLogoutDialog = true }
                             .padding(16.dp)
                     )
                     HorizontalDivider()
                     Text(
                         text = "회원탈퇴",
-                        color = MaterialTheme.colorScheme.error, // 위험한 작업임을 알리는 색상
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { /* TODO: 회원탈퇴 확인 팝업 표시 */ }
+                            .clickable { onNavigateToWithdrawal() } // 콜백 호출
                             .padding(16.dp)
                     )
                     HorizontalDivider()
-
                 }
             }
         }
     }
 }
-
-// 재사용을 위한 컴포저블들
 
 @Composable
 private fun SettingsCategoryHeader(title: String) {

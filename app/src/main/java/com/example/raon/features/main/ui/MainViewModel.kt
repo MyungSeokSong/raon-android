@@ -184,16 +184,6 @@ class MainViewModel @Inject constructor(
                                     )
                                 }
                             }
-                            // DTO 정보와 받아온 thumbnailUrl을 합쳐 ChatRoomUiModel 생성
-//                        ChatRoomUiModel(
-//                            chatId = chatRoomInfo.chatId,
-//                            buyer = chatRoomInfo.buyer,
-//                            seller = chatRoomInfo.seller,
-//                            product = chatRoomInfo.product,
-//                            lastMessage = chatRoomInfo.lastMessage,
-//                            unreadCount = chatRoomInfo.unreadCount,
-//                            viewableThumbnailUrl = thumbnailUrl // Presigned URL 저장
-//                        )
                             chatRoomInfo.copy(viewableThumbnailUrl = thumbnailUrl)
                         }
                     }.awaitAll() // 모든 썸네일 URL 요청이 완료될 때까지 기다림

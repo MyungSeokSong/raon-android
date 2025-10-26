@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -87,7 +86,7 @@ fun ItemDetailScreen(
 ) {
 
 
-    // 👇 3. shouldRefresh 값이 true일 때만 이 효과가 실행됩니다.
+    // 3. shouldRefresh 값이 true일 때만 이 효과가 실행됩니다.
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) {
             // ViewModel에 "새로고침 해줘!" 라고 이벤트를 보냅니다.
@@ -135,7 +134,7 @@ fun ItemDetailScreen(
                     Toast.LENGTH_SHORT
                 ).show()
 
-                // 👇 이 부분을 추가하여 Refresh 이벤트를 처리합니다.
+                // 이 부분을 추가하여 Refresh 이벤트를 처리합니다.
                 // 이 블록에서는 Refresh 이벤트를 받을 일이 없으므로 아무것도 하지 않습니다.
                 is ItemDetailEvent.Refresh -> { /* Do nothing */
                 }
@@ -186,17 +185,17 @@ fun ItemDetailScreen(
                             scope.launch { sheetState.hide() }
                         }
                 )
-                Divider()
-                ListItem(
-                    headlineContent = { Text("상태 변경", fontWeight = FontWeight.Medium) },
-                    leadingContent = { Icon(Icons.Filled.SwapHoriz, contentDescription = "상태 변경") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            Toast.makeText(context, "상태 변경", Toast.LENGTH_SHORT).show()
-                            scope.launch { sheetState.hide() }
-                        }
-                )
+//                Divider()
+//                ListItem(
+//                    headlineContent = { Text("상태 변경", fontWeight = FontWeight.Medium) },
+//                    leadingContent = { Icon(Icons.Filled.SwapHoriz, contentDescription = "상태 변경") },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .clickable {
+//                            Toast.makeText(context, "상태 변경", Toast.LENGTH_SHORT).show()
+//                            scope.launch { sheetState.hide() }
+//                        }
+//                )
                 Divider()
                 ListItem(
                     headlineContent = {

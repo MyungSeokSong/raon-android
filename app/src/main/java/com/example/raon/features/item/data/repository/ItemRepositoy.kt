@@ -6,6 +6,7 @@ import com.example.raon.features.chat.data.remote.dto.CreateChatRoomResponseDto
 import com.example.raon.features.chat.data.remote.dto.GetChatRoomResponseDto
 import com.example.raon.features.item.data.remote.dto.add.ItemResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
+import com.example.raon.features.item.data.remote.dto.update_status.BuyerListResponseDto
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import com.example.raon.features.item.ui.list.model.ItemUiModel
 
@@ -74,6 +75,20 @@ interface ItemRepository {
 
     // 찜 상태 조회 함수 추가 (Boolean을 직접 반환하도록 단순화)
     suspend fun getFavoriteStatus(productId: Int): Boolean
+
+
+    // ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+
+
+    // [추가] 상품 상태 변경 함수
+    suspend fun updateProductStatus(
+        itemId: Int,
+        newStatus: String,
+        buyerId: Int? = null
+    ): ApiResult<Unit>
+
+    // [추가] 구매자 목록 조회 함수
+    suspend fun getBuyersForProduct(itemId: Int): ApiResult<BuyerListResponseDto> // TODO: 실제 응답 타입으로 변경
 
 
 }

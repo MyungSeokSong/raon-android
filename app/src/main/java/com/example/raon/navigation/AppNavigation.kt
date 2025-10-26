@@ -21,6 +21,7 @@ import com.example.raon.features.item.ui.add.AddItemScreen
 import com.example.raon.features.item.ui.add.AddItemViewModel
 import com.example.raon.features.item.ui.detail.ItemDetailScreen
 import com.example.raon.features.item.ui.detail.ItemDetailViewModel
+import com.example.raon.features.profile.ui.BuyerSelectionScreen
 import com.example.raon.features.profile.ui.FavoritesScreen
 import com.example.raon.features.profile.ui.SalesHistoryScreen
 import com.example.raon.features.search.ui.SearchInputScreen
@@ -226,12 +227,30 @@ fun AppNavigation(
             )
         }
 
-        composable("salesHistory") {
+//        composable("salesHistory") {
+//            SalesHistoryScreen(
+//                onItemClick = { itemId -> navController.navigate("itemDetail/$itemId") },
+//                onBackClick = { navController.popBackStack() },
+//                // ▼▼▼ 구매자 선택 화면으로 이동하는 콜백 구현 ▼▼▼
+//                onNavigateToBuyerSelection = { itemId ->
+//                    navController.navigate("buyer_selection/$itemId")
+//                }
+//            )
+//        }
+
+        // ▼▼▼ [핵심 수정] salesHistory 경로 정의 부분 ▼▼▼
+        composable("salesHistory") { navBackStackEntry -> // 'navBackStackEntry' 변수를
             SalesHistoryScreen(
+                // ▼▼▼ ...여기에 다시 전달합니다. ▼▼▼
+                navBackStackEntry = navBackStackEntry,
                 onItemClick = { itemId -> navController.navigate("itemDetail/$itemId") },
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onNavigateToBuyerSelection = { itemId ->
+                    navController.navigate("buyer_selection/$itemId")
+                }
             )
         }
+
 
         composable("favorites") {
             FavoritesScreen(
@@ -246,6 +265,52 @@ fun AppNavigation(
                 onClose = { navController.popBackStack() }
             )
         }
+
+
+
+        composable(
+            "buyer_selection/{itemId}",
+            arguments = listOf(navArgument("itemId") { type = NavType.IntType })
+        ) {
+            BuyerSelectionScreen(
+                onBackClick = { navController.popBackStack() },
+
+                // ▼▼▼ [핵심 수정] onBuyerSelected 람다 전체 수정 ▼▼▼
+                onBuyerSelected = { buyerId ->
+                    // 1. 람다 시작 로그 (Logcat에서 NAV_DEBUG로 필터링)
+                    Log.d("NAV_DEBUG", "1. onBuyerSelected lambda triggered. buyerId: $buyerId")
+
+                    val valueToSet = buyerId ?: -1
+                    Log.d("NAV_DEBUG", "2. valueToSet: $valueToSet")
+
+                    try {
+                        // 3. 'salesHistory' 라우트에 직접 데이터 set 시도
+                        Log.d("NAV_DEBUG", "3. Attempting to set result on 'salesHistory' route...")
+
+                        // [중요] previousBackStackEntry 대신 'salesHistory' 라우트를 명시적으로 찾음
+                        navController.getBackStackEntry("salesHistory")
+                            .savedStateHandle
+                            .set("selected_buyer_id", valueToSet)
+
+                        Log.d("NAV_DEBUG", "4. Successfully set result.")
+
+                        // 5. 뒤로가기 시도
+                        Log.d("NAV_DEBUG", "5. Attempting to popBackStack...")
+                        navController.popBackStack()
+                        Log.d("NAV_DEBUG", "6. Successfully popped back stack.")
+
+                    } catch (e: Exception) {
+                        // 'salesHistory'를 못찾거나 다른 이유로 Crash가 날 경우
+                        Log.e(
+                            "NAV_DEBUG",
+                            "CRASHED inside onBuyerSelected lambda. Check route name.",
+                            e
+                        )
+                    }
+                }
+            )
+        }
+
     }
 }
 

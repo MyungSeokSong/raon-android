@@ -159,20 +159,6 @@ fun MainView(
                         label = {
                             Text(text = navItem.label)
 
-                            // ▼▼▼ 3. '채팅' 탭에 안 읽은 메시지 개수 배지 표시 ▼▼▼
-//                            if (navItem.route == "chat") {
-//                                BadgedBox(
-//                                    badge = {
-//                                        if (mainUiState.unreadChatCount > 0) {
-//                                            Badge { Text(text = mainUiState.unreadChatCount.toString()) }
-//                                        }
-//                                    }
-//                                ) {
-//                                    Icon(imageVector = navItem.icon, contentDescription = navItem.label)
-//                                }
-//                            } else {
-//                                Icon(imageVector = navItem.icon, contentDescription = navItem.label)
-//                            }
                         }
                     )
                 }

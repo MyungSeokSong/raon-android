@@ -15,6 +15,8 @@ import com.example.raon.features.item.data.remote.dto.add.ItemUpdateRequest
 import com.example.raon.features.item.data.remote.dto.detail.ChangeFavoriteStatusRequest
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailData
 import com.example.raon.features.item.data.remote.dto.list.ItemDto
+import com.example.raon.features.item.data.remote.dto.update_status.BuyerListResponseDto
+import com.example.raon.features.item.data.remote.dto.update_status.UpdateStatusRequest
 import com.example.raon.features.item.ui.detail.model.ItemDetailModel
 import com.example.raon.features.item.ui.list.model.ItemUiModel
 import com.example.raon.features.user.domain.repository.UserRepository
@@ -397,6 +399,54 @@ class ItemRepositoryImpl @Inject constructor(
     override suspend fun getFavoriteStatus(productId: Int): Boolean {
         return itemApiService.getFavoriteStatus(productId).data.isFavorite
     }
+
+    // ▼▼▼ [추가] 상품 상태 변경 함수 구현 ▼▼▼
+    override suspend fun updateProductStatus(
+        itemId: Int,
+        newStatus: String,
+        buyerId: Int?
+    ): ApiResult<Unit> {
+        val request = UpdateStatusRequest(status = newStatus, buyerId = buyerId)
+
+        // ▼▼▼ [로그 추가 1] 서버로 '어떤 데이터'를 보내는지 정확히 확인 ▼▼▼
+        // UpdateStatusRequest가 data class라면, $request가 (status=..., buyerId=...) 형태로 예쁘게 출력됩니다.
+        Log.d(
+            "ItemRepository",
+            "Attempting updateProductStatus. itemId: $itemId, requestBody: $request"
+        )
+
+        // API 호출
+        val result = handleApi { itemApiService.updateProductStatus(itemId, request) }
+
+        // ▼▼▼ [로그 추가 2] API 호출 '결과'가 성공인지 실패인지 확인 ▼▼▼
+        when (result) {
+            is ApiResult.Success -> {
+                Log.i("ItemRepository", "updateProductStatus SUCCESS for itemId: $itemId")
+            }
+
+            is ApiResult.Error -> {
+                Log.e(
+                    "ItemRepository",
+                    "updateProductStatus ERROR for itemId: $itemId. Code: ${result.code}, Msg: ${result.errorBody?.message}"
+                )
+            }
+
+            is ApiResult.Exception -> {
+                Log.e(
+                    "ItemRepository",
+                    "updateProductStatus EXCEPTION for itemId: $itemId. Ex: ${result.e.message}"
+                )
+            }
+        }
+
+        return result
+    }
+
+    // ▼▼▼ [추가] 구매자 목록 조회 함수 구현 ▼▼▼
+    override suspend fun getBuyersForProduct(itemId: Int): ApiResult<BuyerListResponseDto> {
+        return handleApi { itemApiService.getBuyersForProduct(itemId) }
+    }
+
 }
 
 // API 에러 응답 파싱용 DTO

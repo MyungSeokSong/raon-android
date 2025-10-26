@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.RemoveRedEye
@@ -38,17 +39,17 @@ import com.example.raon.core.ui.model.ItemListUiModel
 
 /**
  * 여러 화면에서 재사용될 아이템 목록 UI
- * @param items 표시할 아이템 데이터 리스트 (공통 모델 사용)
- * @param onItemClick 아이템 클릭 시 호출될 콜백 (클릭된 아이템의 id 전달)
- * @param isFavoriteList 현재 이 리스트가 찜 목록인지를 나타냅니다. (하트 아이콘 표시 여부 결정)
- * @param onFavoriteClick 하트 아이콘 클릭 시 호출될 콜백 (클릭된 아이템의 id 전달)
+ * @param showSettingsIcon 판매내역 등에서 설정(수정/삭제) 아이콘을 표시할지 여부
+ * @param onSettingsClick 설정 아이콘 클릭 시 호출될 콜백
  */
 @Composable
 fun ItemListComponoents(
     items: List<ItemListUiModel>,
     onItemClick: (Int) -> Unit,
     isFavoriteList: Boolean = false,
-    onFavoriteClick: (itemId: Int) -> Unit = {}
+    onFavoriteClick: (itemId: Int) -> Unit = {},
+    showSettingsIcon: Boolean = false,
+    onSettingsClick: (itemId: Int) -> Unit = {}
 ) {
     LazyColumn {
         items(
@@ -59,7 +60,9 @@ fun ItemListComponoents(
                 item = item,
                 onClick = { onItemClick(item.id) },
                 isFavoriteItem = isFavoriteList,
-                onFavoriteClick = { onFavoriteClick(item.id) }
+                onFavoriteClick = { onFavoriteClick(item.id) },
+                showSettingsIcon = showSettingsIcon,
+                onSettingsClick = { onSettingsClick(item.id) }
             )
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f), thickness = 1.dp)
         }
@@ -74,7 +77,9 @@ private fun ItemListItem(
     item: ItemListUiModel,
     onClick: () -> Unit,
     isFavoriteItem: Boolean,
-    onFavoriteClick: () -> Unit
+    onFavoriteClick: () -> Unit,
+    showSettingsIcon: Boolean,
+    onSettingsClick: () -> Unit
 ) {
     val lastLocation = item.location.split(" ").lastOrNull() ?: ""
 
@@ -168,11 +173,9 @@ private fun ItemListItem(
 
             // 찜 목록인 경우에만 하트 아이콘 표시
             if (isFavoriteItem) {
-                // isFavorite 상태에 따라 아이콘과 색상을 결정
                 val icon =
                     if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder
                 val tint = if (item.isFavorite) Color.Red else Color.Gray
-
                 Icon(
                     imageVector = icon,
                     contentDescription = "관심 상품 토글",
@@ -183,11 +186,27 @@ private fun ItemListItem(
                         .padding(top = 4.dp, end = 4.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            // 클릭 시 ViewModel에 알림
-                            onFavoriteClick()
-                        }
+                            indication = null,
+                            onClick = onFavoriteClick
+                        )
+                )
+            }
+
+            // 판매내역인 경우에만 설정 아이콘 표시
+            if (showSettingsIcon) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "상품 관리",
+                    tint = Color.Gray,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(32.dp)
+                        .padding(top = 4.dp, end = 4.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onSettingsClick
+                        )
                 )
             }
         }

@@ -9,6 +9,8 @@ import com.example.raon.features.item.data.remote.dto.detail.ChangeFavoriteStatu
 import com.example.raon.features.item.data.remote.dto.detail.GetFavoriteStatusResponse
 import com.example.raon.features.item.data.remote.dto.detail.ItemDetailResponse
 import com.example.raon.features.item.data.remote.dto.list.ItemListResponse
+import com.example.raon.features.item.data.remote.dto.update_status.BuyerListResponseDto
+import com.example.raon.features.item.data.remote.dto.update_status.UpdateStatusRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -101,6 +103,22 @@ interface ItemApiService {
     suspend fun getFavoriteStatus(
         @Path("productId") productId: Int
     ): GetFavoriteStatusResponse
+
+
+    // [ 상품 상태 변경 API ] -> AVAILABLE, RESERVED, SOLD
+    @PATCH("api/v1/products/{productId}/status")
+    suspend fun updateProductStatus(
+        @Path("productId") productId: Int,
+        @Body request: UpdateStatusRequest
+    ): Response<Unit>
+
+    // ▼▼▼ [추가] 상품에 대해 채팅한 구매자 목록 조회 API ▼▼▼
+    @GET("api/v1/products/{productId}/buyers")
+    suspend fun getBuyersForProduct(
+        @Path("productId") productId: Int
+    ): Response<BuyerListResponseDto>
+
+
 }
 
 
